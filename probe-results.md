@@ -32,3 +32,10 @@ https://auth.hornbach.com/apps-srv/clients/register` -> HTTP 404
 https://auth.hornbach.com/apps-srv/clients/register -> HTTP 404
 https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
 https://auth.hornbach.com/authz-srv/device/authz -> HTTP 400
+
+## 2026-09-03 22:32:00 UTC
+https://auth.hornbach.com/apps-srv/clients/register` -> HTTP 404
+https://auth.hornbach.com/apps-srv/clients/register -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/ -> 200 len=3038
+https://auth.hornbach.com/oauth2/authorize?response_type=code&client_id=<candidate>&redirect_uri=https://hornbach.de/callback&scope=openid -> HTTP 404
