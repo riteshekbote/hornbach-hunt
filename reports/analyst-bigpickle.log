@@ -1,0 +1,82 @@
+===== ANALYST bigpickle 2026-09-03 17:21:30 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt/
+total 100
+drwxr-xr-x 12 runner runner 4096 Sep  3 17:12 .
+drwxr-xr-x  3 runner runner 4096 Sep  3 17:12 ..
+drwxr-xr-x  7 runner runner 4096 Sep  3 17:12 .git
+drwxr-xr-x  3 runner runner 4096 Sep  3 17:12 .github
+-rw-r--r--  1 runner runner 1901 Sep  3 17:12 README.md
+-rw-r--r--  1 runner runner   32 Sep  3 17:12 analyst-out.txt
+-rw-r--r--  1 runner runner 6897 Sep  3 17:12 analyst-prompt.txt
+-rw-r--r--  1 runner runner 2969 Sep  3 17:12 ctx.txt
+drwxr-xr-x  2 runner runner 4096 Sep  3 17:12 inventory
+drwxr-xr-x  2 runner runner 4096 Sep  3 17:12 knowledge
+drwxr-xr-x  2 runner runner 4096 Sep  3 17:12 leads
+-rw-r--r--  1 runner runner  145 Sep  3 17:12 probe-results.md
+drwxr-xr-x  2 runner runner 4096 Sep  3 17:12 recon-notes
+drwxr-xr-x  2 runner runner 4096 Sep  3 17:12 reports
+drwxr-xr-x  2 runner runner 4096 Sep  3 17:12 reposcan-raw
+-rw-r--r--  1 runner runner 3341 Sep  3 17:12 scope.yml
+drwxr-xr-x  2 runner runner 4096 Sep  3 17:12 scripts
+-rw-r--r--  1 runner runner   32 Sep  3 17:12 state_bigpickle.json
+-rw-r--r--  1 runner runner   32 Sep  3 17:12 state_laguna.json
+-rw-r--r--  1 runner runner   32 Sep  3 17:12 state_ling3.json
+-rw-r--r--  1 runner runner   32 Sep  3 17:12 state_longcat.json
+-rw-r--r--  1 runner runner   33 Sep  3 17:12 state_mimo.json
+-rw-r--r--  1 runner runner   32 Sep  3 17:12 state_nemotron3.json
+drwxr-xr-x  2 runner runner 4096 Sep  3 17:12 triage
+[0m
+[0m✱ [0mGlob "**/*.json"[90m 6 matches[0m
+[0m✱ [0mGlob "**/*.md"[90m 15 matches[0m
+[0m→ [0mRead scope.yml
+[0m→ [0mRead inventory/hornbach.md
+[0m→ [0mRead leads/reposcan-hornbach.md
+[0m→ [0mRead reports/hypotheses.md
+[0m→ [0mRead recon-notes/DEDICATED-DEEP.md
+[0m→ [0mRead triage/run-2026-09-03-15-39.md
+[0m→ [0mRead leads/lead-mimo.md
+[0m→ [0mRead probe-results.md
+[0m→ [0mRead knowledge/index.md
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt/reposcan-raw/
+total 12
+drwxr-xr-x  2 runner runner 4096 Sep  3 17:12 .
+drwxr-xr-x 12 runner runner 4096 Sep  3 17:12 ..
+-rw-r--r--  1 runner runner   71 Sep  3 17:12 summary.txt
+[0m
+[0m→ [0mRead reposcan-raw/summary.txt
+## STEP 1 — DELTA
+NO_DELTA (inventory unchanged at 4 hosts; leads empty; hypotheses empty; no new recon data since last run)
+
+## STEP 2 — PRIORITIZE
+[PRIO] auth.hornbach.com, 8.2, attack_surface:9, business_value:9, tech_exposure:8, gate_ease:7, cloud_surface:8, freshness:8
+[PRIO] login.hornbach.com, 7.0, attack_surface:7, business_value:8, tech_exposure:6, gate_ease:7, cloud_surface:6, freshness:8
+[PRIO] www.hornbach.com, 5.5, attack_surface:5, business_value:7, tech_exposure:4, gate_ease:6, cloud_surface:5, freshness:8
+
+## STEP 3 — HYPOTHESES
+[HYP] cidaas OAuth redirect_uri validation bypass
+class: OATH
+asset: auth.hornbach.com
+confidence: 35
+reasoning: auth.hornbach.com is CNAME to hornbach-prod.cidaas.eu (third-party IdP); cidaas supports OAuth2/OIDC flows; redirect_uri parameter validation is a common misconfiguration point in hosted IdP integrations; no explicit redirect_uri whitelist testing has been performed yet
+evidence_needed: capture OAuth authorize request parameters, enumerate valid redirect_uri values via passive observation
+verify_steps: GET https://auth.hornbach.com/ → follow 302 to hornbach.de; observe query params (client_id, redirect_uri, state); attempt parameter pollution with non-hornbach redirect_uri values; test with curl --max-redirs 0 -v
+impact: OAuth code theft → account takeover; severity HIGH if redirect_uri is loosely validated
+testability: PASSIVE
+
+## STEP 4 — SELF-CRITIQUE
+[PARKED] cidaas OAuth redirect_uri validation bypass: confidence 35 < 40 threshold; no OAuth flow captured yet to confirm redirect_uri parameter exists or is user-controlled; cidaas is a mature provider likely to have strict defaults
+
+## STEP 5 — NEXT ACTION
+[NEXT] PROBE: GET https://auth.hornbach.com/ -v --max-redirs 0 to capture initial redirect chain and query parameters (client_id, redirect_uri, state) for OAuth flow analysis
+
+## STEP 6 — LEARN
+[LEARN] REJECTED class WILDCARD_DOM: wildcard DNS dominates hornbach.com zone; no dedicated hosts recovered; move to CDN-proxied surface analysis instead of subdomain enumeration
+[LEARN] ACCEPTED class OATH: third-party IdP (cidaas) integration on auth.hornbach.com creates OAuth/OIDC attack surface worth investigating
+
+## STEP 7 — RISK
+[RISK] hornbach: 25/100; broad scope with CDN-heavy architecture limits direct infrastructure access; private disclosure channel (bugs.olivermaicher.eu) indicates responsive program; cidaas is mature third-party provider reducing misconfiguration likelihood; surface is limited to 4 hosts with 2 live HTTP endpoints
