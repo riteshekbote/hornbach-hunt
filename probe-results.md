@@ -21,3 +21,14 @@ https://hornbach.com/@evil.com -> 200 len=3038
 https://login.hornbach.com/ -> 200 len=3038
 https://auth.hornbach.com/oauth2/authorize?response_type=code&client_id=public&redirect_uri=https://example.com&scope=openid -> HTTP 404
 https://auth.hornbach.com/ -> 200 len=3038
+
+## 2026-09-03 20:03:29 UTC
+https://auth.hornbach.com/ -> 200 len=3038
+https://auth.hornbach.com/oauth2/authorize?response_type=code&client_id=<candidate>&redirect_uri=https://hornbach.de/callback&scope=openid -> HTTP 404
+https://login.hornbach.com/ -> 200 len=3038
+https://hornbach.com/@evil.com` -> 200 len=3038
+https://hornbach.com/@evil.com -> 200 len=3038
+https://auth.hornbach.com/apps-srv/clients/register` -> HTTP 404
+https://auth.hornbach.com/apps-srv/clients/register -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/authz-srv/device/authz -> HTTP 400
