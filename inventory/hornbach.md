@@ -83,3 +83,11 @@ www.hornbach.com
 - NEW auth.hornbach.com/login-srv/social/token: GET returns HTTP 500 with empty error JSON + `Access-Control-Allow-Origin: *`
 - CHANGED auth.hornbach.com/authz-srv/par: PAR explicitly disabled (AUTH10053 "par is not enabled for this tenant")
 - CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes
+
+## 2026-09-04 17:49:13 UTC
+- NEW auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 "OK" without client auth — RFC 7009 violation (second unauthenticated token mgmt endpoint)
+- NEW auth.hornbach.com/login-srv/social/token: GET returns HTTP 500 with empty error JSON + Access-Control-Allow-Origin: *
+- CHANGED auth.hornbach.com/authz-srv/par: PAR explicitly disabled (AUTH10053)
+- CHANGED auth.hornbach.com/token-srv/introspect: now returns HTTP 404 (was accessible unauthenticated, RFC 7662 compliant returning active=false)
+- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes discovered
+- CHANGED hornbach.com: no wildcard DNS confirmed (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 known scoped hosts resolve
