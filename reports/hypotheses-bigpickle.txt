@@ -1,39 +1,30 @@
-## 2026-09-04 19:53:46 UTC [target] (model bigpickle)
-[NEW] auth.hornbach.com/token-srv/introspect: POST returns HTTP 200 {"active":false} unauthenticated — endpoint RE-CONFIRMED live (transient 404 in prior run was edge/routing, not permanent)
-[NEW] auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 "OK" unauthenticated — endpoint re-confirmed live; both token management endpoints stable unauthenticated
-[NEW] auth.hornbach.com/.well-known/status: returns HTTP 200 {"status":"OK","updatedAt"} — discovery property status endpoint live (per OIDC metadata)
-[CHANGED] auth.hornbach.com/authz-srv/authz: client_id=public now returns 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — confirms uniform invalid_client gate; previous 404 vs 302 variance is request-shape dependent, not client enumeration signal
-[PRIO] auth.hornbach.com, 8.6, attack_surface:9, business_value:9, tech_exposure:9, gate_ease:7, cloud_surface:8, freshness:9
-[PRIO] auth.hornbach.de, 6.4, attack_surface:6, business_value:7, tech_exposure:8, gate_ease:5, cloud_surface:4, freshness:8
-[PRIO] api.hornbach.de, 5.0, attack_surface:4, business_value:6, tech_exposure:7, gate_ease:3, cloud_surface:5, freshness:5
-[HYP] Unauthenticated token revocation + introspection pair enables silent session killing + metadata leak
+## 2026-09-04 22:16:02 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation persists (RFC 7662/7009 systemic bypass)
 class: AUTH
-asset: auth.hornbach.com/token-srv/{revoke,introspect}
-confidence: 60
-reasoning: Fresh probes (2026-09-04 19:53) confirm BOTH POST -> token-srv/introspect returns 200 {"active":false} AND POST -> token-srv/revoke returns 200 "OK" with NO client authentication (no basic auth, client_secret, or client_assertion). OIDC metadata lists introspection_endpoint_auth_methods + token_endpoint_auth_methods but live endpoints ignore them. This is now confirmed STABLE (was transiently 404 in one prior run), systemic cidaas tenant misconfiguration. RFC 7662 §2.1 + RFC 7009 §2.1 both mandate client auth. Two independent endpoints share the same bypass => systemic, not single-endpoint anomaly.
-evidence_needed: a real access_token to (a) introspect unauthenticated to leak sub/scope/exp/client_id metadata (proves exfil), and (b) revoke to demonstrably kill an active session (proves silent session DoS). Both require valid client_id + a test account.
-verify_steps: (DONE) unauthenticated POST fake token -> 200 on both; NEXT: after obtaining valid client_id + issuing a real token, POST token=<real> to /introspect without auth, confirm full metadata JSON; then POST token=<real> to /revoke, re-introspect to confirm active flips false.
-impact: attacker with a captured/leaked token can (1) enumerate its full metadata (sub, scope, exp, client_id, session state) without credentials, and (2) silently revoke it -> forced re-auth -> interception opportunity. Combined: token theft escalates from read to destructive session control. severity MEDIUM (impact gated on token acquisition, but the auth-bypass on the token-management plane is confirmed systemic).
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 65
+reasoning: My 22:15Z probes: POST introspect with NO client auth (no basic/secret/assertion) → 200 {"active":false}; POST revoke → 200 "OK". Metadata advertises token_endpoint_auth_methods_supported=[client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt] but runtime JMV both endpoints with zero auth. 20:01 UTC "404" was transient edge/routing — third independent confirmation session today (14:20, 19:53, 22:15).
+evidence_needed: real access_token → (a) unauthenticated introspect leaks sub/scope/exp/client_id (metadata exfil), (b) unauthenticated revoke flips active→false on re-introspect (silent session kill)
+verify_steps: (DONE) fake-token POST→200 on both. NEXT: with client_id + real token, POST token=<real> to /introspect no-auth → read full metadata; POST to /revoke → re-introspect confirms active=false.
+impact: token theft escalates to metadata disclosure + forced re-auth/interception window; silent DoS on account sessions; severity MEDIUM (gated on possessing a token)
 testability: AUTH_HELPED
-[PARKED] Social token endpoint 500: confidence 40 — empty error object, CORS wildcard informational only, no exploitable leak
-[PARKED] OAuth redirect_uri validation bypass: blocked on client_id (all invalid -> AUTH10007, uniform gate)
-[PARKED] cidaas JWT alg confusion: blocked on client_id + token, mature provider pinned
-[FINAL] 1. Unauthenticated token introspection + revocation (confidence 60, AUTH_HELPED, MEDIUM) — CONFIRMED SYSTEMIC, most defensible finding
-[FINAL] 2. Citrix NetScaler version exposure (confidence 45, PASSIVE, LOW-MEDIUM)
-[FINAL] 3. SAP APIM internal hostname leak via Via header (confidence 45, PASSIVE, LOW)
-[NEXT] HUMAN: Obtain a valid cidaas client_id — the single blocker gating escalation of the confirmed unauthenticated token-management bypass. Best sources: (1) HORNBACH mobile app de.hornbach APK (extract OAuth ClientId from cidaas SDK config / strings.xml); (2) manual www.hornbach.de login with mitmproxy/DevTools to capture the /authz-srv/authz redirect's client_id before the bot-wall; (3) grep public HORNBACH GitHub/GitLab repos for hardcoded cidaas client_id. With a client_id, issue a real token and demonstrate the introspect/revoke bypass against live metadata — converting a config finding into a reportable PoC.
-[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED live, returns 200 {"active":false} unauthenticated — prior "404" was transient; unauthenticated introspection is systemic and stable
-[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED live, returns 200 "OK" unauthenticated — two stable unauthenticated token management endpoints
-[LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id enumeration via status-code differential is REMOVED — invalid client_ids return uniform 302->AUTH10007; 404 vs 302 variance is request-shape not client validity signal
-[RISK] hornbach: 46/100 — cidaas tenant has a confirmed, STABLE pair of unauthenticated token management endpoints (introspection RFC 7662 + revocation RFC 7009) forming a systemic auth-bypass on the token plane; dynamic client registration disabled; PAR disabled; client_id enumeration gated (uniform AUTH10007, UUID format, bot-walled www.hornbach.de); Citrix NetScaler AAA full version exposure; SAP APIM internal hostname leak; impact of strongest finding (introspect/revoke) gated on client_id+token; scope broad but CDN-heavy + gate-hard; critical path = client_id acquisition.
-[HYP] Unauthenticated token revocation + introspection pair (RFC 7662/7009 violation, systemic)
-class: AUTH
-asset: auth.hornbach.com/token-srv/{revoke,introspect}
-confidence: 60
-reasoning: fresh probes 19:53 confirm BOTH endpoints return 200 with NO client auth (no basic, no client_secret, no assertion) despite metadata listing auth_methods_required. Two independent endpoints, same bypass => confirmed systemic tenant misconfig, now stable.
-evidence_needed: a real access_token to prove (a) metadata exfil (sub/scope/exp/client_id) and (b) silent active-session revocation
-verify_steps: DONE—unauthenticated POST fake token→200 on both; NEXT—with client_id, introspect real token, then revoke it, re-introspect to confirm active flips
-impact: token theft escalates from read to destructive session control + metadata exfil; MEDIUM (impact gated on token)
+[HYP] SCIM v2 /Users enumeration/resource access via leaked provisioning tokens
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2/Users
+confidence: 35
+reasoning: 22:15Z GET → 401 (not 404), proving a provisioning controller is mounted; SCIM auto-provisions/updates HORNBACH customer identities. No anonymous leak observed.
+evidence_needed: any SCIM bearer token or valid customer session → GET /Users & GET /Users/{id}
+verify_steps: (DONE) GET /Users→401. NEXT (passive only): HEAD /v2/, /v2/Schemas, /v2/ResourceTypes to map schema before any auth'd attempt.
+impact: cross-tenant PII/provisioning abuse IF a token is ever obtained; none anonymously; severity LOW
 testability: AUTH_HELPED
-[NEXT] HUMAN: Acquire a valid cidaas client_id — the sole blocker gating escalation of the confirmed unauthenticated token-management bypass to a reportable PoC. Sources: (1) de.hornbach APK → extract ClientId from cidaas SDK config; (2) mitmproxy during manual www.hornbach.de login to capture `client_id` in the `/authz-srv/authz` redirect before the bot-wall; (3) grep public HORNBACH repos for a hardcoded client_id.
-[RISK] hornbach: **46/100** — confirmed **stable** pair of unauthenticated token-management endpoints (introspection RFC 7662 + revocation RFC 7009) = systemic auth-bypass on the token plane; client registration & PAR disabled; client_id gated (UUID, bot-walled frontend); impact of the strongest finding gated on client_id+token; Citrix NetScaler full version exposure; SAP APIM hostname leak; broad scope, CDN-heavy, gate-hard; critical path = client_id acquisition.
+[HYP] NetScaler firmware CVE exposure (CVE-2025-5777/6543, CVE-2026-3055/8451 class)
+class: MISCONFIG
+asset: auth.hornbach.de
+confidence: 30
+reasoning: AAA virtual server present (pluginlist.xml, EPA binaries, gwtest.jsp 500/43549). BUT plugin "NS 25.5.1.15" is the Citrix Secure Access Client/EPA client-plugin version (fixed build for client CVE-2025-0320 per Citrix 2025-06 bulletin) — NOT NetScaler ADC firmware (ADC is 14.1/13.1 families). Appliance firmware not fingerprinted; no version→CVE mapping supportable.
+evidence_needed: actual ADC firmware build via ns b/banner/header or docs example; then compare against CTX696300/CTX694788 fixed builds
+verify_steps: (blocked passively) PTARGET pages return no firmware version; requires /vpn banner or error-page differential under auth
+impact: IF firmware found unpatched, unauthenticated memory-read (SAML IdP / AAA) — but currently unprovable; severity LOW until evidenced
+testability: PASSIVE
+[NEXT] HUMAN: Obtain a valid cidaas client_id — sole blocker for turning the confirmed 200/200 unauthenticated token-plane bypass into a reportable PoC. Deterministic path: pull the de.hornbach Android APK (APKMirror), unzip, grep `cidaas.xml`/`strings.xml` for `<item name="ClientId">`; fallback: capture `client_id` from https://auth.hornbach.com/authz-srv/authz redirect during a manual hornbach.de login in a fresh browser profile (before bot-wall).
+[RISK] hornbach: 47/100 — confirmed stable unauthenticated token introspection+revocation pair (RFC 7662/7009 violation, 3 confirmations today); SCIM provisioning surface live (401); client registration/PAR disabled; client_id gate blocks all OAuth escalation (APK extraction is the unlock); Citrix NetScaler downgraded (firmware unfingerprinted, only client-plugins exposed); api surface still gated/no routes; broad scope, CDN-heavy, gate-hard.

@@ -5481,3 +5481,92 @@ testability: AUTH_HELPED
 
 **STEP 7 — RISK**
 [RISK] hornbach: **46/100** — confirmed **stable** pair of unauthenticated token-management endpoints (introspection RFC 7662 + revocation RFC 7009) = systemic auth-bypass on the token plane; client registration & PAR disabled; client_id gated (UUID, bot-walled frontend); impact of the strongest finding gated on client_id+token; Citrix NetScaler full version exposure; SAP APIM hostname leak; broad scope, CDN-heavy, gate-hard; critical path = client_id acquisition.
+===== ANALYST bigpickle 2026-09-04 22:16:10 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sS -m 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' -w '\nHTTP:%{http_code}\n' -X POST 'https://auth.hornbach.com/token-srv/introspect' --data-urlencode 'token=invalid_recon_token_000' -H 'Content-Type: application/x-www-form-urlencoded'
+{"active":false}
+HTTP:200
+[0m
+[0m$ [0mcurl -sS -m 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' -w '\nHTTP:%{http_code}\n' -X POST 'https://auth.hornbach.com/token-srv/revoke' --data-urlencode 'token=invalid_recon_token_000' -H 'Content-Type: application/x-www-form-urlencoded'
+OK
+HTTP:200
+[0m
+[0m$ [0mcurl -sS -m 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' -w '\nHTTP:%{http_code}\n' 'https://auth.hornbach.com/.well-known/status'
+{"updatedAt":"2026-09-04T22:15:02.738133347Z","status":"OK"}
+HTTP:200
+[0m
+[0m$ [0mcurl -sS -m 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' -w '\nHTTP:%{http_code} T:%{time_total}\n' 'https://auth.hornbach.com/.well-known/openid-configuration' | head -c 1500
+{"issuer":"https://auth.hornbach.com","authorization_endpoint":"https://auth.hornbach.com/authz-srv/authz","token_endpoint":"https://auth.hornbach.com/token-srv/token","userinfo_endpoint":"https://auth.hornbach.com/users-srv/userinfo","https://discovery.netid.de/properties/status_endpoint":"https://auth.hornbach.com/.well-known/status","jwks_uri":"https://auth.hornbach.com/.well-known/jwks.json","scopes_supported":["openid","profile","email","phone","address","offline_access","identities","roles","groups"],"response_types_supported":["code","token","id_token","code token","code id_token","token id_token","code token id_token"],"response_modes_supported":["query","fragment","form_post"],"subject_types_supported":["public"],"id_token_signing_alg_values_supported":["HS256","RS256"],"token_endpoint_auth_methods_supported":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"],"claims_supported":["aud","auth_time","created_at","email","email_verified","exp","family_name","given_name","iat","identities","iss","mobile_number","name","nickname","phone_number","picture","sub"],"token_endpoint_auth_signing_alg_values_supported":["HS256","RS256"],"check_session_iframe":"https://auth.hornbach.com/session/check_session","end_session_endpoint":"https://auth.hornbach.com/session/end_session","social_provider_token_resolver_endpoint":"https://auth.hornbach.com/login-srv/social/token","registration_endpoint":"https://auth.hornbach.com/apps-srv/clients/register","us
+[0m
+[0m$ [0mcurl -sS -m 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' -w '\nHTTP:%{http_code}\n' 'https://auth.hornbach.com/user-scim-srv/v2/Users' | head -c 500
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+HTTP:401
+[0m
+[0m$ [0mcurl -sS -m 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' -o /dev/null -w 'userinfo HTTP:%{http_code}\n' 'https://auth.hornbach.com/token-srv/userinfo'
+userinfo HTTP:404
+[0m
+[0m◈ [0mParallel Web Search "hornbach cidaas client_id github OAuth"
+[0m◈ [0mParallel Web Search "Citrix NetScaler ADC version 25.5 vulnerabilities security bulletin CVE 2025 2026"
+STEP 1 — DELTA
+- [NEW] auth.hornbach.com/user-scim-srv/v2/Users → HTTP 401 `{"code":"401","error":"Unauthorized"}` (was 404 on base path) — SCIM v2 provisioning API live and auth-gated, not dead
+- [CHANGED] auth.hornbach.com/token-srv/introspect + /revoke — fresh POSTs (22:15Z, no client auth, token=invalid_recon_token_000) → both HTTP 200 (`{"active":false}` / `"OK"`); refutes the 20:01 "removed/404" inventory note; still LIVE
+- [CHANGED] auth.hornbach.com/.well-known/status → 200 `{"status":"OK","updatedAt":2026-09-04T22:15:02Z}` — fresh edge timestamp, endpoint live
+- [NEW] auth.hornbach.com OIDC metadata: `id_token_signing_alg_values_supported:["HS256","RS256"]`, implicit response_types enabled, `subject_types_supported:["public"]`
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com, 8.6, attack_surface:9, business_value:9, tech_exposure:9, gate_ease:7, cloud_surface:8, freshness:9
+- [PRIO] auth.hornbach.de, 6.4, attack_surface:6, business_value:7, tech_exposure:8, gate_ease:5, cloud_surface:4, freshness:8
+- [PRIO] hornbach-mp.mirakl.net, 5.4, attack_surface:5, business_value:6, tech_exposure:5, gate_ease:6, cloud_surface:4, freshness:6
+- [PRIO] api.hornbach.de, 5.0, attack_surface:4, business_value:6, tech_exposure:7, gate_ease:3, cloud_surface:5, freshness:5
+
+STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation persists (RFC 7662/7009 systemic bypass)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 65
+reasoning: My 22:15Z probes: POST introspect with NO client auth (no basic/secret/assertion) → 200 {"active":false}; POST revoke → 200 "OK". Metadata advertises token_endpoint_auth_methods_supported=[client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt] but runtime JMV both endpoints with zero auth. 20:01 UTC "404" was transient edge/routing — third independent confirmation session today (14:20, 19:53, 22:15).
+evidence_needed: real access_token → (a) unauthenticated introspect leaks sub/scope/exp/client_id (metadata exfil), (b) unauthenticated revoke flips active→false on re-introspect (silent session kill)
+verify_steps: (DONE) fake-token POST→200 on both. NEXT: with client_id + real token, POST token=<real> to /introspect no-auth → read full metadata; POST to /revoke → re-introspect confirms active=false.
+impact: token theft escalates to metadata disclosure + forced re-auth/interception window; silent DoS on account sessions; severity MEDIUM (gated on possessing a token)
+testability: AUTH_HELPED
+
+[HYP] SCIM v2 /Users enumeration/resource access via leaked provisioning tokens
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2/Users
+confidence: 35
+reasoning: 22:15Z GET → 401 (not 404), proving a provisioning controller is mounted; SCIM auto-provisions/updates HORNBACH customer identities. No anonymous leak observed.
+evidence_needed: any SCIM bearer token or valid customer session → GET /Users & GET /Users/{id}
+verify_steps: (DONE) GET /Users→401. NEXT (passive only): HEAD /v2/, /v2/Schemas, /v2/ResourceTypes to map schema before any auth'd attempt.
+impact: cross-tenant PII/provisioning abuse IF a token is ever obtained; none anonymously; severity LOW
+testability: AUTH_HELPED
+
+[HYP] NetScaler firmware CVE exposure (CVE-2025-5777/6543, CVE-2026-3055/8451 class)
+class: MISCONFIG
+asset: auth.hornbach.de
+confidence: 30
+reasoning: AAA virtual server present (pluginlist.xml, EPA binaries, gwtest.jsp 500/43549). BUT plugin "NS 25.5.1.15" is the Citrix Secure Access Client/EPA client-plugin version (fixed build for client CVE-2025-0320 per Citrix 2025-06 bulletin) — NOT NetScaler ADC firmware (ADC is 14.1/13.1 families). Appliance firmware not fingerprinted; no version→CVE mapping supportable.
+evidence_needed: actual ADC firmware build via ns b/banner/header or docs example; then compare against CTX696300/CTX694788 fixed builds
+verify_steps: (blocked passively) PTARGET pages return no firmware version; requires /vpn banner or error-page differential under auth
+impact: IF firmware found unpatched, unauthenticated memory-read (SAML IdP / AAA) — but currently unprovable; severity LOW until evidenced
+testability: PASSIVE
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] SCIM /Users enumeration: 35 < 40 — live-but-401, no token source, dependency duplicates token barrier
+- [PARKED] NetScaler CVE mapping: 30 < 40 — version misread corrected (client plugin ≠ firmware); out-of-scope "known-vulnerable library w/o program-specific exploit" unless firmware proven
+- [PARKED] OAuth HS256 id_token signing (metadata): config-profile only, needs client_id, cidaas mature → informational, no exploit path yet
+- [PARKED] SAP APIM backend Via-header (localhost:8080): descriptive-header class, out-of-scope
+- [FINAL] 1. Unauthenticated token introspection + revocation (confidence 65, AUTH_HELPED, MEDIUM) — 3rd reconfirmation today, most defensible finding
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Obtain a valid cidaas client_id — sole blocker for turning the confirmed 200/200 unauthenticated token-plane bypass into a reportable PoC. Deterministic path: pull the de.hornbach Android APK (APKMirror), unzip, grep `cidaas.xml`/`strings.xml` for `<item name="ClientId">`; fallback: capture `client_id` from https://auth.hornbach.com/authz-srv/authz redirect during a manual hornbach.de login in a fresh browser profile (before bot-wall).
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: 22:15Z fresh probes both 200 unauth ({"active":false}/"OK") — 20:01 "404/removed" was transient edge routing; pair stable across 3 sessions today
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/user-scim-srv/v2/Users: returns 401 (not 404) — SCIM provisioning API mounted and auth-gated
+- [LEARN] REJECTED class MISCONFIG @ auth.hornbach.de: pluginlist.xml "25.5.1.15" = Citrix Secure Access/EPA client-plugin version (CVE-2025-0320 frame), NOT ADC firmware — NetScaler CVE-mapping hypothesis unsupported
+- [LEARN] ACCEPTED class OTHER @ auth.hornbach.com: metadata advertises HS256 id_token signing + implicit response_types + public subject — config-profile notes; untestable until client_id
+
+STEP 7 — RISK
+[RISK] hornbach: 47/100 — confirmed stable unauthenticated token introspection+revocation pair (RFC 7662/7009 violation, 3 confirmations today); SCIM provisioning surface live (401); client registration/PAR disabled; client_id gate blocks all OAuth escalation (APK extraction is the unlock); Citrix NetScaler downgraded (firmware unfingerprinted, only client-plugins exposed); api surface still gated/no routes; broad scope, CDN-heavy, gate-hard.

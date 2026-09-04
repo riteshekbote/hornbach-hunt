@@ -31,3 +31,4 @@
 - 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED live, returns 200 "OK" unauthenticated — two stable unauthenticated token management endpoints
 - 2026-09-04 REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id enumeration via status-code differential is REMOVED — invalid client_ids return uniform 302->AUTH10007; 404 vs 302 variance is request-shape not client validity signal
 - 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: token revocation endpoint accessible unauthenticated, RFC 7009 violation — second token management endpoint missing client auth (but latest probe shows 404, needs re-check)
+- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED live, returns 200 "OK" unauthenticated — two stable unauthenticated token management endpoints (latest 404 may be parameter-sensitive)

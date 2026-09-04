@@ -59,3 +59,9 @@ https://auth.hornbach.com/token-srv/revoke -> HTTP 404
 ## 2026-09-04 20:01:33 UTC
 https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
 https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+
+## 2026-09-04 22:16:16 UTC
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
