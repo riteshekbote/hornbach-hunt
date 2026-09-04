@@ -65,3 +65,55 @@ testability: AUTH_HELPED
 [RISK] hornbach: 45/100; OIDC discovery fully exposed revealing complete auth infrastructure with 6+ service endpoints; registration_endpoint exists in metadata (RFC 7591 dynamic client registration); device_code flow supported; verbose error messages aid enumeration; but cidaas is mature CIAM with likely strict defaults; surface still limited to auth.hornbach.com with bot-protected www.hornbach.de fronting actual login flow; 4 hosts total with wildcard DNS limiting subdomain discovery
 ## 2026-09-03 22:29:03 UTC [target] (model bigpickle)
 ## 2026-09-04 00:27:17 UTC [target] (model bigpickle)
+## 2026-09-04 05:12:30 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection — probing for data exposure via /token-srv/introspect
+class: AUTH
+asset: auth.hornbach.com/token-srv/introspect
+confidence: 45
+reasoning: /token-srv/introspect accepts POST with token param and returns {"active":false} (HTTP 200) WITHOUT client authentication. RFC 7662 requires client auth; cidaas metadata lists introspection_endpoint_auth_methods but the live endpoint did not enforce it on the test. If valid tokens can be introspected unauthenticated, it may leak token metadata (sub, scope, exp) equivalent to an authz data leak.
+evidence_needed: obtain a real access token (requires valid client_id + login) OR a leaked token; however unauthenticated acceptance of introspection is itself abnormal
+verify_steps: (PASSIVE) repeat GET/POST variant probing; note 200-application/json vs 404-router; requires valid token to prove data-exfiltration impact
+impact: potential token-metadata disclosure if real tokens accepted without client auth; severity MEDIUM (unconfirmed)
+testability: AUTH_HELPED (needs token)
+[HYP] cidaas OIDC JWT alg confusion (HS256/RS256)
+class: AUTH
+asset: auth.hornbach.com/.well-known/openid-configuration
+confidence: 40
+reasoning: OIDC metadata lists id_token_signing_alg_values_supported: [HS256, RS256] AND token_endpoint_auth_signing_alg_values_supported: [HS256, RS256]. If any endpoint accepts HS256 for id_tokens using the RS256 public key (from /well-known/jwks.json) as the HMAC secret, an attacker forges tokens. However cidaas is mature and likely pins per-client alg; needs valid client_id + token capture to test.
+evidence_needed: valid client_id, capture a legit id_token, attempt HS256-forged variant
+verify_steps: after obtaining client_id+token, request token endpoint with alg=HS256 compromised via known pubkey
+impact: token forgery → full account impersonation; severity CRITICAL
+testability: AUTH_HELPED (blocked by no client_id)
+[PARKED] Unauthenticated OAuth client registration @ apps-srv/clients/register: confidence 40 — 404 on ALL methods incl. properly-formed POST; registration clearly disabled at routing; no longer a viable vector
+[PARKED] OAuth redirect_uri validation bypass: confidence 50 but requires valid client_id discovery; all ~40 guessed client_ids rejected; bot-challenge blocks the source (www) where client_id would be embedded; blocked on client_id
+[PARKED] cidaas JWT alg confusion: confidence 40 < 45 — blocked on client_id + token capture; mature provider likelihood of strict per-client config
+[PARKED] Unauthenticated introspection: needs real token to prove impact; unauthenticated acceptance without a real token proves nothing
+[NEXT] PROBE: enumerate a valid cidaas client_id from the HORNBACH mobile app (de.hornbach) by obtaining/parsing its OAuth config (client_id + redirect_uri) — required to unblock all OAuth hypotheses; if app unobtainable, test google/ios deep-link callback patterns on authz-srv/authz with a candidate (e.g. redirect_uri=de.hornbach:// or app://callback with guessed client_ids from app package)
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com: dynamic OAuth client registration disabled — /apps-srv/clients/register 404 on all methods; metadata endpoint exists but routing is blocked
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.de: separate Citrix NetScaler AAA VPN Gateway surface exists on hornbach.de, distinct from cidaas .com — legacy employee access infra in-scope
+[LEARN] ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is an in-scope API surface; all /api/* require Mirakl auth
+[LEARN] REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 known scoped hosts resolve
+[RISK] hornbach: 42/100 — cidaas tenant is the confirmed live auth surface with OIDC metadata exposing full endpoint map; dynamic client registration disabled; valid client_id remains the critical unlock gating all OAuth testing (redirect_uri, alg confusion, code theft); new legacy NetScaler AAA on auth.hornbach.de broadens employee-auth surface but is high-risk to probe; www.hornbach.de bot-walled (FingerprintJS) blocks the source that would embed the client_id; Mirakl marketplace (hornbach-mp) is a separate auth'd API surface; broad scope but CDN-heavy and gate-hard.
+[PRIO] auth.hornbach.com, 8.6, attack_surface:9,business_value:9,tech_exposure:9,gate_ease:7,cloud_surface:8,freshness:9
+[PRIO] auth.hornbach.de, 6.4, attack_surface:6,business_value:7,tech_exposure:8,gate_ease:5,cloud_surface:4,freshness:8
+[PRIO] hornbach-mp.mirakl.net, 5.5, attack_surface:6,business_value:6,tech_exposure:6,gate_ease:3,cloud_surface:5,freshness:7
+[HYP] Unauthenticated token introspection on /token-srv/introspect
+class: AUTH
+asset: auth.hornbach.com/token-srv/introspect
+confidence: 45
+reasoning: /token-srv/introspect returns HTTP 200 {"active":false} for POST token=fake WITHOUT any client authentication, though introspect_endpoint_auth_methods requires client_secret/private_key_jwt. Unauthenticated acceptance of the introspection router is abnormal (RFC 7662 requires auth); if any valid token is introspected it may leak sub/scope/exp metadata.
+evidence_needed: a valid access_token to introspect (needs client_id+login) to prove metadata exfiltration
+verify_steps: repeat unauthenticated POST with varied token params; requires real token to demonstrate impact
+impact: token metadata / active-session disclosure; severity MEDIUM (unconfirmed)
+testability: AUTH_HELPED
+[HYP] cidaas OIDC JWT algorithm confusion (HS256/RS256)
+class: AUTH
+asset: auth.hornbach.com (token-srv / users-srv)
+confidence: 40
+reasoning: OIDC metadata lists id_token_signing_alg_values_supported [HS256,RS256] and token_endpoint_auth_signing_alg_values_supported [HS256,RS256]. If any token endpoint accepts HS256 with the RS256 public key (from /well-known/jwks.json) as HMAC secret, tokens can be forged. Requires a valid client_id + captured token to test; cidaas is mature so per-client alg is likely pinned.
+evidence_needed: valid client_id; a legit id_token; test HS256-forged variant against token/userinfo endpoints
+verify_steps: after client_id+token obtained, submit alg=HS256 token signed with pubkey-derived secret to userinfo_signing and observe 200 vs 401
+impact: token forgery → full account impersonation; severity CRITICAL
+testability: AUTH_HELPED
+[NEXT] PROBE: obtain a valid cidaas client_id by parsing the HORNBACH mobile app (de.hornbach) OAuth config; fallback: test candidate redirect_uris (de.hornbach://callback, app://callback) + app package-name-derived client_ids against /authz-srv/authz to find a live client, which unblocks all parked OAuth hypotheses
+[RISK] hornbach: 42/100 — cidaas tenant is confirmed live auth surface, OIDC metadata fully exposed; client registration disabled; valid client_id is the critical unlock gating all OAuth testing (redirect_uri, alg confusion, code theft, device code); new legacy NetScaler AAA on auth.hornbach.de broadens employee-auth surface but is high-risk to probe (employee/infra); www.hornbach.de bot-walled (FingerprintJS) blocks the source embedding client_id; hornbach-mp.mirakl.net is a separate auth-gated Mirakl API surface; broad scope but CDN-heavy and gate-hard.

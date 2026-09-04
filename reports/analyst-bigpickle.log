@@ -1088,3 +1088,1879 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] hornbach: 55/100 — broad cidaas surface (HS256 alg option, ROPC+client_credentials, plain PKCE, live 401-gated SCIM user directory, live token endpoint); dynamic client registration risk reduced by 404 at observed path; all high-value flows (alg confusion, redirect_uri, SCIM BOLA) currently gated on discovering a valid `client_id`, which the bot-challenged frontend conceals; cross-TLD session vector ruled out.
+===== ANALYST bigpickle 2026-09-04 05:17:56 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -D- -X POST https://auth.hornbach.com/apps-srv/clients/register -H "Content-Type: application/json" -d '{"client_name":"test_probe","redirect_uris":["https://evil.com"],"grant_types":["authorization_code"],"response_types":["code"]}' 2>&1
+HTTP/2 404 
+date: Fri, 04 Sep 2026 05:05:55 GMT
+content-type: text/plain; charset=utf-8
+content-length: 9
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: d484bd10-325b-4378-be17-081b473dd846
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=0dKfmTtaD8uPHDDM3apx3xYTCO.n8ZP4idQZwRuXxTk-1788498355.9166424-1.0.1.1-wZCiJtZ87K6m9f61j8ozYevyBEZcLjSzkSWHp32tRXgf9vyhjG1LPoNqTR5YuRshuO3B6D1CJgGM.fEWt0ZB7Z.UzI5O7gU4Tsp7fpIs3F0CDibXH3UJr21qujEMunfR; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:35:55 GMT
+server: cloudflare
+cf-ray: a35a76447a3462c8-HAM
+alt-svc: h3=":443"; ma=86400
+
+Not Found
+[0m
+[0m$ [0mcurl -s -D- -X POST https://auth.hornbach.com/apps-srv/clients/register -H "Content-Type: application/json" -d '{"client_name":"test_probe","redirect_uris":["https://evil.com"],"grant_types":["authorization_code"],"response_types":["code"]}' --max-time 10 -w "\nHTTP_CODE:%{http_code}\nSIZE:%{size_download}\n" 2>&1 | head -50
+HTTP/2 404 
+date: Fri, 04 Sep 2026 05:05:56 GMT
+content-type: text/plain; charset=utf-8
+content-length: 9
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: 40630586-0d44-4d99-9365-6b991bfc10f6
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=LgQeg6rz5HEhugOhlgiZOSTHjG6mfH9XFuzSLXlced8-1788498356.2953806-1.0.1.1-nOgSIrbXvpqObOUyJQKxYr.jEg8mBUI9cqTkxsC0FryWezwN9GnMyMrREREv18Ee.1o8wjUnAT9j4U894n0Ouu8pcwiaG9C6BBkPzxY.TJjI888WG30K3pJVZS_5Egxl; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:35:56 GMT
+server: cloudflare
+cf-ray: a35a7646dfb8f8df-HAM
+alt-svc: h3=":443"; ma=86400
+
+Not Found
+HTTP_CODE:404
+SIZE:9
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=webshop&redirect_uri=https://evil.com&scope=openid" --max-redirs 0 --max-time 10 2>&1 | head -80
+HTTP/2 302 
+date: Fri, 04 Sep 2026 05:05:56 GMT
+content-length: 0
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 37d1f273-14cb-4117-82c4-6580f2c939c4
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=V7N6vKnmzMU.EatZ1o8HZjMnBeeBCJyV7g.w7xC_STI-1788498356.725204-1.0.1.1-aWX7FtJOfloJQfORb9OYu.c7Jlz0UTiKK7ghCmoJxCILnR30g11CjkqWaYyAvlOefb1vrWYDOGsjmKPS.CUy3UFVOw_JsnLl5gXieXoJ6hrJ7zhhf4HwcqhjLs6JWOcp; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:35:56 GMT
+server: cloudflare
+cf-ray: a35a76498bbf785d-MAD
+alt-svc: h3=":443"; ma=86400
+[0m
+[0m$ [0mcurl -s "https://www.hornbach.de/" --max-time 15 -o /tmp/hb_main.html 2>&1; wc -c /tmp/hb_main.html; grep -oi 'client_id[^"]*"[^"]*"' /tmp/hb_main.html | head -20; grep -oi 'cidaas[^"]*' /tmp/hb_main.html | head -20; grep -oi 'clientid[^"]*' /tmp/hb_main.html | head -20
+3038 /tmp/hb_main.html
+[0m
+[0m$ [0mcurl -s "https://www.hornbach.de/customer/login" --max-time 15 -o /tmp/hb_login.html 2>&1; wc -c /tmp/hb_login.html; grep -oi 'client_id\|clientid\|cidaas\|auth\.hornbach\|oauth' /tmp/hb_login.html | head -20
+3038 /tmp/hb_login.html
+[0m
+[0m$ [0mcurl -s "https://auth.hornbach.com/.well-known/openid-configuration" --max-time 10 | python3 -m json.tool 2>/dev/null | head -80
+{
+    "issuer": "https://auth.hornbach.com",
+    "authorization_endpoint": "https://auth.hornbach.com/authz-srv/authz",
+    "token_endpoint": "https://auth.hornbach.com/token-srv/token",
+    "userinfo_endpoint": "https://auth.hornbach.com/users-srv/userinfo",
+    "https://discovery.netid.de/properties/status_endpoint": "https://auth.hornbach.com/.well-known/status",
+    "jwks_uri": "https://auth.hornbach.com/.well-known/jwks.json",
+    "scopes_supported": [
+        "openid",
+        "profile",
+        "email",
+        "phone",
+        "address",
+        "offline_access",
+        "identities",
+        "roles",
+        "groups"
+    ],
+    "response_types_supported": [
+        "code",
+        "token",
+        "id_token",
+        "code token",
+        "code id_token",
+        "token id_token",
+        "code token id_token"
+    ],
+    "response_modes_supported": [
+        "query",
+        "fragment",
+        "form_post"
+    ],
+    "subject_types_supported": [
+        "public"
+    ],
+    "id_token_signing_alg_values_supported": [
+        "HS256",
+        "RS256"
+    ],
+    "token_endpoint_auth_methods_supported": [
+        "client_secret_basic",
+        "client_secret_post",
+        "client_secret_jwt",
+        "private_key_jwt"
+    ],
+    "claims_supported": [
+        "aud",
+        "auth_time",
+        "created_at",
+        "email",
+        "email_verified",
+        "exp",
+        "family_name",
+        "given_name",
+        "iat",
+        "identities",
+        "iss",
+        "mobile_number",
+        "name",
+        "nickname",
+        "phone_number",
+        "picture",
+        "sub"
+    ],
+    "token_endpoint_auth_signing_alg_values_supported": [
+        "HS256",
+        "RS256"
+    ],
+    "check_session_iframe": "https://auth.hornbach.com/session/check_session",
+    "end_session_endpoint": "https://auth.hornbach.com/session/end_session",
+    "social_provider_token_resolver_endpoint": "https://auth.hornbach.com/login-srv/social/token",
+    "registration_endpoint": "https://auth.hornbach.com/apps-srv/clients/register",
+    "userinfo_signing_alg_values_supported": [
+        "HS256",
+        "RS256"
+    ],
+    "userinfo_encryption_alg_values_supported": [
+        "RS256"
+    ],
+    "userinfo_encryption_enc_values_supported": [
+[0m
+[0m$ [0mcurl -s "https://auth.hornbach.com/" --max-time 10 -o /tmp/auth_root.html 2>&1; wc -c /tmp/auth_root.html; strings /tmp/auth_root.html | grep -i 'client_id\|clientid\|app_id\|webshop\|hornbach' | head -20
+0 /tmp/auth_root.html
+[0m
+[0m$ [0mcurl -s "https://auth.hornbach.com/apps-srv/clients" --max-time 10 -D- 2>&1 | head -30
+HTTP/2 401 
+date: Fri, 04 Sep 2026 05:06:04 GMT
+content-type: application/json
+content-length: 66
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: 85fb8669-1c7d-46d7-89cc-72da2b88cdf7
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=8u26UILB5rZs0hxXVU1yyaVRGLZvkGMc6nNxE4tYzkQ-1788498364.8800418-1.0.1.1-zYu2LypmJvSbiEWjD6Mj03L6aElsz.cXcaHCwXoRM_2b.2kLULvGA85Pqy4lNmfQ4OWb7zs8sGqbs8NQmS0IHhqJgso3ZueL5d24DZF7zehC18Xqo76DrxAPga3W8ErB; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:36:04 GMT
+server: cloudflare
+cf-ray: a35a767c7dd5cfdc-MAD
+alt-svc: h3=":443"; ma=86400
+
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+[0m
+[0m$ [0m# Also try device authz endpoint with the same client_ids
+for cid in hornbach webshop hornbach-de hornbach_webshop hornbach-shop hornbach_app; do
+  resp=$(curl -s -X POST "https://auth.hornbach.com/authz-srv/device/authz" -H "Content-Type: application/json" -d "{\"client_id\":\"${cid}\",\"scope\":\"openid\"}" --max-time 5 2>/dev/null)
+  echo "device cid=${cid} -> ${resp}"
+done
+device cid=hornbach -> {"error":"invalid_request","error_code":"AUTH10003","error_description":"invalid_request: error parsing request parameters","error_hint":"please check the query/form parameters you are passing are in correct format"}
+device cid=webshop -> {"error":"invalid_request","error_code":"AUTH10003","error_description":"invalid_request: error parsing request parameters","error_hint":"please check the query/form parameters you are passing are in correct format"}
+device cid=hornbach-de -> {"error":"invalid_request","error_code":"AUTH10003","error_description":"invalid_request: error parsing request parameters","error_hint":"please check the query/form parameters you are passing are in correct format"}
+device cid=hornbach_webshop -> {"error":"invalid_request","error_code":"AUTH10003","error_description":"invalid_request: error parsing request parameters","error_hint":"please check the query/form parameters you are passing are in correct format"}
+device cid=hornbach-shop -> {"error":"invalid_request","error_code":"AUTH10003","error_description":"invalid_request: error parsing request parameters","error_hint":"please check the query/form parameters you are passing are in correct format"}
+device cid=hornbach_app -> {"error":"invalid_request","error_code":"AUTH10003","error_description":"invalid_request: error parsing request parameters","error_hint":"please check the query/form parameters you are passing are in correct format"}
+[0m
+[0m$ [0m# Try to find valid client_ids by testing common names against the authz endpoint
+for cid in hornbach webshop hornbach-de hornbach_webshop hornbach-shop hornbach_app hornbach_angular hornbach_react hornbach_erp hornbach_ciam ciam hornbach_portal myhornbach hornbach-account hornbach-konto; do
+  code=$(curl -s -o /dev/null -w "%{http_code}|%{redirect_url}" "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=${cid}&redirect_uri=https://example.com&scope=openid" --max-redirs 0 --max-time 5 2>/dev/null)
+  echo "client_id=${cid} -> ${code}"
+done
+client_id=hornbach -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=webshop -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=hornbach-de -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=hornbach_webshop -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=hornbach-shop -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=hornbach_app -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=hornbach_angular -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=hornbach_react -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=hornbach_erp -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=hornbach_ciam -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=ciam -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=hornbach_portal -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=myhornbach -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=hornbach-account -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+client_id=hornbach-konto -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m$ [0m# Device authz - try different parameter formats (form-encoded, different field names)
+curl -s -X POST "https://auth.hornbach.com/authz-srv/device/authz" -d "client_id=webshop&scope=openid" --max-time 5 2>/dev/null
+echo "---"
+curl -s -X POST "https://auth.hornbach.com/authz-srv/device/authz" -H "Content-Type: application/x-www-form-urlencoded" -d "client_id=webshop&scope=openid" --max-time 5 2>/dev/null
+echo "---"
+# Try with additional device_code fields
+curl -s -X POST "https://auth.hornbach.com/authz-srv/device/authz" -H "Content-Type: application/json" -d '{"client_id":"webshop","scope":"openid","audience":"https://auth.hornbach.com"}' --max-time 5 2>/dev/null
+{"error":"invalid_client","error_code":"AUTH10007","error_description":"invalid_client: invalid client_id passed","error_hint":"please check if you passing correct client_id or the client is disabled or deleted"}---
+{"error":"invalid_client","error_code":"AUTH10007","error_description":"invalid_client: invalid client_id passed","error_hint":"please check if you passing correct client_id or the client is disabled or deleted"}---
+{"error":"invalid_request","error_code":"AUTH10003","error_description":"invalid_request: error parsing request parameters","error_hint":"please check the query/form parameters you are passing are in correct format"}
+[0m
+[0m$ [0m# Try to find client_id from web archive or cached versions
+# Also try UUID patterns that cidaas might use
+curl -s "https://web.archive.org/web/2024/https://www.hornbach.de/" --max-time 15 -o /tmp/wb_hb.html 2>/dev/null; grep -oi 'client_id[^"]*"[^"]*"\|cidaas[^"]*\|app_id[^"]*"[^"]*"' /tmp/wb_hb.html 2>/dev/null | head -20
+echo "---"
+# Try some UUID-format client_ids (common cidaas pattern)
+for cid in "00000000-0000-0000-0000-000000000001" "a1b2c3d4-e5f6-7890-abcd-ef1234567890"; do
+  resp=$(curl -s -o /dev/null -w "%{http_code}|%{redirect_url}" "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=${cid}&redirect_uri=https://example.com&scope=openid" --max-redirs 0 --max-time 5 2>/dev/null)
+  echo "uuid cid=${cid} -> ${resp}"
+done
+---
+uuid cid=00000000-0000-0000-0000-000000000001 -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+uuid cid=a1b2c3d4-e5f6-7890-abcd-ef1234567890 -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m$ [0m# Check for any public API endpoints or JS bundles on auth.hornbach.com
+for path in /js /assets /static /api /docs /swagger /openapi.json /api-docs /.env /config /manifest.json /favicon.ico; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://auth.hornbach.com${path}" --max-time 5 2>/dev/null)
+  echo "${path} -> ${code}"
+done
+/js -> 404
+/assets -> 404
+/static -> 404
+/api -> 404
+/docs -> 404
+/swagger -> 404
+/openapi.json -> 404
+/api-docs -> 404
+/.env -> 403
+/config -> 403
+/manifest.json -> 404
+/favicon.ico -> 404
+[0m
+[0m◈ [0mExa Web Search "hornbach cidaas client_id oauth site:github.com OR site:gitlab.com"
+[0m◈ [0mExa Web Search "cidaas client_id hornbach.de oauth authorize"
+[0m
+[0m$ [0m# Check Google cache for hornbach.de login page
+curl -s "https://webcache.googleusercontent.com/search?q=cache:hornbach.de/customer/login" --max-time 15 -o /tmp/gc_hb.html 2>/dev/null; grep -oi 'client_id[^"]*"[^"]*"\|cidaas[^"]*\|auth\.hornbach[^"]*' /tmp/gc_hb.html 2>/dev/null | head -20
+echo "---"
+# Try Wayback Machine for JS files
+curl -s "https://web.archive.org/web/2024*/https://www.hornbach.de/static/js/*" --max-time 15 -o /tmp/wb_js.html 2>/dev/null; head -100 /tmp/wb_js.html 2>/dev/null
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Wayback Machine</title>
+    <script>
+    /*
+    @licstart  The following is the entire license notice for the JavaScript code in this page.
+
+    Copyright (C) 2020 Internet Archive
+
+    The JavaScript code in this page is free software: you can
+    redistribute it and/or modify it under the terms of the GNU Affero
+    General Public License as published by the Free Software
+    Foundation, either version 3 of the License, or (at your option)
+    any later version.  The code is distributed WITHOUT ANY WARRANTY;
+    without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+    As additional permission under GNU AGPL version 3 section 7, you
+    may distribute non-source (e.g., minimized or compacted) forms of
+    that code without the copy of the GNU AGPL normally required by
+    section 4, provided you include this license notice and a URL
+    through which recipients can access the Corresponding Source.
+
+    @licend  The above is the entire license notice for the JavaScript code in this page.
+    */
+    </script>    <script type="text/javascript">
+      window.webComponentLoaderConfig = {
+      baseUrl: 'https://archive.org',
+      version: '29e56e87'
+      }
+    </script>
+    <!-- is_embedded: False; context:  -->
+    <!-- navbar https://archive.org/web/navbar.php 0.10729s -->
+    <!-- navbar script -->
+    <script src="//archive.org/includes/athena.js?v=741d564a" type="text/javascript"></script>
+    <script src="//archive.org/includes/apollo.js?v=741d564a" type="text/javascript"></script>
+    <script src="//archive.org/components/npm/lit/polyfill-support.js?v=741d564a" type="text/javascript"></script>
+    <script src="//archive.org/components/npm/@webcomponents/webcomponentsjs/webcomponents-bundle.js?v=741d564a" type="text/javascript"></script>
+    <script src="//archive.org/includes/build/js/ia-topnav.min.js?v=741d564a" type="text/javascript"></script>
+    <script src="//archive.org/includes/build/js/archive.min.js?v=741d564a" type="text/javascript"></script>
+    <!-- navbar styles -->
+    <link href="//archive.org/includes/build/css/archive.min.css?v=741d564a" rel="stylesheet" type="text/css"/>
+    <!-- navbar meta -->
+    <meta property="mediatype" content="">
+    <meta property="primary_collection" content="">
+    <!-- navbar end -->
+    <script type="text/javascript">if('archive_analytics' in window){var v=archive_analytics.values;v.path='/web';v.service='wb';v.server_name='wwwb-app222.us.archive.org';v.server_ms=120;archive_analytics.send_pageview_on_load()}</script>
+    <link href="https://web-static.archive.org/_static/images/archive.ico" rel="shortcut icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" type="text/css" href="https://web-static.archive.org/_static/css/styles.css?v=Zb1uSJFF" />
+    <script type="text/javascript" src="https://web-static.archive.org/_static/js/ui.js?v=7LYlZ-C2" charset="utf-8"></script>
+    <base target="_top">
+    <link href="https://web-static.archive.org/_static/css/web.css" rel="stylesheet" type="text/css"/>
+    <!-- include component js and css -->
+    <link rel="stylesheet" type="text/css" href="https://web-static.archive.org/_static/waybackjs/main.3870ecf7fb28be074853.css" />
+<script src="https://web-static.archive.org/_static/waybackjs/runtime.69f1b02dcd02684f1ce0.js"></script>
+<script src="https://web-static.archive.org/_static/waybackjs/vendors~main.ab6cf762ca77875d5f66.js"></script>
+<script src="https://web-static.archive.org/_static/waybackjs/main.3870ecf7fb28be074853.js"></script>
+    <style>
+      html, body { margin:0; padding:0 }
+      #faux-header {
+        height: 50px;
+        width: 100%;
+        margin:0;
+        background-color:black;
+      }
+      #react-wayback-search {
+        max-width: 1170px;
+        margin: 0 auto;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body class="navia">
+
+                    <div class="ia-banners">
+              <div
+        class="ia-banner hidden save-wayback-20260601"
+        data-campaign="save-wayback-20260601">
+        <p>Keep the news in the Wayback Machine. <a href="https://www.savethearchive.com/NewsLeaders" rel="ugc nofollow">Sign Fight for the Future's letter</a>.</p>
+        <form class="banner-close" action="" method="get" data-action="ia-banner-close">
+          <fieldset>
+            <button aria-label="Close Banner" type="submit"></button>
+          </fieldset>
+        </form>
+      </div>
+          </div>
+                    <div id="topnav">
+              <input class="js_nav_tweaks" type="hidden" value='[]'/>
+    <!-- Shady DOM styles for icon-hamburger -->
+<style scope="icon-hamburger-1">
+  .icon-hamburger-1 svg.icon-hamburger {
+    display: block;
+    height: 4rem;
+    width: 4rem;
+  }
+
+  .icon-hamburger-1 .fill-color.icon-hamburger {
+[0m
+[0m◈ [0mExa Web Search ""hornbach" "client_id" cidaas site:github.com OR site:stackoverflow.com"
+[0m
+[0m$ [0m# Check cidaas social login endpoint - might expose client_ids
+curl -s "https://auth.hornbach.com/login-srv/social/token" -D- --max-time 10 2>/dev/null | head -30
+echo "==="
+# Check cidaas session endpoints  
+curl -s "https://auth.hornbach.com/session/check_session" -D- --max-time 10 2>/dev/null | head -30
+echo "==="
+# Check cidaas status endpoint
+curl -s "https://auth.hornbach.com/.well-known/status" -D- --max-time 10 2>/dev/null | head -30
+HTTP/2 500 
+date: Fri, 04 Sep 2026 05:06:47 GMT
+content-type: application/json; charset=utf-8
+content-length: 41
+access-control-allow-origin: *
+etag: W/"29-3rekA97WHU/ns5EjebSJYlEQPOM"
+strict-transport-security: max-age=15724800; includeSubDomains
+x-cidaas-ref-number: e265d20a-1e3e-4e17-955e-20e6d7bc7347
+x-ref-number: e265d20a-1e3e-4e17-955e-20e6d7bc7347
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=4MhVol09hKr4k0cVaKK8.m.1.VKIcqUqg7506wXaYfo-1788498407.892525-1.0.1.1-Ux1k9AjbkCwdn.ID6TMthK.khi91uBImsmbrXNi5qItxuYleLLFixi4layhCmJwNQkFg6Y6IH0p7eZ1y4t1zXAP1.SgMnHv1qeq5RLl0jyN3n9nJb9MxgZSXvRL8B7d0; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:36:47 GMT
+server: cloudflare
+cf-ray: a35a77895f5b3d39-MAD
+alt-svc: h3=":443"; ma=86400
+
+{"success":false,"status":500,"error":{}}===
+HTTP/2 200 
+date: Fri, 04 Sep 2026 05:06:48 GMT
+content-type: text/html;charset=UTF-8
+set-cookie: __cf_bm=nQuycUeUzFHPZuqxuG6iGxfsqOKEuQL.vZIKnwVaMpo-1788498408.3473475-1.0.1.1-x01mMumRTD2GZMck1LMjhFGKtMleTPjNpPv3ifpDuk2eDgvO1gN6uYhkSw_h00_Es1e.kZMN7UURe7FgTL.dIzXxneKnTWdQ.5Jy6JmresI.BrDiJtfSJuGgmeML2zXI; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:36:48 GMT
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: ea768268-67f7-4469-9573-a4649e785c6d
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35a778c2dac547b-MAD
+alt-svc: h3=":443"; ma=86400
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Check Session Iframe</title>
+    <script>
+        /* A JavaScript implementation of the SHA family of hashes, as defined in FIPS PUB 180-4 and FIPS PUB 202, as well as the corresponding HMAC implementation as defined in FIPS PUB 198a. Copyright Brian Turek 2008-2017 Distributed under the BSD License See http://caligatio.github.com/jsSHA/ for more information Several functions taken from Paul Johnston */
+        'use strict';
+        (function (I) {
+            function w(c, a, d) {
+                let l = 0,
+                    b = [],
+                    g = 0,
+                    f, n, k, e, h, q, y, p, m = !1,
+                    t = [],
+===
+HTTP/2 200 
+date: Fri, 04 Sep 2026 05:06:48 GMT
+content-type: application/json
+set-cookie: __cf_bm=7Bp2kgAUaDBTgE1kG_RnPF7pbwKvCY8wlPuduMixuRg-1788498408.7889628-1.0.1.1-UXncxDtyL7svPMZKHZFlxdhe0001SIEA7yEtAJZ1aTcZ1ZbatOx6Unglq4mHNBfUbzG55xBOIsmcqwvcNo6bEwvLJSJ7oUxob0uVG_vCMSBqdGcSUlkd3htEUjUTRPzR; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:36:48 GMT
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 4306dcee-eb2d-48fc-8306-9be2917618ca
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35a778eee28f769-MAD
+alt-svc: h3=":443"; ma=86400
+
+{"updatedAt":"2026-09-04T05:06:48.838016479Z","status":"OK"}
+[0m
+[0m$ [0m# Try different user agents for hornbach.de
+curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" "https://www.hornbach.de/customer/login" --max-time 15 -D- -o /tmp/hb_login_ua.html 2>/dev/null | head -30
+echo "==="
+wc -c /tmp/hb_login_ua.html
+echo "==="
+# Try the German domain directly
+curl -s "https://www.hornbach.de/" -A "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" --max-time 15 -D- -o /tmp/hb_mobile.html 2>/dev/null | head -30
+echo "==="
+wc -c /tmp/hb_mobile.html
+HTTP/2 200 
+set-cookie: _fs_ch_st_FSBmUei20MqUiJb9=AR4vm_pKylO2sJf9EsRxUGfF8lJxVgMBhOC4GPLBPO2leGr4Gij7cvZ3eINXKZw70l1aAZI7TKfo3-mceCX67ff-rgOGQZQ7fUKJED3gmipVZkFe06Ao8NeZuEOSPEXz14pkFXBR3UOEU6SIgrxqV32LE82Vd_G1Gko8XesLK-sWDcoCDjXekuWX1502sxPXtz5UD-JXIIquQMrtZjAa2lE9PuzaduUfXGtmu3C8tPkhDFkVDzryzKIOlLBZj9kdQktlWSuDOe5Yhc2vcPP1Kx_6c411pMEuCwdlJf9iWmECTWl3iLWeBo0NiYlOKo_bnKNrLIFG0dUaqcizGKXxrPB0xTyvVfUjAkTJXFsN7mszL687QETSNY3PsmT_eQrHSvjmw1_H_M9FP_Oc-M_Ceoed6Sl2MGQ=; Max-Age=10; HttpOnly; Path=/
+content-type: text/html; charset=utf-8
+cache-control: private, no-store
+accept-ranges: bytes
+x-b3-traceid: 08fa7d403afacbc6a0bc02b3075eab17
+date: Fri, 04 Sep 2026 05:06:49 GMT
+alt-svc: h3=":443";ma=86400,h3-29=":443";ma=86400,h3-27=":443";ma=86400
+content-length: 3038
+
+===
+3038 /tmp/hb_login_ua.html
+===
+HTTP/2 200 
+set-cookie: _fs_ch_st_FSBmUei20MqUiJb9=AeMN1zKNpg75uZCKCAF8gVYDE7vjBVwqW-G49oT3R8q98uJEagO8iCw7_-90mpxrqjwxfY0aP7Sx2NRy_PSCotfmxSxw4jEGENr2_PqPK6b5IoV8fY8CsHyFz43L_ycNVrOUXmTQg8Nx4Po9FG3IjxKe5qPQgLkokLWqNHxsdSKVhNUmfH5SrLIMq0DH7oH82oACGPNVnqSXi2NiCIkcHK9P_qdJ8ZJ2SgbTMoMXocvqhepF5zeNE5OcELGs5Ie0uvUGAQ7hJXV838fsFbXWJEwf5N9s7QNSTGs57TWzaJl7FEJEN7cVJDWwFFt9exFI_viLTsheAyoJ3LUxwTgioM6F3vWsin2Pbipz4DDpyVdhRFPSsJBgVvNZE9rc-IWUHnJkgFRWEduvBtWJqFiAkyW2mXBtCRE=; Max-Age=10; HttpOnly; Path=/
+content-type: text/html; charset=utf-8
+cache-control: private, no-store
+accept-ranges: bytes
+x-b3-traceid: a8f42f3870d44892d4eb26655082f408
+date: Fri, 04 Sep 2026 05:06:49 GMT
+alt-svc: h3=":443";ma=86400,h3-29=":443";ma=86400,h3-27=":443";ma=86400
+content-length: 3038
+
+===
+3038 /tmp/hb_mobile.html
+[0m
+[0m$ [0m# Check if there are any public client_ids in cidaas documentation
+curl -s "https://docs.cidaas.com/openapi/authentication/perform-auth-request" --max-time 15 | grep -oi 'client_id[^<]*' | head -20
+client_id
+client_id
+client_id
+client_id+is+missing&error_code=AUTH10001&error_hint=client_id+is+a+required+parameter+that+you+need+to+pass+in+query
+client_id
+client_id+passed&error_code=AUTH10007&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted
+[0m
+[0m$ [0m# Try to find client_ids from cidaas demo instance
+curl -s "https://demo.cidaas.de/.well-known/openid-configuration" --max-time 10 | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d, indent=2))" 2>/dev/null | head -50
+{
+  "issuer": "https://demo.cidaas.de",
+  "authorization_endpoint": "https://demo.cidaas.de/authz-srv/authz",
+  "token_endpoint": "https://demo.cidaas.de/token-srv/token",
+  "userinfo_endpoint": "https://demo.cidaas.de/users-srv/userinfo",
+  "https://discovery.netid.de/properties/status_endpoint": "https://demo.cidaas.de/.well-known/status",
+  "jwks_uri": "https://demo.cidaas.de/.well-known/jwks.json",
+  "scopes_supported": [
+    "openid",
+    "profile",
+    "email",
+    "phone",
+    "address",
+    "offline_access",
+    "identities",
+    "roles",
+    "groups"
+  ],
+  "response_types_supported": [
+    "code",
+    "token",
+    "id_token",
+    "code token",
+    "code id_token",
+    "token id_token",
+    "code token id_token"
+  ],
+  "response_modes_supported": [
+    "query",
+    "fragment",
+    "form_post"
+  ],
+  "subject_types_supported": [
+    "public"
+  ],
+  "id_token_signing_alg_values_supported": [
+    "RS256",
+    "RS384",
+    "RS512",
+    "PS256",
+    "PS384",
+    "PS512",
+    "ES256",
+    "ES384",
+    "ES512",
+    "EdDSA"
+  ],
+  "token_endpoint_auth_methods_supported": [
+    "client_secret_basic",
+    "client_secret_post",
+[0m
+[0m$ [0m# Try common cidaas demo client_ids and patterns
+for cid in "358650c2-7b63-4bc0-af74-e2381c274a56" "00000000-0000-0000-0000-000000000001" "11111111-1111-1111-1111-111111111111" "demo" "test" "sample" "public" "anonymous" "client" "app" "web" "mobile"; do
+  resp=$(curl -s -o /dev/null -w "%{http_code}|%{redirect_url}" "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=${cid}&redirect_uri=https://example.com&scope=openid" --max-redirs 0 --max-time 5 2>/dev/null)
+  echo "cid=${cid} -> ${resp}"
+done
+cid=358650c2-7b63-4bc0-af74-e2381c274a56 -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+cid=00000000-0000-0000-0000-000000000001 -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+cid=11111111-1111-1111-1111-111111111111 -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+cid=demo -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+cid=test -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+cid=sample -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+cid=public -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+cid=anonymous -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+cid=client -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+cid=app -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+cid=web -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+cid=mobile -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m$ [0m# Search for hornbach-related client IDs in public JS/CDNs
+curl -s "https://www.hornbach.de/static/" --max-time 10 -D- 2>/dev/null | head -40
+echo "=== try cloudfront/js container for hornbach"
+# Search github code search API for hornbach client id references
+curl -s "https://api.github.com/search/code?q=hornbach+cidaas+client_id" -H "Accept: application/vnd.github+json" --max-time 10 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); [print(i['html_url']) for i in d.get('items',[])]" 2>/dev/null
+echo "=== try github search for hornbach"
+curl -s "https://api.github.com/search/code?q=%22auth.hornbach.com%22" -H "Accept: application/vnd.github+json" --max-time 10 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); [print(i['html_url']) for i in d.get('items',[])]" 2>/dev/null
+HTTP/2 200 
+set-cookie: _fs_ch_st_FSBmUei20MqUiJb9=AWjiLuHjxNEC1jrsx_zxT-SCI-YXm_HACkrGzZBGhfHnXAHd0b8n9m7NQzUvAQOSO4VQEFOYcJ1QWpyqne3gC_WXq1TtAhSprrh7uuf0p3K4HLI921VtunS8icLpwalh47OrqyTiaLTfG9px0yf9paUZ4ewCmxaGJahRun1PemMruyf8mNnZEEFGXYqI216BvB4lwJnKBFKN4wQBcSW8_ZRu5lml7hy0bRECgf5wz-MFALV8mPTS8llNOq-W45XAlstAnyILao8vvz33qztUlss0_bg-ZPvT3vvH9viV-HppdDJxvbfZNvyPQy43IPXtgBgh-Ksw_sKLKm-9zQzIFtJLGhulEpblSt2Hf9rmihcvZYQhOj0n-ESpb11YuaabxTzVh100F-oQZmhxT5qU-5S2ewyO_iM=; Max-Age=10; HttpOnly; Path=/
+content-type: text/html; charset=utf-8
+cache-control: private, no-store
+accept-ranges: bytes
+x-b3-traceid: 55ef7713bbb71d97d100aae7763b6f78
+date: Fri, 04 Sep 2026 05:07:10 GMT
+alt-svc: h3=":443";ma=86400,h3-29=":443";ma=86400,h3-27=":443";ma=86400
+content-length: 3038
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-o4vzfmmUENEg4chMjjRP9EuW9ucGnGIGVdbl8d0SHQQ='; script-src 'self' 'sha256-a9bHdQGvRzDwDVzx8m+Rzw+0FHZad8L0zjtBwkxOIz4=';"
+    />
+    <link
+      href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/inter-var.woff2"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/styles.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Client Challenge</title>
+    <style>
+      #loading-error {
+        font-size: 16px;
+        font-family: 'Inter', sans-serif;
+        margin-top: 10px;
+        margin-left: 10px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div class="noscript-container">
+=== try cloudfront/js container for hornbach
+=== try github search for hornbach
+[0m
+[0m◈ [0mExa Web Search "hornbach oauth client_id "auth.hornbach.com" -cidaas.eu"
+[0m◈ [0mExa Web Search ""hornbach" "client_id" javascript OR sdk OR oauth OR login redirect_uri"
+The client challenge page (FingerprintJS) is blocking all www.hornbach.de access. The bot-challenge prevents passive JS extraction of client_id.
+
+Let me try GitHub search more broadly and also check the HORNBACH mobile app or other resources for a public client_id.
+[0m
+[0m$ [0m# Try to check the fingerprinted challenge - see if bypassing via proxy or tricking
+# Also try hornbach.de subdomains that might not be bot-protected
+for sub in shop hornbach shop.hornbach www.hornbach de.hornbach; do
+  echo "=== $sub.hornbach.de"
+  curl -s -o /dev/null -w "%{http_code} %{size_download}\n" "https://$sub.hornbach.de/" --max-time 5 2>/dev/null
+done
+echo "=== try login.hornbach.com/customer/login"
+curl -s "https://login.hornbach.com/customer/login" --max-time 10 -D- 2>/dev/null | head -25
+=== shop.hornbach.de
+000 0
+=== hornbach.hornbach.de
+000 0
+=== shop.hornbach.hornbach.de
+000 0
+=== www.hornbach.hornbach.de
+000 0
+=== de.hornbach.hornbach.de
+000 0
+=== try login.hornbach.com/customer/login
+HTTP/2 302 
+server: Varnish
+retry-after: 0
+location: https://www.hornbach.de/customer
+accept-ranges: bytes
+date: Fri, 04 Sep 2026 05:07:35 GMT
+strict-transport-security: max-age=300
+content-length: 0
+[0m
+[0m◈ [0mExa Web Search "hornbach app APK cidaas client_id redirect_uri download"
+[0m◈ [0mExa Web Search ""hornbach" "client_id" OR "clientId" filetype:json OR filetype:js OR filetype:html"
+The client_id enumeration is proving difficult — all common IDs rejected and the bot challenge blocks hornbach.de. Let me try the HORNBACH app APK to extract a public client_id, since mobile apps typically embed their OAuth client_id. Also try other hornbach country domains and any cache/CDN that might serve JS.
+[0m
+[0m$ [0m# Try hornbach mobile app stores / other hornbach properties
+# Try Czech, Austria, Netherlands domains that use same cidaas tenant
+for dom in www.hornbach.at www.hornbach.cz www.hornbach.nl www.hornbach.ch www.hornbach.ro www.hornbach.si www.hornbach.se www.hornbach.lu www.hornbach.sk; do
+  echo "=== $dom"
+  curl -s -o /dev/null -w "%{http_code} %{size_download}" "https://$dom/" --max-time 6 2>/dev/null
+  echo ""
+done
+=== www.hornbach.at
+200 3038
+=== www.hornbach.cz
+200 3038
+=== www.hornbach.nl
+200 3038
+=== www.hornbach.ch
+200 3038
+=== www.hornbach.ro
+200 3038
+=== www.hornbach.si
+000 0
+=== www.hornbach.se
+200 3038
+=== www.hornbach.lu
+200 3038
+=== www.hornbach.sk
+200 3038
+[0m
+All hornbach country domains serve the same 3038-byte bot challenge. Let me try to download and analyze the HORNBACH APK which embeds the client_id, since this is a legitimate passive recon route.
+
+Also I noticed the priority is on the api target phase. Let me check if there's a HORNBACH app on the iOS/Android that I can get the client_id from, and also examine other surface areas of the API. Let me focus my analysis on the OAuth infrastructure more aggressively since the bot challenge blocks web source extraction.
+
+Let me check what else I can discover from the auth.hornbach.com OIDC endpoints, and also look for other hornbach-related domains and API endpoints.
+[0m$ [0m# Check for additional endpoints in the OIDC metadata (past what we've seen)
+curl -s "https://auth.hornbach.com/.well-known/openid-configuration" --max-time 10 | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+for k, v in d.items():
+    print(f'{k}: {v}')
+"
+issuer: https://auth.hornbach.com
+authorization_endpoint: https://auth.hornbach.com/authz-srv/authz
+token_endpoint: https://auth.hornbach.com/token-srv/token
+userinfo_endpoint: https://auth.hornbach.com/users-srv/userinfo
+https://discovery.netid.de/properties/status_endpoint: https://auth.hornbach.com/.well-known/status
+jwks_uri: https://auth.hornbach.com/.well-known/jwks.json
+scopes_supported: ['openid', 'profile', 'email', 'phone', 'address', 'offline_access', 'identities', 'roles', 'groups']
+response_types_supported: ['code', 'token', 'id_token', 'code token', 'code id_token', 'token id_token', 'code token id_token']
+response_modes_supported: ['query', 'fragment', 'form_post']
+subject_types_supported: ['public']
+id_token_signing_alg_values_supported: ['HS256', 'RS256']
+token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post', 'client_secret_jwt', 'private_key_jwt']
+claims_supported: ['aud', 'auth_time', 'created_at', 'email', 'email_verified', 'exp', 'family_name', 'given_name', 'iat', 'identities', 'iss', 'mobile_number', 'name', 'nickname', 'phone_number', 'picture', 'sub']
+token_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256']
+check_session_iframe: https://auth.hornbach.com/session/check_session
+end_session_endpoint: https://auth.hornbach.com/session/end_session
+social_provider_token_resolver_endpoint: https://auth.hornbach.com/login-srv/social/token
+registration_endpoint: https://auth.hornbach.com/apps-srv/clients/register
+userinfo_signing_alg_values_supported: ['HS256', 'RS256']
+userinfo_encryption_alg_values_supported: ['RS256']
+userinfo_encryption_enc_values_supported: ['A128CBC-HS256']
+id_token_encryption_alg_values_supported: ['RS256']
+id_token_encryption_enc_values_supported: ['A128CBC-HS256']
+display_values_supported: ['page', 'popup']
+claim_types_supported: ['normal']
+service_documentation: https://docs.cidaas.de/
+ui_locales_supported: ['en-US', 'de-DE']
+introspection_endpoint: https://auth.hornbach.com/token-srv/introspect
+introspection_async_update_endpoint: https://auth.hornbach.com/token-srv/introspect/async/tokenusage
+revocation_endpoint: https://auth.hornbach.com/token-srv/revoke
+introspection_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post', 'client_secret_jwt', 'private_key_jwt']
+introspection_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256']
+revocation_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post', 'client_secret_jwt', 'private_key_jwt']
+revocation_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256']
+claims_locales_supported: ['en-US']
+op_policy_uri: https://www.cidaas.com/privacy-policy/
+op_tos_uri: https://www.cidaas.com/terms-of-use/
+grant_types_supported: ['implicit', 'authorization_code', 'refresh_token', 'password', 'client_credentials', 'urn:ietf:params:oauth:grant-type:token-exchange', 'urn:ietf:params:oauth:grant-type:device_code']
+code_challenge_methods_supported: ['plain', 'S256']
+device_authorization_endpoint: https://auth.hornbach.com/authz-srv/device/authz
+backchannel_logout_supported: True
+scim_endpoint: https://auth.hornbach.com/user-scim-srv/v2
+[0m
+[0m$ [0m# Test token endpoint with password grant (no client needed to test behavior)
+echo "=== token-srv/token without creds"
+curl -s -X POST "https://auth.hornbach.com/token-srv/token" -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=password&username=test@test.com&password=testtest&client_id=unknown" --max-time 10 -D- 2>/dev/null | head -30
+echo ""
+echo "=== token-srv/token with client_credentials"
+curl -s -X POST "https://auth.hornbach.com/token-srv/token" -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials&client_id=unknown&client_secret=x" --max-time 10 -D- 2>/dev/null | head -30
+echo ""
+echo "=== token-srv/token with invalid grant"
+curl -s -X POST "https://auth.hornbach.com/token-srv/token" -H "Content-Type: application/json" -d '{"grant_type":"invalid"}' --max-time 10 -D- 2>/dev/null | head -30
+=== token-srv/token without creds
+HTTP/2 400 
+date: Fri, 04 Sep 2026 05:08:11 GMT
+content-type: application/json
+content-length: 104
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: c4fa848e-4d87-4961-9de9-ef988c3cb639
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=coGFwxWShj68Uqmu3UX42Uqnv_7YjPAIG_YU5aLL.7c-1788498490.9588215-1.0.1.1-UKlaozt_zFbTaR6Aa581h9whC9Zy_xr_1zG96KxN50W.4tHUKaB96QP7.EeejrylDk.M6TQ5dU9ja39ut0LRCgutjXBSGOX4e_hBEZIdRlf0wQEbKA3V.a36JJlJXdAd; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:38:11 GMT
+server: cloudflare
+cf-ray: a35a79907bb1a6b0-MAD
+alt-svc: h3=":443"; ma=86400
+
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+=== token-srv/token with client_credentials
+HTTP/2 400 
+date: Fri, 04 Sep 2026 05:08:11 GMT
+content-type: application/json
+content-length: 104
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: 421ef249-6c1b-4f2a-bcae-4def627b9793
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=OuV.HQ54LL40sMug8hXnrGBT03T3Y8F4ArCwuZ6oNP0-1788498491.352531-1.0.1.1-NLdrVG3Eiklmlr3yNLWVFK4tHn9wH2e4Eq6ES6LInIC4vRe8qRG9ZRTxhh0OKTWEICcxAmpoeVmvYXnFWRr94q9gxRXoDGWdvysm21JLbqIPwZuU5Us8iHcHopx8MQqo; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:38:11 GMT
+server: cloudflare
+cf-ray: a35a7992fff01c10-AMS
+alt-svc: h3=":443"; ma=86400
+
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+=== token-srv/token with invalid grant
+HTTP/2 400 
+date: Fri, 04 Sep 2026 05:08:11 GMT
+content-type: application/json
+content-length: 104
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: 4daaae3e-99ad-453c-8480-5e1c10a1d9ff
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=sP_4HAo27Me0l8QUyhjYhjkoxKoRXZbi_AZYO1TDeO4-1788498491.7740743-1.0.1.1-CYeZlbujwNNpqcOX7W.YNMy4NiEqsmS_RtvsgMTqiaqn0v0KA0_iGmOgt9PfKde0Z0pMB3rjdWNcI1rxviwJxqpwsXDWYAH9Mz5COu0Bdwi5Il6ObeAs4fPkLJokc8HD; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:38:11 GMT
+server: cloudflare
+cf-ray: a35a79959ef40383-MAD
+alt-svc: h3=":443"; ma=86400
+
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+[0m
+[0m$ [0m# Test various endpoints
+echo "=== introspection without auth"
+curl -s -X POST "https://auth.hornbach.com/token-srv/introspect" -d "token=fake" --max-time 10 -D- 2>/dev/null | head -20
+echo ""
+echo "=== revoke without auth"
+curl -s -X POST "https://auth.hornbach.com/token-srv/revoke" -d "token=fake" --max-time 10 -D- 2>/dev/null | head -20
+echo ""
+echo "=== user-scim-srv/v2"
+curl -s -X POST "https://auth.hornbach.com/user-scim-srv/v2" -H "Content-Type: application/json" -d '{}' --max-time 10 -D- 2>/dev/null | head -20
+echo ""
+echo "=== users-srv/userinfo"
+curl -s -X GET "https://auth.hornbach.com/users-srv/userinfo" --max-time 10 -D- 2>/dev/null | head -20
+=== introspection without auth
+HTTP/2 200 
+date: Fri, 04 Sep 2026 05:08:14 GMT
+content-type: application/json
+content-length: 16
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: ba3ccc0b-8e3e-4d2d-b163-740b79ad1e6a
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=FItxO_QfBc21B3dHVbWFY2WpwAr.Nld56CUUWJGkcNc-1788498494.6435368-1.0.1.1-XSnIqEE9QGKCACtwj9K.bvOb7GL5LEVBIpzEt1xK4JVhTAiIYdkfM1Pzwr6v5wC4kRJlQJ_JmfmSXvZXX7.5vjjNrPx.19f4Ta35C1MJ0b5hKROKH4wfASn36h3USFtK; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:38:14 GMT
+server: cloudflare
+cf-ray: a35a79a78c231c89-AMS
+alt-svc: h3=":443"; ma=86400
+
+{"active":false}
+=== revoke without auth
+HTTP/2 200 
+date: Fri, 04 Sep 2026 05:08:15 GMT
+content-type: text/plain; charset=utf-8
+content-length: 2
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: e701f795-0bf4-4dfe-9e22-df1620d0ca1c
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=b3.mFg53.bon3ND56MWg2.rVIQLd1I7ISHynDPLLBlA-1788498495.0191267-1.0.1.1-3sxa_W.KdsxxemLsptHDKtbHPFrjN9V66cpTQW4cEi_ceoFlgStpg0e5vj1kyJwdPVd6JKqgzOBgnRX9AOqbwAGTHJqDj1UKYmEiKP3JSWvJphYs1iDtsUX6GgzB5jqo; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:38:15 GMT
+server: cloudflare
+cf-ray: a35a79a9dc8eb8fd-AMS
+alt-svc: h3=":443"; ma=86400
+
+OK
+=== user-scim-srv/v2
+HTTP/2 404 
+date: Fri, 04 Sep 2026 05:08:15 GMT
+content-type: text/plain; charset=utf-8
+set-cookie: __cf_bm=seQ670jXaQOZKMBJGD6Ivl00cy8C9hHj8ND2J1_xr8I-1788498495.4096313-1.0.1.1-cA_bvf1lMApHvFhb9Z0GHb722LA.6LS5a8d2JC1fllj4JF7Al56UihE5bKXGUDT.7zBQiOZ8zkaNQZ7HhsBdg99OlvoIqhosDSC__bwDiPaZ17dgeP_uqOlmeKDFyHlZ; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:38:15 GMT
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-ref-number: 3f4312ba-2c72-4e84-a985-b05c31995407
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35a79ac4a1b7751-AMS
+alt-svc: h3=":443"; ma=86400
+
+Cannot POST /user-scim-srv/v2
+=== users-srv/userinfo
+HTTP/2 401 
+date: Fri, 04 Sep 2026 05:08:15 GMT
+content-type: application/json
+content-length: 66
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: 15b6cf08-e731-4833-bb15-a8026a2b9f43
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=J3xaHaJbYXAMnik1KnSLG3_JIklkRAKeXSPHOvK0tq0-1788498495.7894824-1.0.1.1-8.wk7eo_XwtW927n5sW9.CpUacHXu0jjWu0HjNQnbqEUoHj0ViwiCejID3nqHZtx7viG9t0ZOJNibac85nMltuIZeQCPkF.4Ue7MDzWYGn9kJD94nAFO7UbknEA6I6Ng; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:38:15 GMT
+server: cloudflare
+cf-ray: a35a79aeab3a9704-AMS
+alt-svc: h3=":443"; ma=86400
+
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+[0m
+Very interesting. Note that:
+1. `grant_types_supported` includes `password` and `client_credentials` and `token-exchange`
+2. `code_challenge_methods_supported` includes `plain` (which is insecure - allows code_challenge replay)
+3. `id_token_signing_alg_values_supported` includes `HS256` alongside RS256 - a potential alg confusion vector
+4. The password grant is enabled - this is notable for a CIAM
+
+Let me investigate the `plain` PKCE challenge method and the HS256/RS256 alg confusion potential. The registration_endpoint returned 404 though, which suggests the apps-srv may need different path or auth.
+
+Let me also test the token endpoint and the other service endpoints more.
+[0m$ [0m# Try the register endpoint with different auth headers and methods
+echo "=== register with token hint"
+curl -s -X POST "https://auth.hornbach.com/apps-srv/clients/register" -H "Content-Type: application/json" -H "Authorization: Bearer test" -d '{"client_name":"test","redirect_uris":["https://evil.com"]}' --max-time 10 -D- 2>/dev/null | head -20
+echo ""
+echo "=== register with initialization vector for cidaas"
+curl -s -X POST "https://auth.hornbach.com/apps-srv/clients/register" -H "Content-Type: application/x-www-form-urlencoded" -d "client_name=test&redirect_uris=https://evil.com" --max-time 10 -D- 2>/dev/null | head -20
+echo ""
+echo "=== try PUT"
+curl -s -X PUT "https://auth.hornbach.com/apps-srv/clients/register" -H "Content-Type: application/json" -d '{"client_name":"test"}' --max-time 10 -D- 2>/dev/null | head -20
+echo ""
+echo "=== try OPTIONS"
+curl -s -X OPTIONS "https://auth.hornbach.com/apps-srv/clients/register" --max-time 10 -D- 2>/dev/null | head -20
+=== register with token hint
+HTTP/2 404 
+date: Fri, 04 Sep 2026 05:08:17 GMT
+content-type: text/plain; charset=utf-8
+content-length: 9
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: c1c16c15-8f22-4792-9c70-b8b335581005
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=kRPTo1Doz8ySgaB6dhSKENLvp9e8n3c7JcqO0k4uNDI-1788498497.6863291-1.0.1.1-PHt8yDsDe61ThzPuK306ZpxracvP5vr33X4qBzdUg..V8CR2uap1aUA1hd8et8B8LJmpE5UvyIHo0HJ1tpEI1fo06ZBvftAIDt8DH139lBkieZ0JrJNt6BQAQ3yZpHtO; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:38:17 GMT
+server: cloudflare
+cf-ray: a35a79ba8fe09f66-AMS
+alt-svc: h3=":443"; ma=86400
+
+Not Found
+=== register with initialization vector for cidaas
+HTTP/2 404 
+date: Fri, 04 Sep 2026 05:08:18 GMT
+content-type: text/plain; charset=utf-8
+content-length: 9
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: 6438681d-91f9-4f5a-bb69-e4bb23ac25c0
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=k8cMaD7Z0AW2LSNiF.YqIMLC.Zic4ouKplerYnYxpD0-1788498498.1154647-1.0.1.1-7xB.uSM7gd8FnXQzMSUHVpY1H4oa.Wkhv1vrYbaj8szhJuxUZnjtquirBXBKeLdwOKuIYVTJxOCf3TYBkd3dhg2auBvqZNZ_yw0TBwm2peKcYHoZLjRuwBOCJ8GXTUbL; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:38:18 GMT
+server: cloudflare
+cf-ray: a35a79bd3f96cbf2-MAD
+alt-svc: h3=":443"; ma=86400
+
+Not Found
+=== try PUT
+HTTP/2 404 
+date: Fri, 04 Sep 2026 05:08:18 GMT
+content-type: text/plain; charset=utf-8
+content-length: 9
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: 776a77b5-9d4a-45be-8401-7318e0fa3e49
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=TK2OlxTTq05D1CJuICgoeJ14jCUF1FMWgWOMRyCxhuw-1788498498.5060003-1.0.1.1-bpjKLrFNWvLtsB8jI.KBOGYXU550TfmgQF.7GrublsLM1PAmVMiKYX_N70v6vUMaDTUWXlMx_u0CP39B8TzvU4UhH.a.ixWT7MSWyHrJSVSSc90zQ3rfFL8JLbbxnFSV; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:38:18 GMT
+server: cloudflare
+cf-ray: a35a79bfaa5ab936-AMS
+alt-svc: h3=":443"; ma=86400
+
+Not Found
+=== try OPTIONS
+HTTP/2 404 
+date: Fri, 04 Sep 2026 05:08:18 GMT
+content-type: text/plain; charset=utf-8
+content-length: 9
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: 9f084221-db03-46e0-a0d0-ce86c6c8c3d9
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=fIYT5Y.KLzDm.1U4JtcRwu2K0rqic3h89jIFRCYAXZc-1788498498.8841674-1.0.1.1-w_rnTZQQo4sAVfdxTHPnGoBxq3FQ5D28sDeLI6jV9GNn7XoyUgOPBqhpNfK.EE9e_z0Zm.R3Sx12qAyoZUn0_hPPv6tt9fEryoYFky9LNskKPvypbpyJ1PQ1OgOJ9D7J; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:38:18 GMT
+server: cloudflare
+cf-ray: a35a79c20b779709-AMS
+alt-svc: h3=":443"; ma=86400
+
+Not Found
+[0m
+[0m$ [0m# From cidaas docs, try the device flow with form-encoded and various client IDs
+# First check what a valid demo client looks like
+echo "=== demo cidaas device endpoint with form-encoded"
+curl -s -X POST "https://demo.cidaas.de/authz-srv/device/authz" -H "Content-Type: application/x-www-form-urlencoded" -d "client_id=test&scope=openid" --max-time 10 -D- 2>/dev/null | head -25
+echo ""
+echo "=== demo cidaas authz with a known valid client"
+# From cidaas docs: sampleshop.cidaas.de uses a client_id
+curl -s "https://demo.cidaas.de/authz-srv/authz?client_id=demo&response_type=code&redirect_uri=https://example.com&scope=openid" --max-redirs 0 --max-time 10 -D- 2>/dev/null | head -25
+=== demo cidaas device endpoint with form-encoded
+HTTP/2 400 
+date: Fri, 04 Sep 2026 05:08:30 GMT
+content-type: application/json
+content-length: 212
+strict-transport-security: max-age=31536000; includeSubDomains
+x-ref-number: 6bb5b1e7-ea1c-4870-bc24-a73a529d78f2
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35a7a0adcf7014c-MAD
+
+{"error":"invalid_client","error_code":"AUTH10007","error_description":"invalid_client: invalid client_id passed","error_hint":"please check if you passing correct client_id or the client is disabled or deleted"}
+=== demo cidaas authz with a known valid client
+HTTP/2 302 
+date: Fri, 04 Sep 2026 05:08:31 GMT
+content-length: 0
+location: https://demo.cidaas.de/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%3A%2F%2Fdemo.cidaas.de
+strict-transport-security: max-age=31536000; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 167963da-a4de-47ef-a840-76ae4d2aa973
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35a7a0edebeb92d-AMS
+[0m
+The register endpoint consistently returns 404 regardless of method and auth. This suggests the endpoint path is virtualized/filtered by the reverse proxy, or registration is disabled on this tenant (common in production cidaas setups).
+
+Key observations:
+- `registration_endpoint` in metadata but returns 404 on all methods → **registration feature likely disabled** at the proxy level
+- `introspection_endpoint` returns `{"active":false}` without auth (200) - introspection without client auth is unusual but not necessarily a vuln itself
+- `revocation_endpoint` returns "OK" without auth — not a vuln per se
+- `token_endpoint` returns `invalid_client: client authentication failed: unknown client` regardless of grant_type
+
+The most interesting finding is that **the OIDC discovery metadata differs from the demo tenant**. The production hornbach tenant supports `HS256` for id_token_signing (algorithm confusion potential) and `plain` for code_challenge_methods.
+
+Let me test a few more things:
+1. Check if the `apps-srv/clients` endpoint (used for listing clients) behaves differently with client auth
+2. Look for the device code flow with correct params — we need to figure out the exact format
+3. Check for OAuth state/redirect_uri behavior once we find a valid client_id
+
+Since we can't easily find a valid client_id via guessing, let me test the device authz more carefully with the documented format to see what error we get (this reveals whether the client validation passed).
+
+Also, from the earlier tests: device/authz with `{"client_id":"webshop","scope":"openid"}` returned `invalid_request` (AUTH10003 - parsing format) whereas `-d "client_id=webshop&scope=openid"` returned `invalid_client` (AUTH10007). This means form-encoded POST is the right format, and `webshop` is NOT a valid client. 
+
+Let me check what the demo cidaas uses as a valid client_id to understand the format, then continue exploring.
+[0m$ [0m# The hornbach client_id is likely embedded in the mobile app. 
+# Let's check if we can find the app or its config on public apk mirror sites
+# Try to find cidaas client_id in known hornbach mobile app config
+echo "=== Search for hornbach app oauth configs"
+for url in "https://hornbachde-prod.mirakl.net" "https://m.hornbach.de" "https://app.hornbach.de" "https://api.hornbach.de"; do
+  echo "--- $url"
+  curl -s -o /dev/null -w "%{http_code} %{size_download}" "$url" --max-time 5 2>/dev/null
+  echo ""
+done
+=== Search for hornbach app oauth configs
+--- https://hornbachde-prod.mirakl.net
+302 0
+--- https://m.hornbach.de
+000 0
+--- https://app.hornbach.de
+000 0
+--- https://api.hornbach.de
+404 47
+[0m
+[0m$ [0m# From cidaas documentation example, there's "sampleshop.cidaas.de" with a client_id.
+# The format for cidaas client IDs: they are typically UUIDs
+# Let's try to find the real client_id from HORNBACH app or other sources
+# Try the cidaas social provider resolver with different requests
+echo "=== social token endpoint with various inputs"
+curl -s -X POST "https://auth.hornbach.com/login-srv/social/token" -H "Content-Type: application/json" -d '{"grant_type":"social"}' --max-time 10 2>/dev/null | head -10
+echo ""
+echo "=== apps-srv clients/ resource paths"
+for p in "clients" "clients/list" "clients/all" "client" "client/list" "apps" "apps/list" "applications" "applications/list" "app/list"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://auth.hornbach.com/apps-srv/${p}" --max-time 5 2>/dev/null)
+  echo "apps-srv/${p} -> ${code}"
+done
+=== social token endpoint with various inputs
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot POST /login-srv/social/token</pre>
+</body>
+</html>
+
+=== apps-srv clients/ resource paths
+apps-srv/clients -> 401
+apps-srv/clients/list -> 401
+apps-srv/clients/all -> 401
+apps-srv/client -> 404
+apps-srv/client/list -> 404
+apps-srv/apps -> 404
+apps-srv/apps/list -> 404
+apps-srv/applications -> 404
+apps-srv/applications/list -> 404
+apps-srv/app/list -> 404
+[0m
+[0m$ [0m# Explore mirakl backend
+echo "=== hornbachde-prod.mirakl.net root"
+curl -s "https://hornbachde-prod.mirakl.net/" -D- --max-time 10 2>/dev/null | head -40
+echo ""
+echo "=== Follow redirect"
+curl -s -L "https://hornbachde-prod.mirakl.net/" -D- --max-time 10 2>/dev/null | head -60
+=== hornbachde-prod.mirakl.net root
+HTTP/2 302 
+date: Fri, 04 Sep 2026 05:08:43 GMT
+content-length: 0
+location: https://hornbach-mp.mirakl.net/
+x-correlation-id: 5808f743-a2c3-4c26-b465-de6b1764c8a6
+via: 1.1 google
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=UUvoe5FVw9gx5VdYELaxGFqGNx4sqNvt%2BgAXhX3Ss0FT3z9H46CWA2ptqm1hILCv9rZicCkpgs6kENghf3CyJ2U1ipIjNYVsbF%2FKJvu62buqgKgeUfMwUdJlQZ0VqyE0Fk0CrVxEyirSMh%2Ff"}]}
+server: cloudflare
+cf-ray: a35a7a59add568e8-MSP
+
+
+=== Follow redirect
+HTTP/2 302 
+date: Fri, 04 Sep 2026 05:08:43 GMT
+content-length: 0
+location: https://hornbach-mp.mirakl.net/
+x-correlation-id: 4881bb30-ba3b-4ba4-9e6e-3c8611fb8d29
+via: 1.1 google
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=EBurNiIE1Bf23CCR%2FoOlMa14leXBZfyFkROTVuElb9UETnWbkNxBn3rMK5YjnbvcD%2FNK7QtT%2BJV9bOqCczlm0z%2BNdv%2BBw4Hfx4SVXIzWMZiaGYWCIc4gv8rkmX6APmJfVANgTZ7Kv3gtODX5"}]}
+server: cloudflare
+cf-ray: a35a7a5ada1e5113-MSP
+
+HTTP/2 302 
+date: Fri, 04 Sep 2026 05:08:43 GMT
+content-length: 0
+location: https://hornbach-mp.mirakl.net/login/oauth2/mirakl-sso?prompt=none
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+content-language: en-GB
+content-security-policy: upgrade-insecure-requests
+expires: 0
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+pragma: no-cache
+referrer-policy: strict-origin-when-cross-origin
+set-cookie: XSRF-TOKEN=c7ed39a7-42df-462e-a7d0-f11b07533181; Path=/; Secure
+strict-transport-security: max-age=31536000 ; includeSubDomains
+x-content-type-options: nosniff
+x-correlation-id: 264c2529-7d53-44da-86b6-09518fc188bf
+x-frame-options: SAMEORIGIN
+x-robots-tag: noindex
+x-xss-protection: 1; mode=block
+via: 1.1 google
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=pELC8ZmgH6ffSAI6tFkdDPHvi7P65BKHD%2FkvBt8FYnHtcOONcduzVfwvYJhadwr3YTVExdhRNEQViPzqFOR12xijK201tzVkZXzEyuEFWiaHz%2FI30C%2F63HzBBkSaoHHKPahgjoxodzc%3D"}]}
+server: cloudflare
+cf-ray: a35a7a5c69ff348b-MSP
+
+HTTP/2 302 
+date: Fri, 04 Sep 2026 05:08:44 GMT
+content-length: 0
+location: https://login.mirakl.net/authorize?response_type=code&client_id=UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq&scope=openid%20email&state=https://hornbach-mp.mirakl.net/login/oauth2/code/connect?prompt%3Dnone%7Cnone&redirect_uri=https://redirect.mirakl.net&nonce=FpEuAsKpr0dgARPw1RWM00J5ti9smPr5rthZqtRr06I&code_challenge=Tiw8iRgqJ_XlBmbSJrZRoklLK_wysoNGR-sxK0qyZro&code_challenge_method=S256&audience=platform&ext-client-logo-url=https://hornbach-mp.mirakl.net/media/operator-interface-logo&origin=hornbach-mp.mirakl.net&prompt=none
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+content-security-policy: upgrade-insecure-requests
+expires: 0
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+pragma: no-cache
+referrer-policy: strict-origin-when-cross-origin
+set-cookie: XSRF-TOKEN=7f9861b3-0658-41cd-a67e-d48ae8368a5b; Path=/; Secure
+set-cookie: oauth2_authorization_request=JAAAAAIAAAABAAAAAAAAOlz8lTo/d+ZCvTFS6LoG3xJlxE1ZzPGaiw2+RwnrcO2q2R2bfcWEIqWC0Y8TH6SJOLbPDXGRachuJnaYJHN1vhIOR6MKB7eL5iEIwObLlbX6QVesYo3he/fhM1uprYFE8EKe9nw+XXXTWkHLggmBMG1KEawdEd0VBSnReAIS7rT+KS0FAoRPP46lZvw8X9tktqSuJIzH5tUwVO05n6tx8gDkttWLb1xIemJUJYHQIk790xBGteceQVxUaVwUWsgAEX1wmG3OlDhV/aJ+svLr4nKt77/5e4rErOmmF8g+PK4uF7gmwNrbcKnxCspz9Lq6zMnK93vBVlqJtxm2IrDFrBhypb3L8JvPU4oiHo+MUQHT5T4E9a3ttaRYaBzOuxDdebK83Mxmmx/cfdWf78A+yn3rgVX/DdET8WC6PwWj0MStta4abpEylnwkYBiyY5o/7NAM3cB1C62oYE2i8iff+BYyZmQbGPTl+G2HgZqxvCAK9YoZ/m5gx6w88Kkpq7ZgfPwEjjvfp/7urJMAlZFaDDer5C0TjghhZDP7fgNOWpJZ36qvtuuRtkWx3qRTlUX9dm6iubaSi+4FLoFGA42IVUgD2vOU+c0V2JgswC+jiigeEgfBBv8WBpDlJGP3ZE3G/4auIpgYHuCsJYXclJV64y9KyGPXaqrgl4cjvISWTrknSKTZ2kv9HosXyxGSc+t4ZEGF+VZ7Vsc+rIgFmRZ+LMxPqN/LT1363jx5SbqWJJwiPvierqqgIUGdjJkzD7YU7VWLMGO0c4feNRVoEIn0IBZ4FKLDJp1K40LhD9JxNNzLHIm9FyR2lwsNnF0QrcppE6s9k+UaQFI6QFYsMELQnwRo5dtbLosc3If6tcik/I60UBHhf+KeLoAdssW2zGXz5SiAeMoEs2V877UjyjbYO1O2Pd/B6/V/Myyh29cqnuDxZ+ljgHPaMrmBLockJu6W/8ZnfZmugA/sVa1io3rpnsra47RRof0F9DxSXYhLuBXmQqccifvnGYF5N+MgJxGpS/BMMWgS8WTFV2Qvi3wSoJceG3a5NQ9vUHzqjVWULl+csyMLKvoqTnd2JJPwTjlfpH3pGbVVD9xDxohtQBpb0ImOA3xVcoti+wrYLySZlszd8xua9tNaG3RmkyAoKSTa+Cytl4vsNrGFCXULhsQ9/+38ocsEWyeW0B2QHzZreUKEkXLSc/K+gqa24IYpWY0U8lFvNf7MSlzyquKsVgevJVf9EkvuNuRwXEYI0Mk+Bjb1UMMz5m1uOXJhTJD8TbNhvTIigDmOUZgCkef4nBPrKjNpb9RKOHucE4NEGK9eIuhuh8+TT8avTddnjNuVMgqsRpYGgipvbKMw4jWzC0usRr+y6VkmnYpLAQGGw43Q/9hxAVCsMceyEZF3dbGCgy2/4NTSFjqmhsXg70jygILQ0Gm/PzT5/b22xaGYYw33lhxK+7LidRbZbYi46BP/LALpPrrg0Y4oXrAsP0EWvedpj5pO+srjFuPlL/2M69bVRLM89KrnzQaVh13gmcxnbnK9Pb6EwAWHMcblHhtujqZrCQR4N5zHpAJ05n3xt/1V6HyJV5bJRZS0I0pUiA3qkp8dcvXi8LXQZSSzkkKQjRtnUgzCug1nx9v6PRKfD4safU4JaS32tzUfqZkYuWKhFdG+H9FdmGyG6ekSgb8uiRzhZzfaZvpxusZ2IO3IWGZmbZJUCwqVjOEh7UzU4nuHIVrB1laqghEO3Oa95MQOxz1CnrKpBAofqKnznCocU+jlTI608M2FdjeUC5GwOUFHkmWl/el7uR7wb8wuJmLvDYWf8TsLT+2URR7BCK8e+3mi7paT6Moht8/U+a07MMaGf/WTr45ZAQBNL5JMY4JK/S1jMNdI5XFFowY/n3V3Bi9m60fnpHw6DL8Lx9zNWaRd1YnKQwgBLD9ohu16fI0V1sPEn3m3Mu1ycYhwVcrm1/LuLAJ8azHr5AyLG1xW2Ms//HxgipB96tov/NSIODxJRiSrQVMOuWBu3De84j80/7TLuUc7C+YaQknAhPTd0BOtma6CCIO4o7kb3xgcl1Y/pw3paFRa/h0x6676iwAbG9IbX4s8gjGDgfrtNqU20AqW4A+NDXjOLwgcp4ReIunFQpFns0aQnBFE/ZLbchoznP/nqxM9TvdO0Z3v50kahRWaJSlxHmksh3WfE68595oNTuyVRtC9KzKC569DzbwAhwB7QDwYsAJVvUmIjMRI2WL1y/EyM8XHChj+2yRms1wNgy58N2RnjMfijfjypPjfQXOX9hPHYj9basMYV2B94l0LZTykmSuCZEm1fZW4gNyszArCFYDoWkn/tTgNhMA2lSdlUu3PSeZewGBC5YOtiOlQAZ8RR9ZyMStowfbV6ItyWQixUC6Uhswso0KKCTnyH4r69sL0p6U=; Path=/; Secure; HttpOnly; SameSite=Lax
+strict-transport-security: max-age=31536000 ; includeSubDomains
+x-content-type-options: nosniff
+x-correlation-id: 619feaa8-fd7b-4845-a287-e51b7337a19e
+x-frame-options: SAMEORIGIN
+x-robots-tag: noindex
+x-xss-protection: 1; mode=block
+via: 1.1 google
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=FBnKdtj6xxD6e6kImgBdnmEcH3znvr%2FLxVWXbTjS6TUa3lUEWgtb9%2BLNxc4AJOPXE8NAMkM9kp3FL05V6XDLFuUE%2F8R3STX0D7t5lYsanPQ%2B%2BKWe4XSoIC2e9KQNa9mZAYBE4xrK0A4%3D"}]}
+server: cloudflare
+[0m
+Interesting finding: `apps-srv/clients` returns **401 Unauthorized** (not 404). This means the endpoint exists and requires authentication. This is different from `/apps-srv/clients/register` which returns 404 (a different routing). The 401 confirms there's a client management API here.
+
+Let me explore the apps-srv more and see if I can find valid client_ids from other endpoints. Also let me look at the `hornbachde-prod.mirakl.net` — this is the Mirakl marketplace backend which is a separate HORNBACH property (HORNBACH Marketplace is in scope as part of "company-owned infrastructure").
+
+Let me also look into this more carefully.
+[0m$ [0m# Let's examine the apps-srv/clients endpoint more. It returns 401, means it needs auth
+# Let's see what auth it wants
+echo "=== apps-srv/clients with various auth headers"
+curl -s -X GET "https://auth.hornbach.com/apps-srv/clients" -H "Authorization: Basic YWRtaW46YWRtaW4=" --max-time 10 2>/dev/null
+echo ""
+curl -s -X GET "https://auth.hornbach.com/apps-srv/clients" -H "Authorization: Bearer test" --max-time 10 2>/dev/null
+echo ""
+echo "=== apps-srv/clients with Accept: application/json"
+curl -s -X GET "https://auth.hornbach.com/apps-srv/clients" -H "Accept: application/json" --max-time 10 2>/dev/null
+echo ""
+echo "=== check /users-srv/"
+for p in "users" "users/search" "Clients" ""; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://auth.hornbach.com/users-srv/${p}" --max-time 5 2>/dev/null)
+  echo "users-srv/${p} -> ${code}"
+done
+=== apps-srv/clients with various auth headers
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+=== apps-srv/clients with Accept: application/json
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+=== check /users-srv/
+users-srv/users -> 404
+users-srv/users/search -> 404
+users-srv/Clients -> 404
+users-srv/ -> 404
+[0m
+[0m$ [0m# Let me check the mirakl login flow - it's a third-party, but it reveals the hornbach-mp domain which is a HORNBACH asset
+# But this is Mirakl-managed, not directly vulnerable via hornbach cidaas
+# Instead, let me look for the hornbach app client_id in APK
+# The HORNBACH app is de.hornbach on Google Play
+# Try apkpure or apkmirror for the app
+echo "=== Check if we can access the HORNBACH app file via apkmirror"
+curl -s "https://www.apkmirror.com/apk/hornbach-baumarkt-ag/hornbach/" --max-time 15 -D- 2>/dev/null | grep -i 'http.*apk\|client_id\|cidaas' | head -20
+=== Check if we can access the HORNBACH app file via apkmirror
+[0m
+Very significant find! The redirect chain exposed the HORNBACH Mirakl marketplace. But more importantly, I see the chain went through `login.mirakl.net/authorize?response_type=code&client_id=UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq&redirect_uri=https://redirect.mirakl.net&audience=platform&origin=hornbach-mp.mirakl.net`. This is Mirakl's own SSO, not the cidaas tenant.
+
+Let me now focus on the potential **JWT algorithm confusion** vulnerability since the OIDC metadata explicitly lists `HS256` alongside `RS256` for `id_token_signing_alg_values_supported`. If the server accepts HS256-signed tokens using the public RSA key as the HMAC secret, an attacker could forge arbitrary identity tokens.
+
+However, I need a valid client_id to truly test this. Let me try to find the HORNBACH app's client_id through alternative means.
+[0m$ [0m# Meanwhile, let me test the OAuth endpoints on hornbach-mp.mirakl.net more
+# Check if there's a way to access the mirakl API without auth (some endpoints are public)
+echo "=== Mirakl API health/status"
+curl -s -o /dev/null -w "%{http_code}" "https://hornbach-mp.mirakl.net/api/health" --max-time 10 2>/dev/null
+echo ""
+echo "=== Mirakl API version"
+curl -s -o /dev/null -w "%{http_code}" "https://hornbach-mp.mirakl.net/api/version" --max-time 10 2>/dev/null
+echo ""
+echo "=== Mirakl API base"
+curl -s -o /dev/null -w "%{http_code}" "https://hornbach-mp.mirakl.net/api" --max-time 10 2>/dev/null
+echo ""
+echo "=== Mirakl operator API (public catalog info often exposed)"
+curl -s -o /dev/null -w "%{http_code}" "https://hornbach-mp.mirakl.net/api/operators" --max-time 10 2>/dev/null
+echo ""
+echo "=== Mirakl products API (often public for MPC catalogs)"
+curl -s -o /dev/null -w "%{http_code}" "https://hornbach-mp.mirakl.net/api/products" --max-time 10 2>/dev/null
+=== Mirakl API health/status
+401
+=== Mirakl API version
+200
+=== Mirakl API base
+302
+=== Mirakl operator API (public catalog info often exposed)
+401
+=== Mirakl products API (often public for MPC catalogs)
+401
+[0m
+[0m$ [0m# Mirakl /api/version returns 200! Let's see the content
+echo "=== Mirakl API version content"
+curl -s "https://hornbach-mp.mirakl.net/api/version" --max-time 10 2>/dev/null
+echo ""
+echo "=== Mirakl API base follow"
+curl -s -L "https://hornbach-mp.mirakl.net/api" --max-time 10 2>/dev/null | head -20
+=== Mirakl API version content
+{"version":"3.1301"}
+=== Mirakl API base follow
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0m# Try to get HORNBACH mobile app APK from apkpure
+curl -s "https://apkpure.com/hornbach/de.hornbach" -L --max-time 15 2>/dev/null | grep -oi 'download[^"]*apk[^"]*\|de\.hornbach[^"]*apk' | head -10
+download, HORNBACH apk, HORNBACH android apk, HORNBACH download
+download.apkpure.com
+download.apkpure.com
+download-head-info){margin-bottom:16px}}@media screen and (min-width:720px){.dev-partnership-head-info{margin-top:16px}}.dev-partnership-head-info.opt-1507627{align-items:center;gap:16px;margin-top:0;overflow:scroll}.dev-partnership-head-info.opt-1507627 .split-line{background-color:#e7e7e7;flex:0 0 auto;height:24px;width:1px}.dev-partnership-head-info.opt-1507627 li{flex:1;white-space:nowrap}.dev-partnership-head-info.opt-1507627 .head{height:24px}.dev-partnership-head-info li{font-size:14px;justify-content:space-around;line-height:21px}.dev-partnership-head-info .go-reviews,.dev-partnership-head-info li{align-items:center;display:flex;flex-direction:column;text-align:center;width:-moz-fit-content;width:fit-content}.dev-partnership-head-info .go-reviews:hover .desc{color:#00a6ed}.dev-partnership-head-info .head{align-items:center;color:#5e5e5e;display:flex;font-weight:500;gap:6px}.dev-partnership-head-info svg{fill:#fa8b16;height:14px;width:14px}.dev-partnership-head-info .content-ratting .svg-ratting{fill:#000;height:16px;width:16px}.dev-partnership-head-info .virustotal-safe{cursor:pointer}.dev-partnership-head-info .virustotal-safe .safety-score{align-items:center;background:rgba(36,205,119,.1);border:1px solid rgba(36,205,119,.6);border-radius:24px;color:var(--Colors-Brand-100,#24cd77);display:flex;font-size:12px;font-style:normal;font-weight:700;gap:1px;height:24px;justify-content:center;line-height:normal;padding:0 8px;text-align:center}.dev-partnership-head-info .virustotal-safe .safety-icon-detail-large{height:20px;width:20px}.dev-partnership-head-info .virustotal-safe .safety-icon-detail-small{height:14px;width:14px}.dev-partnership-head-info .desc{align-items:center;color:#8b8b8b;display:flex;font-size:12px;gap:2px;justify-content:start;line-height:18px}.dev-partnership{background:rgba(250,139,22,.1);border-radius:4px;color:#fa8b16;cursor:pointer;font-size:12px;line-height:normal;padding:4px 8px;width:-moz-fit-content;width:fit-content}.dev-partnership:hover{background-color:rgba(250,139,22,.15);color:#f58014}#dev-partnership-dialog:not(.fancybox-custom-dialog-2){border-radius:16px;max-width:640px;padding:24px;width:auto}@media screen and (max-width:719px){#dev-partnership-dialog:not(.fancybox-custom-dialog-2){max-height:70vh;padding-bottom:38px}#dev-partnership-dialog:not(.fancybox-custom-dialog-2):not(.download-dev-partnership){margin:auto 10px;padding-bottom:38px;transform:translateY(20px);vertical-align:bottom}#dev-partnership-dialog:not(.fancybox-custom-dialog-2).download-dev-partnership{min-height:100px;top:0;transform:translateY(20px)!important;transform:none}}#dev-partnership-dialog:not(.fancybox-custom-dialog-2) .title{border:none;color:#3c4043;font-size:18px;font-weight:700;line-height:27px;margin-bottom:24px;padding:0 32px 0 0}@media screen and (max-width:719px){#dev-partnership-dialog:not(.fancybox-custom-dialog-2) .title{margin-bottom:20px}}#dev-partnership-dialog:not(.fancybox-custom-dialog-2) .content-wrap{max-height:none;overflow:initial}#dev-partnership-dialog:not(.fancybox-custom-dialog-2) .fancybox-close-small{right:16px;top:16px}#dev-partnership-dialog:not(.fancybox-custom-dialog-2) .fancybox-close-small svg{height:20px;width:20px}#dev-partnership-dialog .content{padding:0}#dev-partnership-dialog .content p{margin-bottom:16px;margin-top:0}#dev-partnership-dialog .content p:not(.dev-partnership){color:#5e5e5e;line-height:21px}#dev-partnership-dialog .content p:last-child{margin-bottom:0}#dev-partnership-dialog .content .dev-partnership{font-weight:500;margin-bottom:24px}@media screen and (max-width:719px){#dev-partnership-dialog .content .dev-partnership{margin-bottom:20px}}#dev-partnership-dialog .content a{color:#00a6ed}#dev-partnership-dialog .content a:hover{text-decoration:underline}.security-statement-tag{background:rgba(36,205,119,.1);border-radius:4px;color:#24cd77;cursor:pointer;font-size:12px;font-weight:500;padding:4px 8px;width:-moz-fit-content;width:fit-content}.security-statement-tag:hover{background-color:rgba(36,205,119,.15);color:#1bbe6d}.security-statement-tag .safety-icon{height:14px;margin-inline-end:4px;vertical-align:text-bottom;width:14px}.security-statement-card{padding:0 16px}.security-statement-card .security-statement-card-wrap{align-self:stretch;background:rgba(36,205,119,.05);border-radius:8px;cursor:pointer;display:flex;gap:8px;padding:16px}@media screen and (max-width:719px){.security-statement-card .security-statement-card-wrap{padding:12px}}.security-statement-card .security-statement-card-wrap p{margin:0}.security-statement-card .security-statement-card-wrap svg.security-statement-icon{flex:0 0 auto;height:24px;margin:0;width:24px}.security-statement-card .security-statement-card-wrap .security-statement-info{align-items:stretch;color:#24cd77;display:flex;flex-direction:column;gap:8px;justify-content:center}.security-statement-card .security-statement-card-wrap .security-statement-info .security-statement-card-title{font-size:14px;font-weight:700;line-height:21px}.security-statement-card .security-statement-card-wrap .security-statement-info .security-statement-card-desc{font-size:12px;line-height:18px}.security-statement-card.security-card-opt-1507627{padding:0}.security-statement-card.security-card-opt-1507627 .security-statement-card-wrap{padding:12px 8px}.security-statement-card.security-card-opt-1507627 .security-statement-card-wrap .security-statement-info{gap:4px;margin-inline-end:8px}.security-statement-card.security-card-opt-1507627 .security-statement-card-wrap .security-statement-card-desc,.security-statement-card.security-card-opt-1507627 .security-statement-card-wrap .security-statement-card-title{line-height:20px}.fancybox-slide:has(>#security-statement-dialog){overflow:hidden}body .fancybox-container{z-index:9999992}#security-statement-dialog:not(.fancybox-custom-dialog-2){border-radius:16px;max-width:640px;padding:24px;width:640px}@media screen and (max-width:719px){#security-statement-dialog:not(.fancybox-custom-dialog-2){border-radius:16px 16px 0 0;max-height:70vh;max-width:none;padding:20px;transform:translateY(6px);vertical-align:bottom}#security-statement-dialog:not(.fancybox-custom-dialog-2):not(.download-security-statement){margin:auto 10px;width:calc(100% - 20px)}#security-statement-dialog:not(.fancybox-custom-dialog-2).download-security-statement{margin:auto 0;width:100%}}#security-statement-dialog:not(.fancybox-custom-dialog-2) .title{border:none;color:#3c4043;font-size:18px;font-weight:700;line-height:27px;margin-bottom:24px;padding:0 32px 0 0}@media screen and (max-width:719px){#security-statement-dialog:not(.fancybox-custom-dialog-2) .title{margin-bottom:20px}}#security-statement-dialog:not(.fancybox-custom-dialog-2) .content-wrap{max-height:none;overflow:initial}#security-statement-dialog:not(.fancybox-custom-dialog-2) .fancybox-close-small{height:44px;padding:12px;right:8px;top:8px;width:44px}#security-statement-dialog:not(.fancybox-custom-dialog-2) .fancybox-close-small svg{height:20px;width:20px}#security-statement-dialog .content{align-items:stretch;display:flex;flex-direction:column;gap:24px;padding:0}@media screen and (max-width:719px){#security-statement-dialog .content{gap:20px}}#security-statement-dialog .content p{margin:0}#security-statement-dialog .content .app-info-card{align-items:stretch;display:flex;gap:16px}#security-statement-dialog .content .app-info-card .app-icon{border:1px solid #eff3f9;border-radius:12px;flex:0 0 auto;height:64px;width:64px}#security-statement-dialog .content .app-info-card .app-info{text-wrap:nowrap;align-items:stretch;display:flex;flex-direction:column;gap:8px;justify-content:center;overflow:hidden;padding:0;text-overflow:ellipsis}#security-statement-dialog .content .app-info-card .app-info .app-name{color:#5e5e5e;font-size:16px;font-weight:500;line-height:24px}#security-statement-dialog .content .app-info-card .app-info .app-version-name{color:#8b8b8b;font-size:14px;line-height:21px}#security-statement-dialog .content .no-report-content{align-items:stretch;color:#5e5e5e;display:flex;flex-direction:column;font-size:14px;gap:12px;line-height:21px}#security-statement-dialog .content .no-report-content .help-link-wrap{align-items:stretch;display:flex;flex-direction:column;gap:8px;padding:8px 0}#security-statement-dialog .content .no-report-content .help-link-wrap .link{color:#00a6ed;padding:8px 0}#security-statement-dialog .content .no-report-content .help-link-wrap .link:hover{text-decoration:underline}#security-statement-dialog .content .no-report-content .help-link-wrap .link .link-icon{fill:#00a6ed;height:14px;margin-left:8px;vertical-align:middle;width:14px}#security-statement-dialog .content .report-content{align-items:stretch;display:flex;flex-direction:column;gap:20px}#security-statement-dialog .content .report-content .virus-total{align-items:center;background:rgba(36,205,119,.1);border-radius:12px;display:flex;gap:16px;padding:16px}#security-statement-dialog .content .report-content .virus-total .virus-num-circle{align-items:center;border:5px solid #24cd77;border-radius:999px;display:flex;flex:0 0 auto;flex-direction:column;gap:4px;height:56px;justify-content:center;width:56px}#security-statement-dialog .content .report-content .virus-total .virus-num-circle .virus-num{color:#24cd77;font-size:16px;font-weight:500;line-height:20px}#security-statement-dialog .content .report-content .virus-total .virus-num-circle .virus-total-num{color:#1bbe6d;font-size:12px;line-height:12px}#security-statement-dialog .content .report-content .virus-total .virus-total-info{align-items:stretch;align-self:stretch;display:flex;flex-direction:column;flex-grow:1;flex-shrink:1;justify-content:space-between}#security-statement-dialog .content .report-content .virus-total .virus-total-info .virus-total-title{color:#1bbe6d;font-size:18px;font-weight:500;line-height:27px}#security-statement-dialog .content .report-content .virus-total .virus-total-info .virus-total-date{color:#24cd77;font-size:14px;line-height:21px;opacity:.8}#security-statement-dialog .content .report-content .virus-item{align-items:center;color:#5e5e5e;display:flex;font-size:14px;font-weight:500;gap:8px;line-height:21px}#security-statement-dialog .content .report-content .virus-item .virus-item-icon{height:20px;width:20px}#security-statement-dialog .content .report-content .certified-by{color:#8b8b8b;font-size:14px;line-height:21px}#security-statement-dialog .content .more-info{align-items:stretch;display:flex;flex-direction:column;gap:8px}#security-statement-dialog .content .more-info .report-link{align-items:center;background:#00a6ed;border-radius:8px;color:#fff;display:flex;font-size:16px;font-weight:500;height:44px;justify-content:center;line-height:24px;padding:0 16px}#security-statement-dialog .content .more-info .report-link:hover{background-color:#0096da}#security-statement-dialog .content .more-info .faq-link{align-items:center;color:#00a6ed;display:flex;font-size:14px;justify-content:center;line-height:21px;padding:8px 0}#security-statement-dialog .content .more-info .faq-link:hover{text-decoration:underline}#security-statement-dialog .content .apk-info{align-items:stretch;display:flex;flex-direction:column;gap:16px}@media screen and (max-width:719px){#security-statement-dialog .content .apk-info{gap:12px}}#security-statement-dialog .content .apk-info .apk-info-item{align-items:stretch;display:flex;flex-direction:column;gap:4px}#security-statement-dialog .content .apk-info .apk-info-item .label{color:#5e5e5e;font-size:14px;font-weight:700;line-height:21px}#security-statement-dialog .content .apk-info .apk-info-item .value{color:#8b8b8b;font-size:12px;line-height:18px;word-break:break-all}.topic-card{align-items:stretch;background:linear-gradient(180deg,#fff1ee,#dae1fb);border-radius:8px;display:flex;flex-direction:column;gap:8px;max-width:100%;overflow:hidden;padding:8px 0}.topic-card .topic-card-header{align-items:flex-start;display:flex;gap:8px;overflow:hidden;padding:4px 12px}@media screen and (min-width:720px){.topic-card .topic-card-header{padding:4px 16px}}.topic-card .topic-card-header .topic-card-title{-webkit-text-fill-color:transparent;background:linear-gradient(90deg,#f77e13,#efab19);background-clip:text;-webkit-background-clip:text;font-size:18px;font-weight:700;line-height:28px}.topic-card .topic-card-header svg{flex-grow:0;flex-shrink:0;height:20px;margin-top:4px;width:20px}.topic-card .swiper-wrapper{display:flex}.topic-card .swiper-wrapper .swiper-slide{flex:0 0 auto;height:100%;width:100%}.topic-card .topic-card-content{align-items:stretch;border-radius:8px;display:grid;flex-direction:column;gap:2px;grid-template-columns:repeat(1,1fr);margin:0 8px;overflow:hidden}@media screen and (min-width:720px){.topic-card .topic-card-content{grid-template-columns:repeat(2,1fr);margin:0 12px}}.topic-card .topic-card-content .topic-item{align-items:stretch;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);background:hsla(0,0%,100%,.9);cursor:pointer;display:flex;flex-direction:column;gap:8px;overflow:hidden;padding:8px 12px}@media screen and (min-width:720px){.topic-card .topic-card-content .topic-item{padding:12px 16px}}.topic-card .topic-card-content .topic-item:hover .topic-title{color:#00a6ed}.topic-card .topic-card-content .topic-item .topic-header{align-items:center;color:#3c4043;display:flex;font-size:14px;font-weight:700;gap:12px;justify-content:space-between;line-height:24px;overflow:hidden}.topic-card .topic-card-content .topic-item .topic-header .tending-mark{align-items:center;color:#fa8b16;display:flex;flex-direction:column;flex-grow:0;flex-shrink:0;font-size:12px;font-weight:700;gap:6px;justify-content:center;line-height:14px;overflow:hidden;width:40px}.topic-card .topic-card-content .topic-item .topic-header .tending-mark .icon-hot{background-image:url(/static-2/assets/svg/img-detail.stack-556bbdb5.svg#icon-fire);background-position:50%;background-repeat:no-repeat;background-size:contain;flex-grow:0;flex-shrink:0;font-size:16px;height:16px;line-height:normal;width:16px}.topic-card .topic-card-content .topic-item .topic-header .tending-mark .trending-value{max-width:100%}.topic-card .topic-card-content .topic-item .topic-summary{color:#5e5e5e;font-size:14px;line-height:20px;max-width:100%}.topic-card .topic-card-content .topic-item .topic-footer{align-items:center;color:#8b8b8b;display:flex;font-size:12px;gap:20px;justify-content:space-between;line-height:20px;max-width:100%;overflow:hidden}.topic-card .topic-card-content .topic-item .topic-footer .topic-info{align-items:center;display:flex;gap:20px;overflow:hidden}.topic-card .topic-card-content .topic-item .topic-footer .icon-container{align-items:center;display:flex;justify-content:center;width:40px}.topic-card .topic-card-content .topic-item .topic-footer .icon-container svg{fill:#8b8b8b;flex-grow:0;flex-shrink:0;height:14px;width:14px}.topic-card .topic-pagination-container{align-items:center;box-sizing:border-box;display:flex;gap:10px;justify-content:center;margin-top:8px;max-width:100%;padding:2px 20px}.topic-card .topic-pagination-bullet{background:rgba(0,0,0,.1);border-radius:50%;cursor:pointer;height:8px;width:8px}.topic-card .topic-pagination-bullet-active{background:#fa8b16}:root{--module-spacing:4px;--app-horizontal-spacing:8px;--app-vertical-spacing:12px;--html-direction:1;--html-rtl:0;--html-ltr:1}@media screen and (min-width:720px) and (max-width:995px){:root{--module-spacing:4px;--app-horizontal-spacing:12px}}@media screen and (min-width:996px){:root{--module-spacing:8px;--app-horizontal-spacing:16px}}html[dir=rtl]{--html-direction:-1;--html-rtl:1;--html-ltr:0}:root{--text-bold:500;--text-bold-700:700}html[lang=ar],html[lang=ja],html[lang=th-TH],html[lang=ur]{--text-bold:bold;--text-bold-700:bold}i.icon{display:inline-block;vertical-align:bottom}.no-scrollbar::-webkit-scrollbar{display:none}.one-line{white-space:nowrap}.double-lines,.one-line,.three-lines{overflow:hidden;text-overflow:ellipsis}.double-lines,.three-lines{-webkit-line-clamp:2;-webkit-box-orient:vertical;display:-webkit-box;white-space:normal}.three-lines{-webkit-line-clamp:3}.shadow-sm{box-shadow:0 1px 10px rgba(0,0,0,.05),0 4px 5px rgba(0,0,0,.08),0 2px 4px -1px rgba(0,0,0,.12)}.shadow-md{box-shadow:0 3px 14px 2px rgba(0,0,0,.05),0 8px 10px 1px rgba(0,0,0,.06),0 5px 5px -3px rgba(0,0,0,.1)}.shadow-lg{box-shadow:0 6px 30px 5px rgba(0,0,0,.05),0 16px 24px 2px rgba(0,0,0,.04),0 8px 10px -5px rgba(0,0,0,.08)}.app-icon{border:1px solid #eff3f9;border-radius:15%;box-sizing:border-box}.svg-align{position:relative;top:-.1em;vertical-align:middle}.reset-button{all:unset;outline:revert}.reset-h-tag{all:unset}.reviews-item{align-items:stretch;background:#fff;border:1px solid #e7e7e7;border-radius:8px;box-sizing:border-box;display:flex;flex:0 0 auto;flex-direction:column;gap:12px;overflow:hidden;padding:12px 8px;position:relative}.reviews-item .reviews-item-top{align-items:center;display:flex;gap:8px;padding:0 8px}.reviews-item .user-icon{flex:0 0 auto;height:40px;position:relative;width:40px}.reviews-item .user-icon img{border-radius:999px;height:100%;width:100%}.reviews-item .reviews-attr-info{align-items:flex-start;display:flex;flex:1;flex-direction:column;gap:8px;justify-content:center;overflow:hidden}.reviews-item .reviews-attr-info .user-info{align-items:center;display:flex;gap:4px;max-width:100%}.reviews-item .reviews-attr-info .user-name{color:#5e5e5e;font-size:14px;font-weight:700;line-height:16px}.reviews-item .reviews-attr-info .vip-badge{background-image:url(/static/imgs/icon_vip_badge.svg);background-position:50%;background-repeat:no-repeat;background-size:cover;flex:0 0 auto;height:14px;width:14px}.reviews-item .reviews-attr-info .star-info{align-items:center;display:flex;gap:12px;max-width:100%}.reviews-item .reviews-attr-info .star-info .reviews-date{color:#8b8b8b;font-size:12px;line-height:12px}.reviews-item .op-menu-container{align-items:center;align-self:stretch;display:flex;position:relative}.reviews-item .op-menu-container.cmt-open .op-menu-list{display:block}.reviews-item .op-menu-container .more-op-btn{color:#c5c5c5;cursor:pointer;display:block;height:20px;padding:0;width:20px}.reviews-item .op-menu-container .more-op-btn:hover{color:#00a6ed}.reviews-item .op-menu-container .more-op-btn svg{stroke:currentColor;height:100%;width:100%}.reviews-item .op-menu-container .op-menu-list{background-color:#fff;border:1px solid #f0f2f4;border-radius:8px;box-shadow:0 4px 4px rgba(0,0,0,.08);display:none;inset-inline-end:0;list-style:none;overflow:hidden;padding:8px 0;position:absolute;top:100%;z-index:999999}.reviews-item .op-menu-container .op-menu-list .op-btn{all:unset;background:none;color:#5e5e5e;cursor:pointer;display:block;height:30px;line-height:30px;padding:0 16px;white-space:nowrap}.reviews-item .op-menu-container .op-menu-list .op-btn:hover{background-color:#f2f5f9;color:#00a6ed}.reviews-item .reviews-item-body{align-items:stretch;display:flex;flex:1;flex-direction:column;gap:12px;padding:0 8px}.reviews-item .reviews-content{align-items:flex-start;color:#5e5e5e;display:flex;flex-direction:column;font-weight:500;gap:12px;line-height:20px}.reviews-item .reviews-content .media-list{display:flex;flex-wrap:wrap;gap:8px;overflow:hidden;width:100%}.reviews-item .reviews-content .media{aspect-ratio:16/9;background-color:#f8f8f8;background-position:50%;background-repeat:no-repeat;background-size:contain;border-radius:8px;max-width:296px;overflow:hidden;position:relative;width:100%}.reviews-item .reviews-content .media.video{background-color:#000}.reviews-item .reviews-content .media.video:before{background-color:rgba(0,0,0,.2);background-image:url(/static-2/assets/svg/img-common.stack-5dfdcab2.svg#icon-play);background-position:50%;background-repeat:no-repeat;background-size:40px;content:
+download-button{align-items:center;background-color:#24cd77;border-radius:4px;color:#fff;display:flex;gap:4px;height:18px;justify-content:center;padding:5px 8px}.buff-store-card .download-button svg{fill:#fff;height:12px;width:12px}.buff-store-card .gift-image{width:80px}.buff-store-card .game-gift{height:16px;width:16px}.buff-store-card .text{color:#4b4b4b;display:flex;flex:1;flex-direction:column;font-weight:500;line-height:18px;min-width:0;text-align:left}.buff-store-card .text span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media screen and (min-width:720px){.buff-store-card .text{flex-direction:row;font-size:16px;line-height:24px}}.buff-store-card .buff-button{background-color:#ff6154;border-radius:4px;color:#fff;font-size:12px;line-height:18px;padding:5px 8px}.buff-store-card .logo-image{height:14px;position:absolute;right:0;top:0;width:14px}@media screen and (min-width:720px){.buff-store-card .logo-image{height:16px;width:16px}}.ar_fix .buff-store-card .text{text-align:right}.apk-com-official-site:not(.additional-info){align-items:center;display:inline-flex;gap:4px;min-height:24px}.apk-com-official-site:not(.additional-info) svg{fill:#00a6ed;height:14px;width:14px}.apk-com-official-site:not(.additional-info) .text{color:#00a6ed;font-size:12px;line-height:18px;white-space:nowrap}.apk-com-official-site:not(.additional-info).other-platform svg{height:20px;margin-right:6px;vertical-align:middle;width:20px}.apk-com-official-site:not(.additional-info).other-platform .text{vertical-align:middle}.ar_fix .apk-com-official-site.other-platform svg{margin-left:6px;margin-right:0}.headline-xxl-large{font-size:64px}.headline-xl-large{font-size:48px}.headline-large{font-size:36px}.headline-medium{font-size:28px}.headline-small{font-size:24px}.headline-xs-small{font-size:20px}.title-bold-xl-large{font-size:18px}.title-bold-large{font-size:16px}.title-bold-medium{font-size:14px}.title-bold-small{font-size:12px}.title-xl-large{font-size:20px}.title-large{font-size:18px}.title-medium{font-size:16px}.title-small{font-size:14px}.body-large{font-size:16px}.body-medium{font-size:14px}.body-small{font-size:12px}:root{--font-weight:500}html[lang=ar],html[lang=ja],html[lang=th-TH],html[lang=ur]{--font-weight:bold}.apk-unit-list.normal-list{box-sizing:border-box;counter-reset:badge-count;display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding:0 16px;white-space:nowrap}.apk-unit-list.normal-list::-webkit-scrollbar{display:none}.apk-unit-list.normal-list .apk-unit{display:inline-flex;flex:0 0 auto;flex-direction:column;gap:8px;width:calc(16.66667% - 10px)}@media screen and (max-width:996px){.apk-unit-list.normal-list .apk-unit{min-width:86px}}@media screen and (min-width:996px){.apk-unit-list.normal-list .apk-unit{width:calc(12.5% - 10.5px)}}.apk-unit-list.normal-list .apk-unit .image-ratio{flex:0 0 auto;padding-top:100%;position:relative}.apk-unit-list.normal-list .apk-unit .image-ratio>.apk-unit-image{bottom:0;height:100%;left:0;position:absolute;right:0;top:0;width:100%}.apk-unit-list.normal-list .apk-unit .apk-unit-title{font-weight:var(--text-bold);line-height:22px}.apk-unit-list.normal-list .apk-unit .apk-unit-center{display:flex;flex:1;flex-direction:column;gap:8px;justify-content:space-between}.apk-unit-list.normal-list .apk-unit.with-rank .apk-unit-center{gap:6px}.apk-unit-list.normal-list .apk-unit .apk-download-btn{align-items:center;align-self:stretch;background:#24cd77;border-radius:4px;color:#fff;display:flex;font-size:12px;font-weight:400;gap:4px;justify-content:center;line-height:normal;min-height:22px;padding:0 6px}.apk-unit-list.normal-list .download.with-icon{align-items:center;color:#8b8b8b;display:flex;font-size:12px;font-weight:400;gap:4px;line-height:16px}.apk-unit-list.normal-list .apk-unit-rank{align-self:flex-start;border-radius:12px;box-sizing:border-box;color:#00a6ed;font-size:12px;font-weight:400;line-height:20px;max-width:100%;outline:1px solid #66d1ff;padding:0 8px}.apk-unit-list.normal-list .apk-unit-rank .rank-num{margin-inline-end:2px}.apk-unit-list.normal-list .stars{align-items:center;color:#fa8b16;display:flex;font-size:12px;gap:4px;line-height:16px}.apk-unit-list.normal-list .stars svg{top:0}.apk-unit-list.normal-list .stars.stars-zero{color:transparent}.apk-unit-list.normal-list .stars.stars-zero svg{fill:#c5c5c5}.apk-unit-list.normal-list .preregister{color:#00a6ed;display:flex;flex-direction:column;font-size:12px;line-height:16px}@media screen and (min-width:996px){.side .apk-unit-list.normal-list{flex-direction:column;gap:8px;white-space:normal}.side .apk-unit-list.normal-list .apk-unit{box-sizing:border-box;flex-direction:row;gap:12px;width:100%}.side .apk-unit-list.normal-list .apk-unit .image-ratio{padding-top:60px;width:60px}.side .apk-unit-list.normal-list .apk-unit-center{display:flex;flex:1;flex-direction:column;gap:12px;justify-content:center;width:0}.side .apk-unit-list.normal-list .apk-unit-content{font-size:12px}.side .apk-unit-list.normal-list .apk-unit-title{display:block;height:auto;line-height:24px;white-space:nowrap}.side .apk-unit-list.normal-list .apk-unit-center,.side .apk-unit-list.normal-list .apk-unit-desc,.side .apk-unit-list.normal-list .apk-unit-title{margin-top:0}.side .apk-unit-list.normal-list .preregister{flex-direction:row}}.apk-unit-list .apk-unit.corner-order{position:relative}.apk-unit-list .apk-unit.corner-order:before{background-position:50%;background-repeat:no-repeat;background-size:cover;content:
+download-box .btn{border-radius:4px;box-sizing:border-box;height:40px}.download-box .gp-btn,.download-box .iphone-btn{align-items:center;display:flex;gap:8px;justify-content:center;padding:4px 8px}.download-box .iphone-btn{background:#fff;border:1px solid #100f0d}.download-box .iphone-btn img{max-height:100%;max-width:100%}.download-box .gp-btn-container{align-items:stretch;display:flex;flex-direction:column;gap:8px}.download-box .gp-btn-container .gp-btn{background:#100f0d}.download-box .gp-btn-container .gp-btn svg{height:auto;max-height:100%;max-width:100%;width:auto}.download-box .gp-btn-container .price-box{display:flex;font-size:14px;gap:8px;justify-content:center;line-height:21px}.download-box .gp-btn-container .price-box .price{color:#fa8b16;text-align:center}.download-box .gp-btn-container .price-box .old-price{color:#5e5e5e}.download-box .aipure-btn:not(.btn-as-text-link),.download-box .apk-buff-store-button:not(.btn-as-text-link),.download-box .telegram-btn:not(.btn-as-text-link){align-items:center;display:flex;font-size:14px;gap:8px;justify-content:space-between;line-height:20px;padding:0 16px}.download-box .aipure-btn:not(.btn-as-text-link) .icon-container,.download-box .apk-buff-store-button:not(.btn-as-text-link) .icon-container,.download-box .telegram-btn:not(.btn-as-text-link) .icon-container{align-items:center;display:flex;height:20px;justify-content:center;width:20px}.download-box .aipure-btn:not(.btn-as-text-link) .icon,.download-box .aipure-btn:not(.btn-as-text-link) .telegram,.download-box .apk-buff-store-button:not(.btn-as-text-link) .icon,.download-box .apk-buff-store-button:not(.btn-as-text-link) .telegram,.download-box .telegram-btn:not(.btn-as-text-link) .icon,.download-box .telegram-btn:not(.btn-as-text-link) .telegram{height:16px;width:16px}.download-box .aipure-btn:not(.btn-as-text-link){background:linear-gradient(#fff,#fff) padding-box,linear-gradient(91deg,#00c2cb -10.09%,#a33ee0 107.68%) border-box;border:1px solid transparent;flex-direction:row-reverse}.download-box .aipure-btn:not(.btn-as-text-link):hover{background:linear-gradient(91deg,#00c2cb -10.09%,#a33ee0 107.68%);border:0}.download-box .aipure-btn:not(.btn-as-text-link):hover .text{-webkit-text-fill-color:initial;background:transparent;color:#fff}.download-box .aipure-btn:not(.btn-as-text-link):hover .icon{fill:#fff}.download-box .aipure-btn:not(.btn-as-text-link) .text{-webkit-text-fill-color:transparent;background:linear-gradient(91deg,#00c2cb -10.09%,#a33ee0 107.68%);background-clip:text;-webkit-background-clip:text}.download-box .aipure-btn:not(.btn-as-text-link) .icon{fill:#a33ee0}.download-box .aipure-btn.btn-as-text-link{flex-direction:row-reverse;text-decoration:none}.download-box .aipure-btn.btn-as-text-link:hover .text:after{opacity:0}.download-box .aipure-btn.btn-as-text-link .text{-webkit-text-fill-color:transparent;background:linear-gradient(91deg,#00c2cb -10.09%,#a33ee0 107.68%);background-clip:text;-webkit-background-clip:text;position:relative}.download-box .aipure-btn.btn-as-text-link .text:after{background:linear-gradient(91deg,#00c2cb -10.09%,#a33ee0 107.68%);bottom:0;content:
+download-box .aipure-btn.btn-as-text-link .icon{fill:#a33ee0}.download-box .telegram-btn:not(.btn-as-text-link){border:1px solid #0096da;color:#0096da;flex-direction:row-reverse}.download-box .telegram-btn:not(.btn-as-text-link):hover{background-color:#0096da;color:#fff}.download-box .telegram-btn:not(.btn-as-text-link) .telegram{position:inherit}.download-box .telegram-btn.btn-as-text-link{color:#0096da;flex-direction:row-reverse}.download-box .telegram-btn.btn-as-text-link .telegram{position:inherit}.download-box .apk-buff-store-button:not(.btn-as-text-link){border:1px solid #ff6154;color:#ff6154;flex-direction:row-reverse}.download-box .apk-buff-store-button:not(.btn-as-text-link):hover{background-color:#ff6154;color:#fff}.download-box .apk-buff-store-button.btn-as-text-link{color:#ff6154}.download-box .btn-as-text-link{align-items:center;align-self:center;display:flex;gap:4px;height:auto;justify-content:center;line-height:20px;text-decoration:underline}.download-box .btn-as-text-link:hover{text-decoration:none}.download-box .btn-as-text-link .icon-container{align-items:center;display:flex;height:12px;justify-content:center;width:12px}.download-box .btn-as-text-link .icon-container .icon{height:100%;width:100%}.download-box .coming-soon-btn,.download-box .custom-btn,.download-box .removed-btn{align-items:center;background-color:#24cd77;color:#fff;display:flex;font-size:14px;justify-content:center;line-height:20px}.download-box .off-download-desc{text-align:center}.download-box .custom-btn:hover{background:#24dc83}.download-box .removed-btn{background-color:#e0e0e0;color:#999}.download-box .normal-download-btn{align-items:center;background:#24cd77;color:#fff;display:flex;font-size:16px;font-weight:700;gap:8px;height:52px;justify-content:space-between;line-height:20px;max-width:100%;padding:15px 16px}.download-box .normal-download-btn:hover{background-color:#24dc83}.download-box .normal-download-btn:not(.download-font-weight) .text{font-weight:500}.download-box .normal-download-btn.download-font-weight .text{font-weight:700}.download-box .normal-download-btn.download-btn-breathe{animation:download-btn-breathe-shadow 2s ease-in-out infinite}.download-box .normal-download-btn.download-btn-breathe:hover{animation:none;box-shadow:0 0 12px 0 rgba(36,205,119,.8)}.download-box .normal-download-btn .text{flex:1}.download-box .normal-download-btn .icon{background:url(https://static.apkpure.com/www/static/imgs/icon-download-v1.svg) no-repeat;background-position:50%;background-size:cover;flex-grow:0;flex-shrink:0;height:20px;width:20px}.download-box .normal-download-btn.download-loading{background-color:#7ee8b2;pointer-events:none}.download-box .normal-download-btn.download-loading .icon{animation:download-icon-rotate 1.5s linear infinite;background-image:url(/static-2/assets/svg/img-common.stack-5dfdcab2.svg#icon-loading)}.download-box .normal-download-btn.vip{background:linear-gradient(90deg,#ff7704,#fb05f4) border-box;border:1px solid transparent}.download-box .normal-download-btn.vip:hover{background:linear-gradient(#fff,#fff) padding-box,linear-gradient(90deg,#ff7704,#fb05f4) border-box}.download-box .normal-download-btn.vip:hover .text{-webkit-text-fill-color:transparent;background:linear-gradient(90deg,#ff7704,#fb05f4);background-clip:text;-webkit-background-clip:text}.download-box .normal-download-btn.vip:hover .icon{background-image:url(/static-2/assets/svg/img-common.stack-5dfdcab2.svg#icon-vip-download)}.how-to-link{align-items:center;align-self:center;color:#00a6ed;display:flex;font-size:14px;gap:4px;justify-content:center;line-height:21px}.how-to-link .icon{height:12px;width:12px}.divider-container{align-items:stretch;background:#f2f5f9;display:flex;flex-direction:column;gap:10px;margin:4px 0}.divider-container .detail-buff-store-card{margin:0}.aegon-down-link{align-items:center;background:#fff;display:flex;gap:8px;overflow:hidden;padding:8px 16px}.aegon-down-link .icon{height:44px;width:44px}.aegon-down-link .text{align-items:flex-start;display:flex;flex:auto;flex-direction:column;overflow:hidden}.aegon-down-link .text .title{color:#5e5e5e;font-size:14px;font-weight:500;line-height:28px;max-width:100%}.aegon-down-link .text .desc{color:#8b8b8b;font-size:12px;line-height:20px;max-width:100%}.aegon-down-link .aegon-down-item-btn{align-items:center;background:#24cd77;border-radius:4px;color:#fff;display:flex;flex:0 0 auto;font-size:12px;gap:4px;height:28px;justify-content:center;line-height:normal;padding:0 8px}.questionnaire-entry-box{align-items:center;background-color:#fff;display:flex;flex-direction:column;gap:8px;height:auto;padding:8px 16px;text-align:center}@media screen and (min-width:720px){.questionnaire-entry-box{flex-direction:row;gap:12px;text-align:start}}.questionnaire-entry-box .icon{display:none}@media screen and (min-width:720px){.questionnaire-entry-box .icon{align-items:center;background:rgba(64,135,247,.1);border-radius:50%;display:flex;height:44px;justify-content:center;width:44px}}.questionnaire-entry-box .icon svg{fill:#76a8f9;flex-shrink:0;height:24px;width:24px}.questionnaire-entry-box .text{flex:1}.questionnaire-entry-box .text .title{color:#4b4b4b;font-size:14px;font-weight:500;line-height:21px}@media screen and (min-width:720px){.questionnaire-entry-box .text .title{font-size:16px;line-height:24px}}.questionnaire-entry-box .text .des{color:#a6a6a6;font-size:12px;font-weight:400;line-height:18px;margin-top:2px}.questionnaire-entry-box .emoji-img-box{display:flex;flex-shrink:0;gap:12px}.questionnaire-entry-box .emoji-img-box svg{height:26px;opacity:.8;width:24px}.questionnaire-entry-box .emoji-img-box svg:hover{opacity:1}@media screen and (min-width:720px){.questionnaire-entry-box .emoji-img-box svg{height:32px;width:30px}}.topic-module{background:#fff;margin-bottom:var(--model-spacing);padding:8px}@media screen and (min-width:720px){.topic-module{padding:12px}}.main-body .module.about-module .title{align-items:flex-start;display:flex;gap:12px;justify-content:space-between}.main-body .module.about-module .title .name{overflow:initial;text-overflow:clip;white-space:normal}.main-body .module.about-module .title .icon-link{height:28px}.main-body .module.about-module .title .icon-link:hover{text-decoration:underline}.description-editor-card{align-items:stretch;display:flex;gap:12px;max-width:-moz-max-content;max-width:max-content}.description-editor-card:hover .editor-info .editor-name{color:#00a6ed}.description-editor-card .avatar{border-radius:999px;height:40px;width:40px}.description-editor-card .editor-info{color:#8b8b8b;display:flex;flex:1 0 0;flex-direction:column;font-size:12px;justify-content:space-between;line-height:14px;overflow:hidden;text-overflow:ellipsis}.description-editor-card .editor-info .editor-name{align-items:center;color:#5e5e5e;display:flex;font-size:14px;font-weight:500;gap:6px;line-height:normal;max-width:100%;overflow:hidden}.description-editor-card .editor-info .editor-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.description-editor-card .editor-info .editor-name .tag{align-items:center;background:rgba(100,131,168,.1);border-radius:4px;color:#6483a8;display:flex;flex-shrink:0;font-size:10px;justify-content:center;line-height:20px;padding:0 4px}.description{color:#5e5e5e;font-size:14px;line-height:28px;word-break:break-word}.description .paragraph-bottom{margin-bottom:16px}.description .paragraph-top{margin-top:16px}.description h3,.description h4{color:#3c4043;font-size:16px;font-weight:700;line-height:28px}.description b{font-weight:700}.description ol,.description ul{display:flex;flex-direction:column;gap:4px;padding-inline-start:20px}.description li{list-style:inherit}.additional-content{grid-gap:1px;align-items:flex-start;align-items:stretch;background:#e7e7e7;border:1px solid #e7e7e7;display:grid;flex-direction:column;grid-template-columns:repeat(2,1fr);justify-items:stretch;width:100%}.additional-content .additional-item{align-items:flex-start;background-color:#fff;display:flex;flex-direction:column;gap:4px;padding:8px 12px}.additional-content .additional-item:last-child:not(:nth-child(2n)){grid-column:1/-1}.additional-content .additional-item .label{align-items:center;color:#3c4043;display:flex;font-size:14px;font-weight:500;gap:4px;line-height:24px}.additional-content .additional-item .value{color:#8b8b8b;display:flex;font-size:12px;gap:8px;line-height:20px}.additional-content .additional-item .value.link{color:#00a6ed}.additional-content .additional-item .value .open-security-btn{color:#00a6ed;cursor:pointer}.additional-content .additional-item .icon-gp-license{align-items:center;display:flex;height:14px;width:14px}.additional-content .additional-item .icon-gp-license svg{height:100%;width:100%}.additional-content .additional-item .icon-refresh{align-items:center;background:#4087f7;border-radius:20px;color:#fff;display:flex;height:20px;justify-content:center;width:20px}.additional-content .additional-item .icon-refresh svg{height:12px;width:12px}.additional-content .additional-item .google-logo{height:16px;width:81px}.additional-content .additional-item .virustotal-logo{cursor:pointer;height:20px;width:104px}.tag-module .tag-box{align-items:center;display:flex;flex-wrap:wrap;gap:4px}.tag-module .tag-box .tag-item{align-items:center;background:#f2f5f9;border:1px solid #f2f5f9;border-radius:999px;box-sizing:border-box;color:#5e5e5e;display:flex;font-size:14px;height:36px;justify-content:center;line-height:20px;padding:0 12px}.tag-module .tag-box .tag-item:hover{background:#dbf4ff;border:1px solid #dbf4ff;color:#00a6ed}.whats-new-module .whats-new-container{display:flex;flex-direction:column;gap:4px}.whats-new-module .text{color:#5e5e5e;font-size:14px;line-height:28px}.whats-new-module .update-date{font-weight:700}.secondary-download-box{align-items:stretch;background:#fff;display:flex;flex-direction:column;padding:12px 16px}@media screen and (min-width:720px){.secondary-download-box .btn{align-self:center;width:360px}}.virus-total-module{background:#fff;display:flex;flex-direction:column;gap:16px;padding:12px 16px}.virus-total-module .virus-total-info-box{align-items:flex-start;align-self:stretch;background:linear-gradient(180deg,rgba(36,205,119,.1),rgba(36,205,119,0)),#fff;border:1px solid #c9f5de;border-radius:8px;display:flex;gap:16px;justify-content:space-between;overflow:hidden;padding:16px;position:relative}@media screen and (max-width:719px){.virus-total-module .virus-total-info-box{flex-direction:column}}.virus-total-module .virus-total-info-box .container{display:flex;flex-direction:column;gap:16px}.virus-total-module .virus-total-info-box .vt-main{display:flex;flex-direction:column;gap:16px;width:100%}@media screen and (min-width:720px){.virus-total-module .virus-total-info-box .vt-main{align-items:flex-start;flex-direction:row;justify-content:space-between}}.virus-total-module .virus-total-info-box .vt-main .vt-left{display:flex;flex:1;flex-direction:column;gap:16px;min-width:0}.virus-total-module .virus-total-info-box .top-container{align-items:center;display:flex;gap:16px;width:100%}@media screen and (max-width:719px){.virus-total-module .virus-total-info-box .top-container{align-items:flex-start}}.virus-total-module .virus-total-info-box .top-container .score-ring{flex-shrink:0;position:relative}.virus-total-module .virus-total-info-box .top-container .score-ring .css-ring{border:4px solid #24cd77;border-radius:50%;box-sizing:border-box;height:80px;width:80px}@media screen and (max-width:719px){.virus-total-module .virus-total-info-box .top-container .score-ring .css-ring{height:56px;width:56px}}.virus-total-module .virus-total-info-box .top-container .score-ring .score-text{align-items:center;color:#24cd77;display:flex;flex-direction:column;justify-content:center;left:50%;position:absolute;top:50%;transform:translate(-50%,-50%)}.virus-total-module .virus-total-info-box .top-container .score-ring .score-text .score-num{font-size:28px;font-weight:700;line-height:1}@media screen and (max-width:719px){.virus-total-module .virus-total-info-box .top-container .score-ring .score-text .score-num{font-size:18px}}.virus-total-module .virus-total-info-box .top-container .score-ring .score-text .score-total{font-size:14px;font-weight:400;line-height:1}.virus-total-module .virus-total-info-box .top-container .vt-right{display:flex;flex-direction:column;gap:12px}.virus-total-module .virus-total-info-box .top-container .info{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}.virus-total-module .virus-total-info-box .top-container .info .title{align-items:center;color:#24cd77;display:flex;font-size:20px;font-style:normal;font-weight:700;gap:4px;line-height:28px;overflow:hidden;text-overflow:ellipsis}@media screen and (max-width:719px){.virus-total-module .virus-total-info-box .top-container .info .title{font-size:18px;line-height:26px}}.virus-total-module .virus-total-info-box .top-container .info .title .safe-icon-container{align-items:center;display:inline-flex;margin-left:4px;vertical-align:-3px}.virus-total-module .virus-total-info-box .top-container .info .title .safe-icon{cursor:pointer;flex-shrink:0;height:20px;width:20px}.virus-total-module .virus-total-info-box .top-container .info .desc{color:#24cd77;font-size:14px;font-style:normal;font-weight:500;line-height:20px;overflow:hidden;text-overflow:ellipsis}@media screen and (max-width:719px){.virus-total-module .virus-total-info-box .pc-tag{display:none}}@media screen and (min-width:720px){.virus-total-module .virus-total-info-box .mobile-tag{display:none}}.virus-total-module .virus-total-info-box .security-tag{display:flex;flex-wrap:wrap;gap:12px}.virus-total-module .virus-total-info-box .security-tag .item-tag{align-items:center;color:#3c4043;display:flex;font-size:16px;font-weight:700;gap:6px;line-height:20px}.virus-total-module .virus-total-info-box .security-tag .item-tag .icon{flex-shrink:0;height:16px;width:16px}.virus-total-module .virus-total-info-box .security-tag .item-tag .icon svg{fill:#24cd77;height:100%;width:100%}.virus-total-module .virus-total-info-box .security-tag .item-tag span{color:#5e5e5e;font-size:14px;font-style:normal;font-weight:700;line-height:22px}.virus-total-module .virus-total-info-box .content{display:flex;flex-direction:column;gap:8px;position:relative;width:100%}.virus-total-module .virus-total-info-box .content .row{color:#5e5e5e;font-size:14px;font-style:normal;line-height:20px;word-break:break-all}.virus-total-module .virus-total-info-box .content .row .label{font-weight:700;margin-right:4px}.virus-total-module .virus-total-info-box .content .row .value{font-weight:400}.virus-total-module .virus-total-info-box .content .row .value.img{align-items:center;display:inline-flex;vertical-align:middle}.virus-total-module .virus-total-info-box .content .row .value svg{height:18px;margin-right:8px;vertical-align:middle;width:91px}.virus-total-module .virus-total-info-box .content .content-rows{display:flex;flex-direction:column;gap:8px;mask-image:linear-gradient(180deg,#000 0,#000 calc(100% - 32px),transparent);-webkit-mask-image:linear-gradient(180deg,#000 0,#000 calc(100% - 32px),transparent)}.virus-total-module .virus-total-info-box .content .expandable-rows{display:none}.virus-total-module .virus-total-info-box .content .toggle{align-items:center;color:#05a5ed;cursor:pointer;display:inline-flex;font-size:14px;font-weight:500;gap:4px;line-height:20px;width:-moz-fit-content;width:fit-content}.virus-total-module .virus-total-info-box .content .toggle .toggle-icon{fill:#05a5ed;height:14px;transition:transform .3s ease;width:14px}.virus-total-module .virus-total-info-box .content .toggle:hover{opacity:.8}.virus-total-module .virus-total-info-box.expanded .content .expandable-rows{display:flex;flex-direction:column}.virus-total-module .virus-total-info-box.expanded .content .toggle .toggle-icon{transform:rotate(180deg)}.virus-total-module .virus-total-info-box.expanded .content .content-rows{mask-image:none;-webkit-mask-image:none}.virus-total-module .virus-total-info-box .logo{background:url(/static-2/assets/svg/img-common.stack-5dfdcab2.svg#icon-safe) no-repeat;bottom:-20px;height:100px;pointer-events:none;position:absolute;right:-16px;width:100px}.virus-total-module .virus-total-info-box .logo svg{fill:#24cd77;height:100%;opacity:.12;width:100%}@media screen and (min-width:720px){.virus-total-module .virus-total-info-box .vt-logo-large{height:86px}.virus-total-module .virus-total-info-box .vt-logo-small{height:62px}}.virus-total-module .virus-total-info-box .vt-logo-container{display:flex;flex-shrink:0;gap:4px;justify-content:center}@media screen and (min-width:720px){.virus-total-module .virus-total-info-box .vt-logo-container{align-items:center;flex-direction:column}}.virus-total-module .virus-total-info-box .vt-logo-container .vt-logo{align-items:center;cursor:pointer;display:flex;justify-content:center}.virus-total-module .virus-total-info-box .vt-logo-container .vt-logo .virustotal{height:29.5px;width:124px}.virus-total-module .virus-total-info-box .vt-logo-container .vt-logo .apkpure-verify{height:29.5px;width:85px}.virus-total-module .virus-total-info-box .vt-logo-container .vt-logo svg{height:100%;width:100%}.virus-total-module .virus-total-info-box .vt-logo-container .vt-brand{color:#3c4043;font-size:16px;font-weight:700;letter-spacing:1px;line-height:24px;white-space:nowrap}.virus-total-module .virus-total-info-box .vt-logo-container .vt-verified{align-items:center;color:#8b8b8b;display:flex;font-size:12px;font-style:normal;font-weight:400;line-height:20px;text-align:center}.virus-total-module .virus-total-info-box .vt-logo-container .vt-verified .vt-link{cursor:pointer;font-weight:500;text-decoration-line:underline;-webkit-text-decoration-skip-ink:none;text-decoration-skip-ink:none;text-decoration-style:solid;text-decoration-thickness:auto;text-underline-offset:auto;text-underline-position:from-font}.virus-total-module .virus-total-info-box .vt-logo-container .vt-verified .vt-link:hover{color:#8b8b8b;text-decoration:none}.screenshots-module .screenshots-container-warper{position:relative}.screenshots-module .screenshots-container{overflow:auto}.screenshots-module .screenshots-list{align-items:center;display:flex;gap:12px;padding-left:16px;padding-right:16px;width:-moz-fit-content;width:fit-content}.screenshots-module .screenshots-list .screenshots-item{border-radius:8px;flex-grow:0;flex-shrink:0;height:180px;overflow:hidden;width:auto}.screenshots-module .screenshots-list .screenshots-item.video{background-position:50%;background-repeat:no-repeat;background-size:100%;cursor:pointer;position:relative;width:320px}.screenshots-module .screenshots-list .screenshots-item.video:before{background-color:rgba(0,0,0,.3);background-image:url(/static-2/assets/svg/img-common.stack-5dfdcab2.svg#icon-play-2);background-position:50%;background-repeat:no-repeat;background-size:32px;border-radius:40px;content:
+Download HORNBACH latest version apk
+Download APK (138.1 MB)</strong><i class=
+download?from=profile&amp;icn=aegon&amp;ici=image_profile&amp;refapk=de.hornbach&amp;utm_content=1009
+[0m
+[0m$ [0m# Try to find the hornbach app's identity config from public places
+# Search binary search / public code repos
+curl -s "https://api.github.com/search/code?q=de.hornbach+client_id+OR+cidaas+OR+oauth" -H "Accept: application/vnd.github+json" --max-time 10 2>/dev/null | head -40
+{
+  "message": "Requires authentication",
+  "documentation_url": "https://docs.github.com/rest",
+  "status": "401"
+}
+[0m
+The APK download HTML doesn't give me a direct link easily. Let me focus on what I can do passively. Let me look at the Mirakl OAuth flow more carefully, since that reveals a HORNBACH-integrated SSO, and try to find the hornbach cidaas client_id through other angles.
+
+Actually, let me reconsider the priority. The task phase is "POC" targeting "api". The key findings I have so far:
+
+1. `apps-srv/clients` returns 401 (needs auth) but `apps-srv/clients/register` returns 404 — registration endpoint in metadata but disabled at routing
+2. All attempted client_ids rejected
+3. platform is mature cidaas with strict defaults
+
+Let me check for other endpoints and the possibility of token endpoint behavior with various grant types. Also let me look at what else is accessible on the wider hornbach infrastructure — maybe there are API endpoints on hornbach.com itself.
+
+Let me look at the scope and what else I should examine. The phase is "POC" target "api" - so I should focus on finding API vulnerabilities.
+
+Let me check the hornbach.com domain and any API subdomains.
+[0m$ [0m# Check hornbach.com root and API-like paths
+echo "=== hornbach.com root"
+curl -s -o /dev/null -w "%{http_code} %{size_download}" "https://www.hornbach.com/" --max-time 10 2>/dev/null
+echo ""
+echo "=== Check common API subdomains (passive DNS records often reveal these)"
+for sub in api api2 api3 api-gateway api-gw gateway api-gateway-hornbach hornbach-api shop-api app-api b2b-api seller-api partner-api product-api order-api customer-api auth oauth identity sso login account id broker services service; do
+  resp=$(dig +short "$sub.hornbach.com" A 2>/dev/null | head -3)
+  if [ -n "$resp" ]; then
+    echo "$sub.hornbach.com -> $resp"
+  fi
+done
+=== hornbach.com root
+301 169
+=== Check common API subdomains (passive DNS records often reveal these)
+auth.hornbach.com -> hornbach-prod.cidaas.eu.
+141.101.90.98
+141.101.90.99
+login.hornbach.com -> n.sni.global.fastly.net.
+146.75.105.91
+[0m
+DNS only confirms the 4 known hosts. `dig` isn't finding more. Let me check what DNS entries exist for auth.hornbach.com (the CNAME resolves to cidaas with Cloudflare IPs). The wildcard DNS absorbs all subdomains.
+
+Let me continue exploring what we can test on the auth.hornbach.com cidaas instance. The most valuable thing I can do is test the device_code flow more carefully since the endpoint confirmed it's live. Let me also check for the session_transfer grant and the social login.
+
+Let me also look at the `hornbach-mp.mirakl.net` endpoint more since that's clearly a HORNBACH-run Mirakl marketplace, which is in scope.
+
+Actually, let me step back and focus. The current phase is POC targeting "api". Let me test device_code flow correctly, and check if we can find a valid client_id from the HORNBACH Mirakl marketplace's login flow (it might redirect to auth.hornbach.com).
+[0m$ [0m# Let's check if the HORNBACH Mirakl marketplace login redirects to auth.hornbach.com (cidaas)
+# This would reveal the client_id!
+curl -s "https://hornbach-mp.mirakl.net/" -L --max-redirs 5 --max-time 15 -D- -o /tmp/mirakl_flow.html 2>/dev/null | grep -i "location\|auth.hornbach\|hornbach-prod" | head -20
+echo "==="
+# Try to access the seller login / operator login pages
+curl -s "https://hornbach-mp.mirakl.net/login" -L --max-redirs 5 --max-time 15 -D- 2>/dev/null | grep -i "location\|auth.hornbach" | head -10
+echo "==="
+# Try Mirakl API catalog/products - some markets expose public endpoints
+for ep in "api/catalog/export" "api/shops" "api/offers" "api/orders" "api/channels"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://hornbach-mp.mirakl.net/${ep}" --max-time 8 2>/dev/null)
+  echo "${ep} -> ${code}"
+done
+location: https://hornbach-mp.mirakl.net/login/oauth2/mirakl-sso?prompt=none
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+location: https://login.mirakl.net/authorize?response_type=code&client_id=UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq&scope=openid%20email&state=https://hornbach-mp.mirakl.net/login/oauth2/code/connect?prompt%3Dnone%7Cnone&redirect_uri=https://redirect.mirakl.net&nonce=x-L5fwIeJ7XESokhR4rs9OlxioA4Rzm6RwBKUyuRiAc&code_challenge=ZmrLbxM7O5D8bHwUK2KE5Y0-kN0ubxIOfRZeKXiwomQ&code_challenge_method=S256&audience=platform&ext-client-logo-url=https://hornbach-mp.mirakl.net/media/operator-interface-logo&origin=hornbach-mp.mirakl.net&prompt=none
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+location: https://redirect.mirakl.net/?error=login_required&error_description=Login%20required&state=https%3A%2F%2Fhornbach-mp.mirakl.net%2Flogin%2Foauth2%2Fcode%2Fconnect%3Fprompt%3Dnone%7Cnone
+location: https://hornbach-mp.mirakl.net/login/oauth2/code/connect?error=login_required&error_description=Login+required&prompt=none&state=https%3A%2F%2Fhornbach-mp.mirakl.net%2Flogin%2Foauth2%2Fcode%2Fconnect%3Fprompt%3Dnone%7Cnone
+location: https://hornbach-mp.mirakl.net/login
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+===
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+            top.location = self.location;
+                                                    window.location.href = data.url;
+===
+api/catalog/export -> 401
+api/shops -> 401
+api/offers -> 401
+api/orders -> 401
+api/channels -> 401
+[0m
+The Mirakl marketplace uses its own SSO (login.mirakl.net - Mirakl's platform), not the HORNBACH cidaas tenant. So it won't reveal the hornbach client_id.
+
+Let me take a different approach. Let me check the HORNBACH mobile app via a different route. Also, let me look at whether the `www.hornbach.de` customer/account flow has any public API endpoints that might reveal the client_id or expose API vulnerabilities.
+
+But actually, all www.hornbach[.*] domains are behind the FingerprintJS bot challenge. Let me look for other horns in the HORNBACH infra that might expose the client_id — possibly the mobile app's API base URL or a non-challenged service.
+
+Let me try the HORNBACH API that the mobile app uses — it's often on a distinct host, and might be less protected than the web.
+[0m$ [0m# Search for HORNBACH mobile app API domains
+# The app is de.hornbach - these backend APIs often on their own hosts
+# Let me check DNS for common API hosts not under hornbach.com wildcard
+# Try some discovered from public sources
+for host in "m.hornbach.de" "app-api.hornbach.de" "api.hornbach.com" "hp-api.hornbach.de" "capi.hornbach.de" "shopapi.hornbach.de" "portal.hornbach.de" "b2c.hornbach.de" "gw.hornbach.de" "gateway.hornbach.de"; do
+  resp=$(dig +short "$host" A 2>/dev/null | head -3)
+  echo "$host -> ${resp:-(none)}"
+done
+echo "=== Check hornbach.com A records directly"
+dig +short hornbach.com A 2>/dev/null
+echo "=== wildcard test"
+dig +short random-xyz-test.hornbach.com A 2>/dev/null
+m.hornbach.de -> (none)
+app-api.hornbach.de -> (none)
+api.hornbach.com -> (none)
+hp-api.hornbach.de -> (none)
+capi.hornbach.de -> (none)
+shopapi.hornbach.de -> (none)
+portal.hornbach.de -> (none)
+b2c.hornbach.de -> (none)
+gw.hornbach.de -> (none)
+gateway.hornbach.de -> (none)
+=== Check hornbach.com A records directly
+50.85.48.229
+=== wildcard test
+[0m
+[0m◈ [0mExa Web Search "hornbach mobile app API endpoint "hornbach-api" OR "capi" OR "app-api" OR "mobile-api" de.hornbach"
+[0m
+[0m$ [0m# Verify the wildcard claim
+echo "=== wildcard test on hornbach.com"
+dig +short random-xyz-test.hornbach.com A 2>/dev/null
+echo ""
+echo "=== wildcard test on hornbach.de"
+dig +short random-xyz-test.hornbach.de A 2>/dev/null
+echo ""
+echo "=== known host test hornbach.de"
+dig +short www.hornbach.de A 2>/dev/null
+echo ""
+echo "=== a few more subdomains on hornbach.de"
+dig +short shop.hornbach.de A 2>/dev/null
+dig +short api.hornbach.de A 2>/dev/null
+dig +short auth.hornbach.de A 2>/dev/null
+dig +short login.hornbach.de A 2>/dev/null
+dig +short cidaas.hornbach.de A 2>/dev/null
+dig +short www.hornbach.com A 2>/dev/null
+=== wildcard test on hornbach.com
+
+=== wildcard test on hornbach.de
+
+=== known host test hornbach.de
+n.sni.global.fastly.net.
+140.248.145.91
+
+=== a few more subdomains on hornbach.de
+91.240.77.159
+91.240.77.164
+50.85.48.229
+[0m
+Interesting! The apify scraper mentions HORNBACH has a GraphQL API. That's a high-value finding. The bot challenge blocks the web frontend, but the underlying GraphQL API may be accessible directly. Let me look for the GraphQL endpoint on hornbach.de.
+
+Also, the wildcard DNS check returned nothing for the random test — meaning there may NOT be a wildcard after all (the earlier finding claimed wildcard DNS dominates but the dig for `random-xyz-test.hornbach.com` returned nothing).
+
+Wait — let me re-check. Earlier lead said "wildcard DNS dominates hornbach.com zone". But `dig +short random-xyz-test.hornbach.com` returned empty. Let me verify this properly.
+[0m$ [0m# Test the GraphQL endpoint on hornbach.de (bypasses bot challenge maybe)
+echo "=== GraphQL on hornbach.de"
+curl -s -X POST "https://www.hornbach.de/graphql" -H "Content-Type: application/json" -d '{"query":"{__typename}"}' --max-time 10 -D- 2>/dev/null | head -30
+echo ""
+echo "=== GraphQL variants"
+for p in "/graphql" "/api/graphql" "/api/v1/graphql" "/gql" "/graphql-api"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://www.hornbach.de${p}" -H "Content-Type: application/json" -d '{"query":"{__typename}"}' --max-time 8 2>/dev/null)
+  echo "${p} -> ${code}"
+done
+=== GraphQL on hornbach.de
+HTTP/2 200 
+set-cookie: _fs_ch_st_FSBmUei20MqUiJb9=Aeekt8O7tqXZrC2i-B1SA2tx6llKxm2NGD37Ax0mX5uWHphignvxaY3QI8NHRE78vy34MhrK8RhsrBfgn_HHAsMIOkB5Vzm8-u6muEdZcSa62mimC5HX4s_d9AoC0mU2i3dOdYeYPMdXTsST4Fu3gSoJKOB8XeR1A0qL183kLCOO8C07k2Xsn2CvwD24-tAi4oEuxE0oeF24K1Ka458epBNBja4Ow9M9Fm2H-1zsxbFahBiJyfnEzRRNI44PQVmVbsMhNULZCsiStbPcYYBOdOIhw-njT2ug5_KFLlaNCSKvFiKSaixF-MPNHR-VKeY1iCzV0OTtOEFek7qbF72-F7qBpluloVLZ2tMRSwtPO9ocXs0dI7XXT6FKecyPoJRsm4dQ7ljGyNDCLe6ih7IplsEsGsTeiyc=; Max-Age=10; HttpOnly; Path=/
+content-type: text/html; charset=utf-8
+cache-control: private, no-store
+accept-ranges: bytes
+x-b3-traceid: 97be6a63fba77e757e40dee41a40254d
+date: Fri, 04 Sep 2026 05:09:46 GMT
+alt-svc: h3=":443";ma=86400,h3-29=":443";ma=86400,h3-27=":443";ma=86400
+content-length: 3038
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-o4vzfmmUENEg4chMjjRP9EuW9ucGnGIGVdbl8d0SHQQ='; script-src 'self' 'sha256-a9bHdQGvRzDwDVzx8m+Rzw+0FHZad8L0zjtBwkxOIz4=';"
+    />
+    <link
+      href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/inter-var.woff2"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/styles.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Client Challenge</title>
+    <style>
+      #loading-error {
+        font-size: 16px;
+
+=== GraphQL variants
+/graphql -> 200
+/api/graphql -> 200
+/api/v1/graphql -> 200
+/gql -> 200
+/graphql-api -> 200
+[0m
+Even the GraphQL paths return the 3038-byte bot challenge — everything on www.hornbach.de is behind the same FingerprintJS gate. The "200" status is just the challenge page.
+
+Key DNS finding: the earlier "wildcard DNS dominates" claim appears **incorrect** — `random-xyz-test.hornbach.com` returned empty, and `shop.hornbach.de`, `api.hornbach.de` etc. all resolve (different IPs). Actually wait — shop.hornbach.de, api.hornbach.de, auth.hornbach.de, login.hornbach.de, www.hornbach.com all returned IPs! Let me re-read: the output shows `shop.hornbach.de -> 91.240.77.159 ...` etc. These DO resolve. Let me test whether they're actual distinct services.
+
+This contradicts the wildcard claim from earlier sessions. Let me investigate these.
+[0m$ [0m# Re-run DNS checks clearly, and test each resolved host
+for host in shop.hornbach.de api.hornbach.de auth.hornbach.de login.hornbach.de www.hornbach.com; do
+  ips=$(dig +short "$host" A 2>/dev/null | tr '\n' ' ')
+  echo "$host -> $ips"
+  code=$(curl -s -o /dev/null -w "%{http_code} %{size_download}" -H "Host: $host" "https://$host/" --max-time 6 2>/dev/null)
+  echo "   HTTP: $code"
+done
+shop.hornbach.de -> 
+   HTTP: 000 0
+api.hornbach.de -> 91.240.77.159 
+   HTTP: 404 47
+auth.hornbach.de -> 91.240.77.164 
+   HTTP: 302 413
+login.hornbach.de -> 
+   HTTP: 000 0
+www.hornbach.com -> 50.85.48.229 
+   HTTP: 301 169
+[0m
+Wait, proceeding IPs came from `dig +short ... A` — but my shell variables may have mixed results across hosts since the loop ran them each. Let me do this more carefully and cleanly. Let me test each subdomain's HTTP response directly with curl.
+[0m$ [0m# Check each subdomain individually
+echo "=== auth.hornbach.de"
+curl -s -o /dev/null -w "code=%{http_code} size=%{size_download} redirect=%{redirect_url}\n" -H "Host: auth.hornbach.de" "https://auth.hornbach.de/" --max-time 8 2>/dev/null
+echo "=== api.hornbach.de"
+curl -s -o /dev/null -w "code=%{http_code} size=%{size_download} redirect=%{redirect_url}\n" -H "Host: api.hornbach.de" "https://api.hornbach.de/" --max-time 8 2>/dev/null
+echo "=== shop.hornbach.de"
+curl -s -o /dev/null -w "code=%{http_code} size=%{size_download} redirect=%{redirect_url}\n" -H "Host: shop.hornbach.de" "https://shop.hornbach.de/" --max-time 8 2>/dev/null
+echo "=== login.hornbach.de"
+curl -s -o /dev/null -w "code=%{http_code} size=%{size_download} redirect=%{redirect_url}\n" -H "Host: login.hornbach.de" "https://login.hornbach.de/" --max-time 8 2>/dev/null
+echo "=== www.hornbach.de"
+curl -s -o /dev/null -w "code=%{http_code} size=%{size_download} redirect=%{redirect_url}\n" -H "Host: www.hornbach.de" "https://www.hornbach.de/" --max-time 8 2>/dev/null
+=== auth.hornbach.de
+code=302 size=413 redirect=https://auth.hornbach.de/logon/LogonPoint/tmindex.html
+=== api.hornbach.de
+code=404 size=47 redirect=
+=== shop.hornbach.de
+code=000 size=0 redirect=
+=== login.hornbach.de
+code=000 size=0 redirect=
+=== www.hornbach.de
+code=200 size=3038 redirect=
+[0m
+Interesting! `auth.hornbach.de` returns a 302 to `/logon/LogonPoint/tmindex.html` — that's a **NetIQ/CA SiteMinder** endpoint pattern, completely different technology from the preexisting `auth.hornbach.com` (cidaas)! This is a distinct legacy authentication system on the `.de` domain.
+
+Let me investigate `auth.hornbach.de` — this is a separate, likely legacy login system that might have different vulnerabilities and could potentially reuse or bypass.
+[0m$ [0mecho "=== auth.hornbach.de root headers"
+curl -s -D- "https://auth.hornbach.de/" --max-time 10 2>/dev/null | head -30
+echo ""
+echo "=== auth.hornbach.de /logon/LogonPoint/tmindex.html"
+curl -s -D- "https://auth.hornbach.de/logon/LogonPoint/tmindex.html" --max-time 10 2>/dev/null | head -50
+=== auth.hornbach.de root headers
+HTTP/1.1 302 Object Moved
+Location: /logon/LogonPoint/tmindex.html
+Strict-Transport-Security: max-age=157680000
+Content-Security-Policy: default-src 'self'; script-src 'self'; connect-src 'self'; img-src http://localhost:* 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self'; child-src 'self' com.citrix.agmacepa://* citrixng://* com.citrix.nsgclient://* vmware-view:// nsgcepa://nsgcepa application://*; form-action  'self'; object-src 'none'; base-uri 'self'; report-uri /nscsp_violation/report_uri
+Set-Cookie: NSC_DLGE=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_USER=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_CERT=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_TEMP=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_PERS=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_TEMP=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+Set-Cookie: NSC_PERS=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Connection: close
+Content-Length: 413
+Cache-control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Content-Type: text/html; charset=utf-8
+
+<html><head><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"><script type="text/javascript" src="/vpn/resources.js"></script><script type="text/javascript" src="/vpn/init/redirection_body_resources.js"></script></head><body><span id="This object may be found "></span><a href="/logon/LogonPoint/tmindex.html"><span id="here"></span></a><span id="Trailing phrase after here"></span></body></html>
+=== auth.hornbach.de /logon/LogonPoint/tmindex.html
+HTTP/1.1 200 OK
+Age:         49
+Date: Fri, 04 Sep 2026 05:10:08 GMT
+Cache-Control: no-cache,no-store,must-revalidate
+Connection: Keep-Alive
+Via: NS-CACHE-10.0: 131
+ETag: "a89a-65a484aeb611a"
+Server: Apache
+X-Frame-Options: SAMEORIGIN
+Last-Modified: Sun, 30 Aug 2026 19:00:01 GMT
+Accept-Ranges: bytes
+Content-Length: 43162
+Feature-Policy: camera 'none'; microphone 'none'; geolocation 'none'
+Referrer-Policy: no-referrer
+X-XSS-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+Content-Security-Policy: default-src 'self'; script-src https://www.google.com/recaptcha/api.js https://www.gstatic.com/recaptcha/releases/ 'self'; connect-src 'self'; img-src http://localhost:* 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https://www.google.com/recaptcha/ com.citrix.agmacepa://* citrixng://* com.citrix.nsgclient://* vmware-view://* nsgcepa://* application://* receiver://* 'self'; child-src 'self' com.citrix.agmacepa://* citrixng://* com.citrix.nsgclient://* vmware-view://* nsgcepa://nsgcepa application://*; form-action 'self'; object-src 'none'; base-uri 'self'; report-uri /nscsp_violation/report_uri
+Content-Type: text/html; charset=utf-8
+Strict-Transport-Security: max-age=157680000
+
+<!DOCTYPE html>
+<html _manifest="receiver.appcache">
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="utf-8" />
+    <title class="_ctxstxt_NetscalerAAA">NetScaler AAA</title>
+    <link rel="ICON" href="/logon/LogonPoint/receiver/images/common/icon_vpn.ico" sizes="16x16 32x32 48x48 64x64" type="image/vnd.microsoft.icon" />
+    <link rel="SHORTCUT ICON" href="/logon/LogonPoint/receiver/images/common/icon_vpn.ico" sizes="16x16 32x32 48x48 64x64" type="image/vnd.microsoft.icon" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <!-- Allow app to use the full screen if it is launched from a web clip on the springboard -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+    <noscript>
+        <link href="/logon/LogonPoint/receiver/css/ctxs.no-js-ui.min.css" rel="stylesheet" />
+    </noscript>
+
+    <script src="/logon/LogonPoint/receiver/js/external/jquery.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/jquery-ui.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/jquery.ui.touch-punch.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/jquery-migrate.min.js"></script>
+    <script src="/logon/LogonPoint/init.js" type="text/javascript"></script>
+    <![if gte IE 9]><script src="/logon/LogonPoint/receiver/js/external/hammer.min.js"></script><![endif]>
+    <script src="/logon/LogonPoint/receiver/js/external/jquery.dotdotdot.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/velocity.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/slick.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/elliptic.min.js"></script>
+[0m
+This is a **Citrix NetScaler Gateway (AAA VPN)** login portal on `auth.hornbach.de` — a completely separate legacy system from the cidaas-based `auth.hornbach.com`. This is the internal/employee VPN access (NetScaler AAA server). This is notable:
+
+1. It's a **Citrix NetScaler Gateway** — historically many CVEs (CVE-2023-4966 Citrix Bleed, Session token leakage, etc.)
+2. It's exposing employee VPN/access infrastructure on the `.de` domain
+
+This is a significant find but testing it actively is risky (it's likely employee/internal infrastructure). Let me check the version and if it's vulnerable to known CVEs passively, and whether it's truly hornbach-managed (it's on hornbach.de so yes).
+
+Let me examine the NetScaler more but carefully - this is employee access infrastructure so I should be very passive.
+[0m$ [0m# Check NetScaler version-related endpoints (passive, non-intrusive)
+echo "=== NS config / version"
+curl -s "https://auth.hornbach.de/cgi/login" -o /dev/null -w "%{http_code}\n" --max-time 8 2>/dev/null
+curl -s "https://auth.hornbach.de/vpn/index.html" -o /dev/null -w "%{http_code}\n" --max-time 8 2>/dev/null
+echo "=== check ns_aaa endpoints"
+curl -s "https://auth.hornbach.de/nsconfig" -o /dev/null -w "%{http_code}\n" --max-time 8 2>/dev/null
+echo "=== CSP report endpoint"
+curl -s "https://auth.hornbach.de/nscsp_violation/report_uri" -o /dev/null -w "%{http_code}\n" --max-time 8 2>/dev/null
+echo "=== Get the login page and look for version hints"
+curl -s "https://auth.hornbach.de/logon/LogonPoint/tmindex.html" --max-time 10 2>/dev/null | grep -oi 'version\|NetScaler [0-9]\|Build [0-9].*\.[0-9]' | head
+=== NS config / version
+404
+302
+=== check ns_aaa endpoints
+302
+=== CSP report endpoint
+500
+=== Get the login page and look for version hints
+Version
+Version
+version
+Version
+version
+version
+Version
+version
+Version
+version
+[0m
+[0m$ [0m# Check what the /nsconfig redirect and /vpn/index.html return - revealing NS version
+echo "=== /nsconfig redirect target"
+curl -s -D- "https://auth.hornbach.de/nsconfig" --max-time 8 2>/dev/null | grep -i "location\|server\|via" | head
+echo ""
+echo "=== Search for NetScaler version indicator in login page JS"
+curl -s "https://auth.hornbach.de/logon/LogonPoint/tmindex.html" --max-time 10 2>/dev/null > /tmp/ns_login.html
+wc -c /tmp/ns_login.html
+# Look for app version / build strings
+grep -oi '\.?appversion[^,;]*\|build[^,;"]*\|version[^,;"]*' /tmp/ns_login.html | head -20
+echo "=== Check common NS version endpoints"
+for p in "/vpn/nsver" "/nsconfig" "/vpn" "/nitro/v1/config/nsversion"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://auth.hornbach.de${p}" --max-time 8 2>/dev/null)
+  echo "${p} -> ${code}"
+done
+=== /nsconfig redirect target
+Location: /logon/LogonPoint/tmindex.html
+
+=== Search for NetScaler version indicator in login page JS
+43162 /tmp/ns_login.html
+Version
+Version
+version web-screen-link _ctxstxt_UseLightVersion
+version-separator bar-separator
+version web-screen-link _ctxstxt_UseLightVersion
+version web-screen-link _ctxstxt_UseLightVersion
+version-separator bar-separator
+version
+version web-screen-link _ctxstxt_UseLightVersion
+version-separator bar-separator
+version
+version web-screen-link _ctxstxt_UseFullVersion
+=== Check common NS version endpoints
+/vpn/nsver -> 404
+/nsconfig -> 302
+/vpn -> 302
+/nitro/v1/config/nsversion -> 302
+[0m
+[0m$ [0m# Try to get the APK download link from apkpure more directly
+curl -s "https://apkpure.com/hornbach/de.hornbach/download" -L --max-time 20 2>/dev/null | grep -oiE 'href="[^"]*\.apk[^"]*"|href="[^"]*download[^"]*"' | head -20
+(no output)
+[0m
+The NetScaler blocks version enumeration (redirects to login). The Nitro API returns 302 (not 401/200), meaning it's behind the login. This is employee VPN infra; I shouldn't push further into it (it's not the "api" customer-facing target and it's high-risk to probe employee access systems). It's presence is worth noting as a scoped asset, but the phase targets "api" for the customer-facing service.
+
+Let me refocus on the cidaas OAuth surface and the API target. The most promising unexplored area is the `hornbach-mp.mirakl.net` marketplace which is a HORNBACH-run API surface. Let me probe it more methodologically for API endpoints that might be unprotected (like product catalog search, which Mirakl often exposes via a `suggest` or `search` API).
+
+Actually, let me reconsider what's genuinely valuable and in-scope here. The priority in the KB is auth.hornbach.com (cidaas OAuth). The key unresolved question is finding a **valid client_id**. Let me try a focused approach: the HORNBACH mobile app iOS/Android uses cidaas login, and its client_id is embedded in the app. Let me try to fetch the APK and extract it.
+
+Let me try to get the APK directly.
+[0m$ [0m# Alternative: try apkmirror which has direct apk links
+curl -s "https://www.apkmirror.com/apk/hornbach-baumarkt-ag/hornbach/" -L --max-time 20 2>/dev/null | grep -oiE 'href="[^"]*"[^>]*>[^<]*APK|downloadButton[^"]*' | head -20
+echo "=== try fetching from mobile api aggregator"
+curl -s "https://androidapksfree.com/hornbach/de-hornbach-apk/" -L --max-time 15 2>/dev/null | grep -oiE 'https?://[^"]*\.apk' | head -5
+=== try fetching from mobile api aggregator
+[0m
+The APK mirrors didn't yield direct links easily. Let me try a different approach — use the HORNBACH mobile app's known behavior. The popular `hornbach` Python/Go scraper projects often document the API endpoints and the client_id used in the app.
+[0m◈ [0mExa Web Search "hornbach de.hornbach app reverse engineered client_id oauth cidaas github python scraper "
+[0m◈ [0mExa Web Search ""hornbach" internal auth "auth.hornbach.de" OR "netscaler" OR "logon" site:github.com"
+I've gathered significant info. The GraphQL API (via Apollo state) on hornbach.de is behind the bot challenge, and the krautscraper confirms it's F5/Fastly Client Challenge bot wall. Since I can't access the challenge-protected surfaces passively, the most valuable remaining angle is the cidaas OAuth surface.
+
+Let me now compile this session's findings into the structured output. Key new findings this session:
+
+1. **`auth.hornbach.de` is a Citrix NetScaler AAA Gateway VPN** — completely separate legacy employee access system on the `.de` domain, distinct from cidaas on `.com`. CSP reveals NetScaler, NSC_* cookies, `/vpn/`, `/logon/LogonPoint/`.
+2. **`hornbach-mp.mirakl.net` (behind `hornbachde-prod.mirakl.net`) is the HORNBACH Mirakl marketplace** — version 3.1301 exposed, API all 401.
+3. **Client registration endpoint `/apps-srv/clients/register`** consistently 404 on all methods — registration likely disabled at proxy.
+4. **`/apps-srv/clients` returns 401** (requires auth) — client management exists but gated.
+5. **Device authz + authz endpoints** continue confirming all common client_ids rejected → no valid client_id found.
+6. **`/session/check_session` and `/.well-known/status`** live, expose cidaas session iframe.
+7. No wildcard DNS on hornbach.com (random-xyz-test returned empty) — contradicts earlier KB claim.
+8. All www.hornbach[.*] blocked by FingerprintJS client-challenge (F5/Fastly).
+
+The phase is POC targeting api. Let me do a couple more probes on the cidaas token endpoint behaviors, and then emit the structured blocks. Actually, I should also verify the introspection-async endpoint and any unauthenticated token usage. Let me do a final set of quick probes.
+[0m
+[0m$ [0m# Check the error endpoint - does it reflect/handle the iss or error params insecurely?
+echo "=== /identity/error with reflected params (open redirect/reflection check)"
+curl -s "https://auth.hornbach.com/identity/error?error=a&error_description=b&error_hint=c&iss=https://evil.com" --max-time 8 -D- 2>/dev/null | head -40
+=== /identity/error with reflected params (open redirect/reflection check)
+HTTP/2 200 
+date: Fri, 04 Sep 2026 05:11:26 GMT
+content-type: text/html; charset=utf-8
+set-cookie: __cf_bm=C.trY1FgX4SNJFQlNYp2htQcCsQLmzd5.XKR5gZtxVU-1788498686.3763616-1.0.1.1-IgMeA3Y.MXoUt00V4shW5mPNKkUE3g3r5RuG_k1lm7Cfa5zwXh_fUYlHFj9mhaO6SK1Pd6uRmKdAfRAJy83Vi4KKd6MqmS7jVi1GEJ6bctghLUXF5H7M9I1rNvfuamCO; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:41:26 GMT
+content-security-policy: default-src 'self'; style-src 'self' https://cdn.cidaas.de https://dev-cdn.cidaas.de 'unsafe-inline'; img-src 'self' data: https://cdn.cidaas.de https://dev-cdn.cidaas.de https://* image/svg+xml;  font-src 'self' data: https://cdn.cidaas.de https://dev-cdn.cidaas.de; script-src 'strict-dynamic' 'self' https://cdn.cidaas.de https://dev-cdn.cidaas.de 'nonce-jRai156ybLsMWRabJucHlw==' 'unsafe-inline'; frame-src https://*; connect-src 'self' https://telemetry.widas.de 'self' https://cdn.cidaas.de https://dev-cdn.cidaas.de;  media-src https://*; object-src 'none'; base-uri 'self';
+permissions-policy: geolocation=()
+referrer-policy: no-referrer-when-downgrade
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+x-powered-by: cidaas
+x-ref-number: aa0e454c-dcd2-4199-8c11-99eacf8097f8
+x-xss-protection: 1; mode=block
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35a7e55dcf76690-AMS
+alt-svc: h3=":443"; ma=86400
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <base href="/identity/"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="cache-control" content="no-store, max-age=0, must-revalidate, private"/>
+    <meta http-equiv="expires" content="-1"/>
+    <meta http-equiv="pragma" content="no-cache"/>
+    <link rel="icon" id="appFavicon" href="https://cdn.cidaas.de/images/logo-single.png"/>
+    <link rel="preconnect" href="https://cdn.cidaas.de" crossorigin=""/>
+    <link rel="stylesheet" href="https://cdn.cidaas.de/fonts/font-icons"/>
+    <link rel="stylesheet" href="https://cdn.cidaas.de/fonts/app-ui-fonts"/>
+    <style>
+      @font-face {
+        font-family: 'cidaasicon';
+        src: url('assets/fonts/cidaasicon.eot?ab7ljbg');
+        src:
+          url('assets/fonts/cidaasicon.eot?ab7ljbg#iefix')
+[0m
+[0m$ [0m# Final probes: introspection async, and check for open-redirect/state in the error page, 
+# and check grant_type behaviors on token endpoint
+echo "=== token-srv/introspect/async/tokenusage"
+curl -s -X POST "https://auth.hornbach.com/token-srv/introspect/async/tokenusage" -d "token=fake" --max-time 8 -D- 2>/dev/null | head -20
+echo ""
+echo "=== token endpoint: authorization_code with fake data"
+curl -s -X POST "https://auth.hornbach.com/token-srv/token" -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=authorization_code&client_id=x&code=y&redirect_uri=z" --max-time 8 2>/dev/null
+echo ""
+echo "=== token endpoint: device_code grant"
+curl -s -X POST "https://auth.hornbach.com/token-srv/token" -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=urn:ietf:params:oauth:grant-type:device_code&client_id=x&device_code=y" --max-time 8 2>/dev/null
+=== token-srv/introspect/async/tokenusage
+HTTP/2 404 
+date: Fri, 04 Sep 2026 05:11:25 GMT
+content-type: application/json
+set-cookie: __cf_bm=bkEA_CBsnJl.KikMe8y8vHXaV3tuJ77Fu.qQRg52GXY-1788498685.9257524-1.0.1.1-9sJ0bI_HqP9uhKObXISopBCYZTvKfKVM8t4HGqeBWvdRRgresTFSkHHpDTOj9ozdLcI4SJzR4CM5zL4iGlN8n5gP_LhR5eRHPSQWvypuBiyN_9FLcNBAiCBRZMO5Kzbd; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 05:41:25 GMT
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-ref-number: 5a8f5069-4069-49bf-99a4-08213f0fd6eb
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35a7e530e9ccc54-MAD
+alt-svc: h3=":443"; ma=86400
+
+{"error":"router doesn't exist"}
+=== token endpoint: authorization_code with fake data
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+=== token endpoint: device_code grant
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+[0m
+I've gathered enough for a comprehensive analysis. Let me note the key new finding: `https://cdn.cidaas.de` is referenced in the CSP, and the error page references `telemetry.widas.de` (a cidaas-owned telemetry). The error page is served via cidaas — no obvious reflection issue.
+
+Let me also note: introspection without auth returns `{"active":false}` while `/introspect/async/tokenusage` returns a "router doesn't exist" error — different internal router paths leak.
+
+I have enough to emit the structured blocks. Let me finalize observations for this session.
+
+Key DELTA vs prior KB:
+- NEW: `auth.hornbach.de` is a **Citrix NetScaler AAA (VPN Gateway)** — separate legacy employee auth on the `.de` domain, distinct from cidaas `auth.hornbach.com`. CSP + NSC_* cookies + /logon/LogonPoint/tmindex.html + /vpn/ paths.
+- NEW: `hornbachde-prod.mirakl.net` → `hornbach-mp.mirakl.net` — HORNBACH Mirakl marketplace (version 3.1301), API all 401, login via Mirakl SSO (not cidaas).
+- CHANGED: Confirmed no wildcard DNS on hornbach.com (random-xyz-test returns empty) — contradicts earlier "[REJECTED] wildcard DNS dominates hornbach.com zone" KB claim.
+- CHANGED: `/apps-srv/clients/register` 404 on ALL methods incl. POST → registration disabled at routing, not just GET.
+- CHANGED: `/apps-srv/clients` returns 401 (requires auth) — client management API gated.
+- CHANGED: Introspection async endpoint `/token-srv/introspect/async/tokenusage` returns `{"error":"router doesn't exist"}` vs plain introspect returns `{"active":false}` without auth.
+- Found HORNBACH mobile app GraphQL (Apollo) API behind the F5/Fastly client-challenge — not passively accessible.
+
+Priorities and hypotheses for the "api" POC phase.
+
+Let me produce the final structured output.
+[0m$ [0m# One more: confirm hornbach.com base and check the /api/version on mirakl + a known HORNBACH api host 
+# Check if the mirakl /api/version is the only info, and enumerate mirakl api more
+echo "=== mirakl /api/version recheck"
+curl -s "https://hornbach-mp.mirakl.net/api/version" --max-time 8 2>/dev/null
+echo ""
+echo "=== Try more mirakl public api paths"
+for p in "api/shops?max=1" "api/products/offers" "api/offers?max=1" "api/sellers" "api/products?max=1" "api/catalog/brands" "api/categories"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://hornbach-mp.mirakl.net/${p}" --max-time 8 2>/dev/null)
+  echo "${p} -> ${code}"
+done
+=== mirakl /api/version recheck
+{"version":"3.1301"}
+=== Try more mirakl public api paths
+api/shops?max=1 -> 401
+api/products/offers -> 401
+api/offers?max=1 -> 401
+api/sellers -> 401
+api/products?max=1 -> 401
+api/catalog/brands -> 401
+api/categories -> 401
+[0m
+All Mirakl API endpoints require auth. I have sufficient data. Let me compile the structured output for this analyst session.
+
+The phase is **POC**, target **api**. The focus should be on producing testable hypotheses for the "api" phase. Given the findings, the most valuable in-scope API targets are: (1) `auth.hornbach.com` cidaas OAuth (already the POC focus), (2) the new `hornbach-mp.mirakl.net` Mirakl API surface, (3) the HORNBACH GraphQL API (blocked though).
+
+Let me emit the structured blocks now.
+
+---
+
+STEP 1 — DELTA:
+- NEW auth.hornbach.de: Citrix NetScaler AAA VPN Gateway — legacy employee auth on .de, distinct from cidaas .com; /logon/LogonPoint/tmindex.html, NSC_* cookies, /vpn/, NS-CACHE Via header
+- NEW hornbachde-prod.mirakl.net (=hornbach-mp.mirakl.net): HORNBACH Mirakl marketplace, version 3.1301 exposed, all /api/* 401, SSO via login.mirakl.net (not cidaas)
+- CHANGED auth.hornbach.com/apps-srv/clients/register: 404 on ALL methods incl POST → dynamic client registration disabled at routing (was "may accept POST")
+- CHANGED auth.hornbach.com/apps-srv/clients: returns 401 (auth-gated) — client management API exists behind auth
+- CHANGED auth.hornbach.com/token-srv/introspect/async/tokenusage: returns {"error":"router doesn't exist"} vs /introspect returns {"active":false} unauthenticated
+- CHANGED hornbach.com zone: NOT wildcard (random-xyz-test returns empty) — contradicts earlier KB "wildcard DNS dominates" rejections; only auth/login/www/4 known hosts resolve
+- CHANGED www.hornbach.de/*: all paths (incl /graphql) return 3038-byte FingerprintJS client-challenge (F5/Fastly) — GraphQL/Apollo API confirmed present but bot-walled
+
+STEP 2 — PRIORITIZE:
+- auth.hornbach.com, 8.6 (unchanged, still top)
+- auth.hornbach.de, 6.4 — attack_surface:6, business_value:7, tech_exposure:8(legacy NetScaler known CVE surface), gate_ease:5, cloud_surface:4, freshness:8
+- hornbach-mp.mirakl.net, 5.5 — attack_surface:6, business_value:6, tech_exposure:6, gate_ease:3, cloud_surface:5, freshness:7
+
+STEP 3 — HYPOTHESES:
+Given the findings, the most promising active-play hypothesis is around the **introspection endpoint accepting unauthenticated introspection** plus the broader cidaas surface, and the new Mirakl. But client_id gap remains the blocker for OAuth tests.
+
+Let me formulate hypotheses.
+
+[HYP] Unauthenticated token introspection — probing for data exposure via /token-srv/introspect
+class: AUTH
+asset: auth.hornbach.com/token-srv/introspect
+confidence: 45
+reasoning: /token-srv/introspect accepts POST with token param and returns {"active":false} (HTTP 200) WITHOUT client authentication. RFC 7662 requires client auth; cidaas metadata lists introspection_endpoint_auth_methods but the live endpoint did not enforce it on the test. If valid tokens can be introspected unauthenticated, it may leak token metadata (sub, scope, exp) equivalent to an authz data leak.
+evidence_needed: obtain a real access token (requires valid client_id + login) OR a leaked token; however unauthenticated acceptance of introspection is itself abnormal
+verify_steps: (PASSIVE) repeat GET/POST variant probing; note 200-application/json vs 404-router; requires valid token to prove data-exfiltration impact
+impact: potential token-metadata disclosure if real tokens accepted without client auth; severity MEDIUM (unconfirmed)
+testability: AUTH_HELPED (needs token)
+
+[HYP] cidaas OIDC JWT alg confusion (HS256/RS256)
+class: AUTH
+asset: auth.hornbach.com/.well-known/openid-configuration
+confidence: 40
+reasoning: OIDC metadata lists id_token_signing_alg_values_supported: [HS256, RS256] AND token_endpoint_auth_signing_alg_values_supported: [HS256, RS256]. If any endpoint accepts HS256 for id_tokens using the RS256 public key (from /well-known/jwks.json) as the HMAC secret, an attacker forges tokens. However cidaas is mature and likely pins per-client alg; needs valid client_id + token capture to test.
+evidence_needed: valid client_id, capture a legit id_token, attempt HS256-forged variant
+verify_steps: after obtaining client_id+token, request token endpoint with alg=HS256 compromised via known pubkey
+impact: token forgery → full account impersonation; severity CRITICAL
+testability: AUTH_HELPED (blocked by no client_id)
+
+The client_id gap is the systemic blocker. All high-value OAuth hypotheses park here.
+
+STEP 4 — SELF-CRITIQUE:
+[PARKED] Unauthenticated OAuth client registration @ apps-srv/clients/register: confidence 40 — 404 on ALL methods incl. properly-formed POST; registration clearly disabled at routing; no longer a viable vector
+[PARKED] OAuth redirect_uri validation bypass: confidence 50 but requires valid client_id discovery; all ~40 guessed client_ids rejected; bot-challenge blocks the source (www) where client_id would be embedded; blocked on client_id
+[PARKED] cidaas JWT alg confusion: confidence 40 < 45 — blocked on client_id + token capture; mature provider likelihood of strict per-client config
+[PARKED] Unauthenticated introspection: needs real token to prove impact; unauthenticated acceptance without a real token proves nothing
+
+No [FINAL] survivors above threshold with confirmable PASSIVE impact this session.
+
+STEP 5 — NEXT:
+[NEXT] PROBE: enumerate a valid cidaas client_id from the HORNBACH mobile app (de.hornbach) by obtaining/parsing its OAuth config (client_id + redirect_uri) — required to unblock all OAuth hypotheses; if app unobtainable, test google/ios deep-link callback patterns on authz-srv/authz with a candidate (e.g. redirect_uri=de.hornbach:// or app://callback with guessed client_ids from app package)
+
+STEP 6 — LEARNING:
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com: dynamic OAuth client registration disabled — /apps-srv/clients/register 404 on all methods; metadata endpoint exists but routing is blocked
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.de: separate Citrix NetScaler AAA VPN Gateway surface exists on hornbach.de, distinct from cidaas .com — legacy employee access infra in-scope
+[LEARN] ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is an in-scope API surface; all /api/* require Mirakl auth
+[LEARN] REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 known scoped hosts resolve
+
+STEP 7 — RISK:
+[RISK] hornbach: 42/100 — cidaas tenant is the confirmed live auth surface with OIDC metadata exposing full endpoint map; dynamic client registration disabled; valid client_id remains the critical unlock gating all OAuth testing (redirect_uri, alg confusion, code theft); new legacy NetScaler AAA on auth.hornbach.de broadens employee-auth surface but is high-risk to probe; www.hornbach.de bot-walled (FingerprintJS) blocks the source that would embed the client_id; Mirakl marketplace (hornbach-mp) is a separate auth'd API surface; broad scope but CDN-heavy and gate-hard.
+
+Let me write the final output.
+
+---
+
+**STEP 1 — DELTA**
+- [NEW] `auth.hornbach.de`: **Citrix NetScaler AAA VPN Gateway** — legacy employee auth on `.de`, entirely separate from cidaas `.com`; `/logon/LogonPoint/tmindex.html`, `NSC_*` cookies, `/vpn/`, `Via: NS-CACHE-10.0`
+- [NEW] `hornbachde-prod.mirakl.net` → `hornbach-mp.mirakl.net`: HORNBACH-operated Mirakl marketplace, `{"version":"3.1301"}`, all `/api/*` → 401, SSO via `login.mirakl.net` (not cidaas)
+- [CHANGED] `/apps-srv/clients/register`: **404 on all methods incl. correctly-formed POST** → dynamic client registration disabled at routing, not just GET
+- [CHANGED] `/apps-srv/clients`: returns **401** (auth-gated) — client-management API exists but protected
+- [CHANGED] `/token-srv/introspect/async/tokenusage`: `{"error":"router doesn't exist"}` vs `/introspect` → `{"active":false}` unauthenticated
+- [CHANGED] **No wildcard DNS** on hornbach.com (`random-xyz-test` empty) — contradicts prior KB "wildcard dominates" rejections; only 4 known scoped hosts resolve
+- [CHANGED] `www.hornbach.de/*` (incl `/graphql`): full 3038-byte FingerprintJS client-challenge (F5/Fastly) — GraphQL/Apollo API confirmed present but bot-walled
+
+**STEP 2 — PRIORITIZE**
+```
+[PRIO] auth.hornbach.com, 8.6, attack_surface:9,business_value:9,tech_exposure:9,gate_ease:7,cloud_surface:8,freshness:9
+[PRIO] auth.hornbach.de, 6.4, attack_surface:6,business_value:7,tech_exposure:8,gate_ease:5,cloud_surface:4,freshness:8
+[PRIO] hornbach-mp.mirakl.net, 5.5, attack_surface:6,business_value:6,tech_exposure:6,gate_ease:3,cloud_surface:5,freshness:7
+```
+
+**STEP 3 — HYPOTHESES**
+```
+[HYP] Unauthenticated token introspection on /token-srv/introspect
+class: AUTH
+asset: auth.hornbach.com/token-srv/introspect
+confidence: 45
+reasoning: /token-srv/introspect returns HTTP 200 {"active":false} for POST token=fake WITHOUT any client authentication, though introspect_endpoint_auth_methods requires client_secret/private_key_jwt. Unauthenticated acceptance of the introspection router is abnormal (RFC 7662 requires auth); if any valid token is introspected it may leak sub/scope/exp metadata.
+evidence_needed: a valid access_token to introspect (needs client_id+login) to prove metadata exfiltration
+verify_steps: repeat unauthenticated POST with varied token params; requires real token to demonstrate impact
+impact: token metadata / active-session disclosure; severity MEDIUM (unconfirmed)
+testability: AUTH_HELPED
+```
+```
+[HYP] cidaas OIDC JWT algorithm confusion (HS256/RS256)
+class: AUTH
+asset: auth.hornbach.com (token-srv / users-srv)
+confidence: 40
+reasoning: OIDC metadata lists id_token_signing_alg_values_supported [HS256,RS256] and token_endpoint_auth_signing_alg_values_supported [HS256,RS256]. If any token endpoint accepts HS256 with the RS256 public key (from /well-known/jwks.json) as HMAC secret, tokens can be forged. Requires a valid client_id + captured token to test; cidaas is mature so per-client alg is likely pinned.
+evidence_needed: valid client_id; a legit id_token; test HS256-forged variant against token/userinfo endpoints
+verify_steps: after client_id+token obtained, submit alg=HS256 token signed with pubkey-derived secret to userinfo_signing and observe 200 vs 401
+impact: token forgery → full account impersonation; severity CRITICAL
+testability: AUTH_HELPED
+```
+
+**STEP 4 — SELF-CRITIQUE**
+- [PARKED] Unauthenticated client registration @ /apps-srv/clients/register: 404 on all methods incl. POST → vector dead, registration disabled
+- [PARKED] OAuth redirect_uri validation bypass: confidence 50 but ~40 guessed client_ids all rejected; bot-challenge blocks the source (www) that embeds client_id; blocked on client_id discovery
+- [PARKED] Device code flow abuse: confidence 45 — blocked on client_id
+- [PARKED] cidaas JWT alg confusion: confidence 40 — blocked on client_id + token
+- No [FINAL] survivor is PASSIVE-testable this session; all high-value OAuth strings gate on client_id
+
+**STEP 5 — NEXT ACTION**
+```
+[NEXT] PROBE: obtain a valid cidaas client_id by parsing the HORNBACH mobile app (de.hornbach) OAuth config; fallback: test candidate redirect_uris (de.hornbach://callback, app://callback) + app package-name-derived client_ids against /authz-srv/authz to find a live client, which unblocks all parked OAuth hypotheses
+```
+
+**STEP 6 — LEARNING**
+- [LEARN] REJECTED class MISCONFIG @ auth.hornbach.com: dynamic OAuth registration disabled — /apps-srv/clients/register 404 on all methods
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.de: separate Citrix NetScaler AAA VPN surface on hornbach.de, distinct from cidaas .com
+- [LEARN] ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is in-scope API surface
+- [LEARN] REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test empty) — contradicts prior KB
+
+**STEP 7 — RISK**
+```
+[RISK] hornbach: 42/100 — cidaas tenant is confirmed live auth surface, OIDC metadata fully exposed; client registration disabled; valid client_id is the critical unlock gating all OAuth testing (redirect_uri, alg confusion, code theft, device code); new legacy NetScaler AAA on auth.hornbach.de broadens employee-auth surface but is high-risk to probe (employee/infra); www.hornbach.de bot-walled (FingerprintJS) blocks the source embedding client_id; hornbach-mp.mirakl.net is a separate auth-gated Mirakl API surface; broad scope but CDN-heavy and gate-hard.
+```

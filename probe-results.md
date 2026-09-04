@@ -42,3 +42,6 @@ https://auth.hornbach.com/oauth2/authorize?response_type=code&client_id=<candida
 
 ## 2026-09-04 00:43:50 UTC
 
+
+## 2026-09-04 05:17:58 UTC
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?

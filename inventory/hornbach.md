@@ -73,3 +73,5 @@ www.hornbach.com
 - CHANGED www.hornbach.com / hornbach.de: Login page returns bot-challenge page (FingerprintJS `_fs_ch_st_` cookie), 3038-byte stub
 
 ## 2026-09-04 00:43:49 UTC
+
+## 2026-09-04 05:17:56 UTC
