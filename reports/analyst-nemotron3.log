@@ -2181,3 +2181,272 @@ testability: PASSIVE
 [LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
 [LEARN] ACCEPTED class OTHER @ api.hornbach.de: API gateway exists (Gateway server header) but no documented endpoints discovered at common paths
 [RISK] hornbach: 70 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS. API gateway (api.hornbach.de) discovered but no endpoints enumerated. Priority: bypass bot challenge to extract client_id, then test OAuth redirect_uri validation.
+===== ANALYST nemotron3 2026-09-04 09:58:02 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.com/.well-known/openid-configuration" -H "Accept: application/json" --max-time 10
+HTTP/2 200 
+date: Fri, 04 Sep 2026 09:44:19 GMT
+content-type: application/json; charset=utf-8
+cache-control: public, max-age=900
+set-cookie: __cf_bm=5pXaFPbHNSA6.dQ9_vDhKPf.68jgBps.q9v0R2gc6e0-1788515059.620518-1.0.1.1-QPsNj71QC5LxdoSyDPlaXlY0S8PpsYEc0aWgVso8ExG3qYmT9I.p9HZBseFAXVLrMv7d.cdEfLgIYErJDWJVFHqmxFUJm1GdAJxMAv2Xi12.b5glzleovIBzeaKLPSZK; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 10:14:19 GMT
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 12c7e674-8c26-49bd-8a6c-aae1a10cd30c
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35c0e129d4f0e07-MXP
+alt-svc: h3=":443"; ma=86400
+
+{"issuer":"https://auth.hornbach.com","authorization_endpoint":"https://auth.hornbach.com/authz-srv/authz","token_endpoint":"https://auth.hornbach.com/token-srv/token","userinfo_endpoint":"https://auth.hornbach.com/users-srv/userinfo","https://discovery.netid.de/properties/status_endpoint":"https://auth.hornbach.com/.well-known/status","jwks_uri":"https://auth.hornbach.com/.well-known/jwks.json","scopes_supported":["openid","profile","email","phone","address","offline_access","identities","roles","groups"],"response_types_supported":["code","token","id_token","code token","code id_token","token id_token","code token id_token"],"response_modes_supported":["query","fragment","form_post"],"subject_types_supported":["public"],"id_token_signing_alg_values_supported":["HS256","RS256"],"token_endpoint_auth_methods_supported":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"],"claims_supported":["aud","auth_time","created_at","email","email_verified","exp","family_name","given_name","iat","identities","iss","mobile_number","name","nickname","phone_number","picture","sub"],"token_endpoint_auth_signing_alg_values_supported":["HS256","RS256"],"check_session_iframe":"https://auth.hornbach.com/session/check_session","end_session_endpoint":"https://auth.hornbach.com/session/end_session","social_provider_token_resolver_endpoint":"https://auth.hornbach.com/login-srv/social/token","registration_endpoint":"https://auth.hornbach.com/apps-srv/clients/register","userinfo_signing_alg_values_supported":["HS256","RS256"],"userinfo_encryption_alg_values_supported":["RS256"],"userinfo_encryption_enc_values_supported":["A128CBC-HS256"],"id_token_encryption_alg_values_supported":["RS256"],"id_token_encryption_enc_values_supported":["A128CBC-HS256"],"display_values_supported":["page","popup"],"claim_types_supported":["normal"],"service_documentation":"https://docs.cidaas.de/","ui_locales_supported":["en-US","de-DE"],"introspection_endpoint":"https://auth.hornbach.com/token-srv/introspect","introspection_async_update_endpoint":"https://auth.hornbach.com/token-srv/introspect/async/tokenusage","revocation_endpoint":"https://auth.hornbach.com/token-srv/revoke","introspection_endpoint_auth_methods_supported":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"],"introspection_endpoint_auth_signing_alg_values_supported":["HS256","RS256"],"revocation_endpoint_auth_methods_supported":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"],"revocation_endpoint_auth_signing_alg_values_supported":["HS256","RS256"],"claims_locales_supported":["en-US"],"op_policy_uri":"https://www.cidaas.com/privacy-policy/","op_tos_uri":"https://www.cidaas.com/terms-of-use/","grant_types_supported":["implicit","authorization_code","refresh_token","password","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code"],"code_challenge_methods_supported":["plain","S256"],"device_authorization_endpoint":"https://auth.hornbach.com/authz-srv/device/authz","backchannel_logout_supported":true,"scim_endpoint":"https://auth.hornbach.com/user-scim-srv/v2"}
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=test&redirect_uri=https://example.com&scope=openid" --max-redirs 0 --max-time 10
+HTTP/2 302 
+date: Fri, 04 Sep 2026 09:44:57 GMT
+content-length: 0
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 3021b782-c035-43d5-ba78-150b525645c5
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=yD2GeuTK6r60W8gjWOvnne9.gQ8yDovidM22MzCdqsc-1788515097.0791166-1.0.1.1-dJyt.CEG7vqCbXZSLt.0jafegUdTdOlO_eLW18_Xumzq3wl90mpbfNRi_lKFWJToDtBXLgp_76oZLV46xYhEgTaY6R4iLCE5m9kZZOKFHFtcf5CNfmpS7gpQu4d9JYdB; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 10:14:57 GMT
+server: cloudflare
+cf-ray: a35c0efcb90e3439-HAM
+alt-svc: h3=":443"; ma=86400
+[0m
+[0m$ [0mcurl -s -D- -X POST "https://auth.hornbach.com/apps-srv/clients/register" -H "Content-Type: application/json" -d '{"client_name":"test_probe","redirect_uris":["https://evil.com"],"grant_types":["authorization_code"],"response_types":["code"]}' --max-time 10
+HTTP/2 404 
+date: Fri, 04 Sep 2026 09:44:57 GMT
+content-type: text/plain; charset=utf-8
+content-length: 9
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: df0cf5cf-8e4a-4cab-8c0d-b2d2779f8978
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=uwwQtsU_A4HLlY6Ci.Pb8FbeOrhdM8Nv2MQCEBqGLU0-1788515097.668196-1.0.1.1-UEwsrKWq.CG3C4WrxaZl8ppFCYYDVXss6.dchM34FZx.Y0B0mI2FFbFHR4AhAslKGErGw7P0K81_m0k9olFGL84znQuhBoaxM3YRtMzEta2Wuo6hx4CRyqGXVEidKIoH; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 10:14:57 GMT
+server: cloudflare
+cf-ray: a35c0f0068bd0d57-MXP
+alt-svc: h3=":443"; ma=86400
+
+Not Found
+[0m
+[0m$ [0mcurl -s -D- -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" -H "Accept-Language: de-DE,de;q=0.9,en;q=0.8" -b "choosenLanguage=de_DE" "https://www.hornbach.de/customer" --max-time 15
+HTTP/2 200 
+set-cookie: _fs_ch_st_FSBmUei20MqUiJb9=Ac2Gk9-lAN-tfeorrhfogA81xSWjs-UDRTUrMC2WOiFcIXjAtpMTs3waNNmb1lEjO5A915SfDhD_z49Brpk7l_675JN7kVSZ4y1MP-jaurp1aQHv4fmuOCN08C7Ow9vAlWjY0F_ZlMxZoxzyGIJ9XgpHdevJSoHPrJx9wsvYFXj75_mu5_372ZHuaMZu4QGq1JKql6Ec7e8L-f_rPChnDD5nPFdZDzDapN8jW_EjzLh_Lfg1sVSW8dfWfPes80HV3P5d2G35QRlCOTWWZalp2Iogfh0q4HenTDZAWumtypb9ie5IQldatHYVakf8ymwvf6Ur-JlXKTSoSKvllEdtX_boaCj0WZnY4iJzJ5kqJZAwKNUkMYSROSMmjNAqIQ-WP8RmwXPyqK11tuiyeeKT0sgKYe0ABISEDg==; Max-Age=10; HttpOnly; Path=/
+content-type: text/html; charset=utf-8
+cache-control: private, no-store
+accept-ranges: bytes
+x-b3-traceid: b69912e1ad5d4af5f1ab4c90fcfb1088
+date: Fri, 04 Sep 2026 09:45:15 GMT
+alt-svc: h3=":443";ma=86400,h3-29=":443";ma=86400,h3-27=":443";ma=86400
+content-length: 3038
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-o4vzfmmUENEg4chMjjRP9EuW9ucGnGIGVdbl8d0SHQQ='; script-src 'self' 'sha256-a9bHdQGvRzDwDVzx8m+Rzw+0FHZad8L0zjtBwkxOIz4=';"
+    />
+    <link
+      href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/inter-var.woff2"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/styles.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Client Challenge</title>
+    <style>
+      #loading-error {
+        font-size: 16px;
+        font-family: 'Inter', sans-serif;
+        margin-top: 10px;
+        margin-left: 10px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div class="noscript-container">
+        <div class="noscript-content">
+          <img
+            src="/_fs-ch-1T1wmsGaOgGaSxcX/assets/errorIcon.svg"
+            alt=""
+            role="presentation"
+            class="error-icon"
+          />
+          <span class="noscript-span"
+            >JavaScript is disabled in your browser.</span
+          >
+          <p>Please enable JavaScript to proceed.</p>
+        </div>
+      </div>
+    </noscript>
+    <div id="loading-error" role="alert" aria-live="polite">
+      A required part of this site couldn’t load. This may be due to a browser
+      extension, network issues, or browser settings. Please check your
+      connection, disable any ad blockers, or try using a different browser.
+    </div>
+    <script>
+      function loadScript(src) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.onload = resolve;
+          script.onerror = (event) => {
+            console.error('Script load error event:', event);
+            document.getElementById('loading-error').style.display = 'block';
+            reject(
+              new Error(
+                `Failed to load script: ${src}, Please contact the service administrator.`
+              )
+            );
+          };
+          script.src = src;
+          document.body.appendChild(script);
+        });
+      }
+
+      loadScript('/_fs-ch-1T1wmsGaOgGaSxcX/errors.js')
+        .then(() => {
+          const script = document.createElement('script');
+          script.src = '/_fs-ch-1T1wmsGaOgGaSxcX/script.js?reload=true';
+          script.onerror = (event) => {
+            console.error('Script load error event:', event);
+            const errorMsg = new Error(
+              `Failed to load script: ${script.src}. Please contact the service administrator.`
+            );
+            console.error(errorMsg);
+            handleScriptError();
+          };
+          document.body.appendChild(script);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    </script>
+  </body>
+</html>
+[0m
+[0m$ [0mcurl -s -D- "https://api.hornbach.de/" --max-time 10
+HTTP/1.1 404 Not Found
+Date: Fri, 04 Sep 2026 09:45:29 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-39939a6a042d4b435ed33993 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.de/" --max-time 10
+HTTP/1.1 302 Object Moved
+Location: /logon/LogonPoint/tmindex.html
+Strict-Transport-Security: max-age=157680000
+Content-Security-Policy: default-src 'self'; script-src 'self'; connect-src 'self'; img-src http://localhost:* 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self'; child-src 'self' com.citrix.agmacepa://* citrixng://* com.citrix.nsgclient://* vmware-view:// nsgcepa://nsgcepa application://*; form-action  'self'; object-src 'none'; base-uri 'self'; report-uri /nscsp_violation/report_uri
+Set-Cookie: NSC_DLGE=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_USER=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_CERT=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_TEMP=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_PERS=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_TEMP=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+Set-Cookie: NSC_PERS=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Connection: close
+Content-Length: 413
+Cache-control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Content-Type: text/html; charset=utf-8
+
+<html><head><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"><script type="text/javascript" src="/vpn/resources.js"></script><script type="text/javascript" src="/vpn/init/redirection_body_resources.js"></script></head><body><span id="This object may be found "></span><a href="/logon/LogonPoint/tmindex.html"><span id="here"></span></a><span id="Trailing phrase after here"></span></body></html>
+[0m
+[0m$ [0mcurl -s -D- -X POST "https://auth.hornbach.com/token-srv/introspect" -H "Content-Type: application/x-www-form-urlencoded" -d "token=test" --max-time 10
+HTTP/2 200 
+date: Fri, 04 Sep 2026 09:45:51 GMT
+content-type: application/json
+content-length: 16
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 11391551-0d07-4667-adbd-9686c9bc9a76
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=y8T7lTPlTX7fNd.FCAGJFjHFE9l8SX2FBOUFMTwuDNE-1788515151.839876-1.0.1.1-XRA1YH7tsOn12BoSROD4Jc4NYHSFlHA.Wgkl7DyEpLPiozSizmVlofYBRdtWUyTqp.iebaZy571TPjUt0Pg7VhsJonqT133N1ULUnIc4nBAHrC59URpUzcvfoEhIJOVT; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 10:15:51 GMT
+server: cloudflare
+cf-ray: a35c1052fcbd159b-HAM
+alt-svc: h3=":443"; ma=86400
+
+{"active":false}
+[0m
+**STEP 1 — DELTA**
+- [NEW] auth.hornbach.com: Token introspection endpoint (/token-srv/introspect) accepts unauthenticated POST, returns `{"active":false}` for invalid tokens (RFC 7662 compliant)
+- [CHANGED] www.hornbach.de/customer: Still serves FingerprintJS challenge page (3038 bytes), bot protection blocks access to login page JS bundles containing cidaas client_id
+- [CONFIRMED] auth.hornbach.com: Dynamic client registration (apps-srv/clients/register) returns 404 on POST — RFC 7591 disabled
+- [CONFIRMED] auth.hornbach.com: Authorization endpoint (authz-srv/authz) live, verbose invalid_client errors with error_hint
+- [CONFIRMED] api.hornbach.de: Gateway server header, 404 on root, no documented endpoints discovered
+- [CONFIRMED] auth.hornbach.de: Citrix NetScaler AAA VPN Gateway surface (legacy employee access)
+
+**STEP 2 — PRIORITIZE**
+[PRIO] auth.hornbach.com,8.65,attack_surface=9,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=5
+[PRIO] auth.hornbach.de,6.20,attack_surface=6,business_value=7,tech_exposure=6,gate_ease=10,cloud_surface=5,freshness=4
+[PRIO] api.hornbach.de,5.85,attack_surface=5,business_value=8,tech_exposure=5,gate_ease=10,cloud_surface=7,freshness=3
+[PRIO] hornbach-mp.mirakl.net,5.55,attack_surface=5,business_value=7,tech_exposure=5,gate_ease=8,cloud_surface=6,freshness=4
+
+**STEP 3 — HYPOTHESES**
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 50
+reasoning: Authorization endpoint live, accepts redirect_uri parameter before client_id validation per OAuth flow; cidaas CIAM may use regex/wildcard matching for redirect_uri allowlists; verbose error messages confirm parameter processing
+evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, https://hornbach.de.evil.com, https://hornbach.de@evil.com, path traversal /..;/evil.com) accepted and authorization code delivered to attacker URI
+verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) curl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid" --max-redirs 0; 3) Test redirect_uri variations if login page returned
+impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
+testability: AUTH_HELPED
+
+[HYP] Unauthenticated token introspection metadata leakage via /token-srv/introspect
+class: AUTH
+asset: auth.hornbach.com/token-srv/introspect
+confidence: 35
+reasoning: Introspection endpoint accepts unauthenticated POST per RFC 7662; returns {"active":false} for invalid tokens; may leak token metadata (scope, client_id, exp, sub) for valid tokens without client credentials if misconfigured
+evidence_needed: Valid access token returns token metadata (scope, client_id, exp, sub, aud) without client authentication; test with token from device code flow or password grant if available
+verify_steps: 1) Obtain valid access token via device code flow (authz-srv/device/authz) or password grant; 2) curl -s -X POST "https://auth.hornbach.com/token-srv/introspect" -H "Content-Type: application/x-www-form-urlencoded" -d "token=<valid_token>" — observe response fields
+impact: Token metadata exposure → client enumeration, scope enumeration, user identity leakage (AUTH class, LOW-MEDIUM)
+testability: AUTH_HELPED
+
+[HYP] Citrix NetScaler AAA Gateway legacy vuln surface on auth.hornbach.de
+class: MISCONFIG
+asset: auth.hornbach.de/logon/LogonPoint/tmindex.html
+confidence: 40
+reasoning: Citrix NetScaler AAA VPN Gateway exposed; legacy employee access infrastructure; known CVE classes (CVE-2019-19781, CVE-2023-3519) for RCE via path traversal / gateway plugin; CSP allows 'unsafe-inline' style-src
+evidence_needed: Version disclosure via /vpn/resources.js or HTTP headers; path traversal to /logon/LogonPoint/../../../etc/passwd or similar; known exploit payloads for detected version
+verify_steps: 1) GET https://auth.hornbach.de/vpn/resources.js — parse for version/build; 2) GET https://auth.hornbach.de/logon/LogonPoint/../../../windows/win.ini --max-redirs 0; 3) Check for CVE-2023-3519 payload via /logon/LogonPoint/custom/../../../
+impact: Pre-auth RCE on corporate VPN gateway → internal network access (MISCONFIG class, CRITICAL if vulnerable)
+testability: PASSIVE
+
+**STEP 4 — SELF-CRITIQUE**
+[PARKED] Unauthenticated token introspection metadata leakage via /token-srv/introspect: confidence 35 < 40 threshold; RFC 7662 compliant behavior (returns active=false without auth); no evidence of metadata leakage without valid token + client auth
+[PARKED] Citrix NetScaler AAA Gateway legacy vuln surface on auth.hornbach.de: confidence 40 at threshold; legacy employee infra, but requires version confirmation and active exploit testing; out-of-scope for customer-facing bounty per program note on employee systems
+[FINAL] 1. OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 50, AUTH_HELPED, HIGH)
+
+**STEP 5 — NEXT ACTION**
+[NEXT] PROBE: Obtain valid cidaas client_id from HORNBACH mobile app (de.hornbach) by downloading APK/IPA and extracting OAuth config (client_id + redirect_uri scheme) — required prerequisite for OAuth redirect_uri validation testing on authz-srv/authz
+
+**STEP 6 — LEARNING**
+[LEARN] REJECTED class AUTH @ auth.hornbach.com/apps-srv/clients/register: POST returns 404 — unauthenticated dynamic client registration (RFC 7591) not enabled
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: token introspection endpoint accessible unauthenticated, RFC 7662 compliant (returns active=false)
+[LEARN] ACCEPTED class OTHER @ api.hornbach.de: API gateway exists (Gateway server header) but no documented endpoints discovered at common paths
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.de: Citrix NetScaler AAA VPN Gateway surface confirmed (legacy employee access)
+
+**STEP 7 — RISK**
+[RISK] hornbach: 70 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) discovered but no endpoints enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz.

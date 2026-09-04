@@ -173,3 +173,45 @@ testability: PASSIVE
 [LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
 [LEARN] ACCEPTED class OTHER @ api.hornbach.de: API gateway exists (Gateway server header) but no documented endpoints discovered at common paths
 [RISK] hornbach: 70 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS. API gateway (api.hornbach.de) discovered but no endpoints enumerated. Priority: bypass bot challenge to extract client_id, then test OAuth redirect_uri validation.
+## 2026-09-04 09:47:35 UTC [target] (model nemotron3)
+[PRIO] auth.hornbach.com,8.65,attack_surface=9,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=5
+[PRIO] auth.hornbach.de,6.20,attack_surface=6,business_value=7,tech_exposure=6,gate_ease=10,cloud_surface=5,freshness=4
+[PRIO] api.hornbach.de,5.85,attack_surface=5,business_value=8,tech_exposure=5,gate_ease=10,cloud_surface=7,freshness=3
+[PRIO] hornbach-mp.mirakl.net,5.55,attack_surface=5,business_value=7,tech_exposure=5,gate_ease=8,cloud_surface=6,freshness=4
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 50
+reasoning: Authorization endpoint live, accepts redirect_uri parameter before client_id validation per OAuth flow; cidaas CIAM may use regex/wildcard matching for redirect_uri allowlists; verbose error messages confirm parameter processing
+evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, https://hornbach.de.evil.com, https://hornbach.de@evil.com, path traversal /..;/evil.com) accepted and authorization code delivered to attacker URI
+verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) curl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid" --max-redirs 0; 3) Test redirect_uri variations if login page returned
+impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
+testability: AUTH_HELPED
+[HYP] Unauthenticated token introspection metadata leakage via /token-srv/introspect
+class: AUTH
+asset: auth.hornbach.com/token-srv/introspect
+confidence: 35
+reasoning: Introspection endpoint accepts unauthenticated POST per RFC 7662; returns {"active":false} for invalid tokens; may leak token metadata (scope, client_id, exp, sub) for valid tokens without client credentials if misconfigured
+evidence_needed: Valid access token returns token metadata (scope, client_id, exp, sub, aud) without client authentication; test with token from device code flow or password grant if available
+verify_steps: 1) Obtain valid access token via device code flow (authz-srv/device/authz) or password grant; 2) curl -s -X POST "https://auth.hornbach.com/token-srv/introspect" -H "Content-Type: application/x-www-form-urlencoded" -d "token=<valid_token>" — observe response fields
+impact: Token metadata exposure → client enumeration, scope enumeration, user identity leakage (AUTH class, LOW-MEDIUM)
+testability: AUTH_HELPED
+[HYP] Citrix NetScaler AAA Gateway legacy vuln surface on auth.hornbach.de
+class: MISCONFIG
+asset: auth.hornbach.de/logon/LogonPoint/tmindex.html
+confidence: 40
+reasoning: Citrix NetScaler AAA VPN Gateway exposed; legacy employee access infrastructure; known CVE classes (CVE-2019-19781, CVE-2023-3519) for RCE via path traversal / gateway plugin; CSP allows 'unsafe-inline' style-src
+evidence_needed: Version disclosure via /vpn/resources.js or HTTP headers; path traversal to /logon/LogonPoint/../../../etc/passwd or similar; known exploit payloads for detected version
+verify_steps: 1) GET https://auth.hornbach.de/vpn/resources.js — parse for version/build; 2) GET https://auth.hornbach.de/logon/LogonPoint/../../../windows/win.ini --max-redirs 0; 3) Check for CVE-2023-3519 payload via /logon/LogonPoint/custom/../../../
+impact: Pre-auth RCE on corporate VPN gateway → internal network access (MISCONFIG class, CRITICAL if vulnerable)
+testability: PASSIVE
+[PARKED] Unauthenticated token introspection metadata leakage via /token-srv/introspect: confidence 35 < 40 threshold; RFC 7662 compliant behavior (returns active=false without auth); no evidence of metadata leakage without valid token + client auth
+[PARKED] Citrix NetScaler AAA Gateway legacy vuln surface on auth.hornbach.de: confidence 40 at threshold; legacy employee infra, but requires version confirmation and active exploit testing; out-of-scope for customer-facing bounty per program note on employee systems
+[FINAL] 1. OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 50, AUTH_HELPED, HIGH)
+[NEXT] PROBE: Obtain valid cidaas client_id from HORNBACH mobile app (de.hornbach) by downloading APK/IPA and extracting OAuth config (client_id + redirect_uri scheme) — required prerequisite for OAuth redirect_uri validation testing on authz-srv/authz
+[LEARN] REJECTED class AUTH @ auth.hornbach.com/apps-srv/clients/register: POST returns 404 — unauthenticated dynamic client registration (RFC 7591) not enabled
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: token introspection endpoint accessible unauthenticated, RFC 7662 compliant (returns active=false)
+[LEARN] ACCEPTED class OTHER @ api.hornbach.de: API gateway exists (Gateway server header) but no documented endpoints discovered at common paths
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.de: Citrix NetScaler AAA VPN Gateway surface confirmed (legacy employee access)
+[RISK] hornbach: 70 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) discovered but no endpoints enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz.

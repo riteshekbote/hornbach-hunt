@@ -117,3 +117,33 @@ impact: token forgery → full account impersonation; severity CRITICAL
 testability: AUTH_HELPED
 [NEXT] PROBE: obtain a valid cidaas client_id by parsing the HORNBACH mobile app (de.hornbach) OAuth config; fallback: test candidate redirect_uris (de.hornbach://callback, app://callback) + app package-name-derived client_ids against /authz-srv/authz to find a live client, which unblocks all parked OAuth hypotheses
 [RISK] hornbach: 42/100 — cidaas tenant is confirmed live auth surface, OIDC metadata fully exposed; client registration disabled; valid client_id is the critical unlock gating all OAuth testing (redirect_uri, alg confusion, code theft, device code); new legacy NetScaler AAA on auth.hornbach.de broadens employee-auth surface but is high-risk to probe (employee/infra); www.hornbach.de bot-walled (FingerprintJS) blocks the source embedding client_id; hornbach-mp.mirakl.net is a separate auth-gated Mirakl API surface; broad scope but CDN-heavy and gate-hard.
+## 2026-09-04 09:57:53 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection leaks token metadata
+class: AUTH
+asset: auth.hornbach.com/token-srv/introspect
+confidence: 50
+reasoning: POST to /token-srv/introspect with `token=fake` returns HTTP 200 `{"active":false}` without ANY client authentication (no Basic auth, no client_secret, no client_assertion). RFC 7662 §2.1 requires resource server to authenticate itself; cidaas metadata lists `introspection_endpoint_auth_methods_supported`. Unauthenticated acceptance is a concrete misconfiguration — if valid tokens are accepted, attacker gets sub/scope/exp/token_type metadata for any access token without credentials.
+evidence_needed: valid access_token from cidaas (requires client_id + user login) to prove data exfiltration; the unauthenticated acceptance itself is the misconfiguration
+verify_steps: (DONE) POST with fake token returns 200; NEXT: obtain real token from mobile app flow, introspect unauthenticated, verify response contains token metadata (sub, scope, exp, client_id)
+impact: token metadata disclosure (active sessions, scopes, user identity, expiry); severity MEDIUM; chain potential: introspect stolen/leaked tokens to map session state
+testability: AUTH_HELPED (needs valid client_id + user login to obtain token)
+[HYP] api.hornbach.de internal hostname disclosure via Via header
+class: MISCONFIG
+asset: api.hornbach.de
+confidence: 55
+reasoning: Via response header leaks `Via: 1.0 sapigwprd01 (Gateway), 1.0 sapigwprd01 (Gateway)` — reveals internal SAP API Gateway hostname and software. Combined with `/healthcheck` returning 200 XML `<status>ok</status>` with `Host: localhost:8080` in response, this confirms SAP APIM backend on localhost:8080 behind the gateway. Gateway also returns structured JSON error messages with X-CorrelationID for request tracing.
+evidence_needed: already confirmed via passive probing
+verify_steps: (DONE) GET /healthcheck returns 200 with Via header leak; impact is information disclosure
+impact: internal hostname + software fingerprinting enables targeted attacks against SAP APIM; severity LOW; but if path discovery yields API endpoints, combined with gateway bypass could lead to backend access
+testability: PASSIVE
+[HYP] Citrix NetScaler version exposure + downloadable EPA/VPN binaries
+class: MISCONFIG
+asset: auth.hornbach.de
+confidence: 45
+reasoning: Citrix NetScaler Gateway v25.5.1.15 fully exposed: pluginlist.xml reveals exact versions (NS 25.5.1.15, Opswat EPA 4.3.4619.0/4.3.2138.0); EPA/VPN installer binaries are publicly downloadable (HTTP 200): nsepa_setup.exe, epaPackage.exe, Citrix_Endpoint_Analysis.dmg, MacLibs.zip. gwtest.jsp returns HTTP 500 with internal error code 43549. This is employee-facing VPN infrastructure — may have separate vuln class vs cidaas.
+evidence_needed: confirmed via passive probing; version 25.5.1.15 maps to Citrix NetScaler ADC — check for CVE-2023-4966 (Citrix Bleed), CVE-2024-6235, CVE-2025-6543 etc; current version likely patched for known CVEs but surface is worth monitoring
+verify_steps: (DONE) pluginlist.xml returns full version info; EPA binaries downloadable; gwtest.jsp 500; NEXT: check if version 25.5.1.15 is current/latest or if any unpatched CVE applies
+impact: version fingerprinting enables targeted exploit; downloadable binaries can be reverse-engineered for client-side auth flaws; gwtest.jsp 500 may indicate misconfiguration; severity LOW-MEDIUM
+testability: PASSIVE
+[NEXT] HUMAN: The critical unlock for all OAuth hypotheses is obtaining a valid cidaas client_id. Options: (1) extract from HORNBACH mobile app (de.hornbach on Google Play) via APK decompile — look for `ClientId` in cidaas SDK config (strings.xml or Cidaas initialization); (2) intercept OAuth redirect in browser during manual login at www.hornbach.de to capture client_id from authz redirect; (3) check Apple App Store listing for OAuth redirect URI scheme. Until client_id is obtained, unauthenticated introspection testing and Citrix NetScaler version audit are the most productive passive activities.
+[RISK] hornbach: 43/100 — cidaas tenant is primary live auth surface; unauthenticated introspection endpoint confirmed abnormal (RFC 7662 violation) but impact gated on client_id; SAP API Gateway on api.hornbach.de identified but minimal route surface; Citrix NetScaler AAA on auth.hornbach.de is employee-facing VPN with full version disclosure; dev/preprod subdomains exist but are IP-restricted/GCP-gated; www.hornbach.de bot-walled (FingerprintJS); Mirakl marketplace is separate auth-gated surface; scope broad but CDN-heavy and gates hard.

@@ -2964,3 +2964,1243 @@ testability: AUTH_HELPED
 ```
 [RISK] hornbach: 42/100 — cidaas tenant is confirmed live auth surface, OIDC metadata fully exposed; client registration disabled; valid client_id is the critical unlock gating all OAuth testing (redirect_uri, alg confusion, code theft, device code); new legacy NetScaler AAA on auth.hornbach.de broadens employee-auth surface but is high-risk to probe (employee/infra); www.hornbach.de bot-walled (FingerprintJS) blocks the source embedding client_id; hornbach-mp.mirakl.net is a separate auth-gated Mirakl API surface; broad scope but CDN-heavy and gate-hard.
 ```
+===== ANALYST bigpickle 2026-09-04 09:58:02 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=de.hornbach&redirect_uri=https://example.com&scope=openid"
+302
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=de.hornbach&redirect_uri=https://example.com&scope=openid" 2>&1 | head -50
+HTTP/2 302 
+date: Fri, 04 Sep 2026 09:44:26 GMT
+content-length: 0
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: a54dae99-36c0-4104-9404-3e0b133aef6a
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=zzyb545KzI0sFmY7WPjiEqAHEkXzUNMV4aDNicgxQc4-1788515065.9820244-1.0.1.1-CPMN7l2vYV3hM9527IYj7UekfwUKZHolTMh7R63ffA0IG2IVWCbdOANXBu5nMCzbXPoQDAhDF.zRJsuOQ1ZhSIayoCwryNEcrOrJAE4gbFBBEvqlwX_ofmcV1a5jkbt8; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 10:14:26 GMT
+server: cloudflare
+cf-ray: a35c0e3a6f97af99-HAM
+alt-svc: h3=":443"; ma=86400
+[0m
+[0m$ [0mfor client_id in "com.hornbach.android" "com.hornbach" "hornbach-android" "hornbach" "de.hornbach.android" "de.hornbach.app"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=$client_id&redirect_uri=https://example.com&scope=openid")
+  echo "$client_id: $code"
+done
+com.hornbach.android: 302
+com.hornbach: 302
+hornbach-android: 302
+hornbach: 302
+de.hornbach.android: 302
+de.hornbach.app: 302
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=com.hornbach.android&redirect_uri=https://example.com&scope=openid" 2>&1 | grep -i location
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m$ [0mcurl -s "https://www.hornbach.de" 2>&1 | grep -i "client_id\|oauth\|cidaas\|auth\.hornbach" | head -20
+(no output)
+[0m
+[0m$ [0mcurl -s -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" "https://www.hornbach.de" 2>&1 | head -100
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-o4vzfmmUENEg4chMjjRP9EuW9ucGnGIGVdbl8d0SHQQ='; script-src 'self' 'sha256-a9bHdQGvRzDwDVzx8m+Rzw+0FHZad8L0zjtBwkxOIz4=';"
+    />
+    <link
+      href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/inter-var.woff2"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/styles.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Client Challenge</title>
+    <style>
+      #loading-error {
+        font-size: 16px;
+        font-family: 'Inter', sans-serif;
+        margin-top: 10px;
+        margin-left: 10px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div class="noscript-container">
+        <div class="noscript-content">
+          <img
+            src="/_fs-ch-1T1wmsGaOgGaSxcX/assets/errorIcon.svg"
+            alt=""
+            role="presentation"
+            class="error-icon"
+          />
+          <span class="noscript-span"
+            >JavaScript is disabled in your browser.</span
+          >
+          <p>Please enable JavaScript to proceed.</p>
+        </div>
+      </div>
+    </noscript>
+    <div id="loading-error" role="alert" aria-live="polite">
+      A required part of this site couldn’t load. This may be due to a browser
+      extension, network issues, or browser settings. Please check your
+      connection, disable any ad blockers, or try using a different browser.
+    </div>
+    <script>
+      function loadScript(src) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.onload = resolve;
+          script.onerror = (event) => {
+            console.error('Script load error event:', event);
+            document.getElementById('loading-error').style.display = 'block';
+            reject(
+              new Error(
+                `Failed to load script: ${src}, Please contact the service administrator.`
+              )
+            );
+          };
+          script.src = src;
+          document.body.appendChild(script);
+        });
+      }
+
+      loadScript('/_fs-ch-1T1wmsGaOgGaSxcX/errors.js')
+        .then(() => {
+          const script = document.createElement('script');
+          script.src = '/_fs-ch-1T1wmsGaOgGaSxcX/script.js?reload=true';
+          script.onerror = (event) => {
+            console.error('Script load error event:', event);
+            const errorMsg = new Error(
+              `Failed to load script: ${script.src}. Please contact the service administrator.`
+            );
+            console.error(errorMsg);
+            handleScriptError();
+          };
+          document.body.appendChild(script);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    </script>
+  </body>
+</html>
+[0m
+[0m$ [0mfor path in "/" "/api" "/api/v1" "/api/v2" "/api/v3" "/graphql" "/swagger" "/swagger-ui" "/openapi" "/health" "/status" "/info" "/debug" "/admin" "/config"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.hornbach.de$path" 2>&1)
+  echo "$path: $code"
+done
+/: 404
+/api: 404
+/api/v1: 404
+/api/v2: 404
+/api/v3: 404
+/graphql: 404
+/swagger: 404
+/swagger-ui: 404
+/openapi: 404
+/health: 404
+/status: 404
+/info: 404
+/debug: 404
+/admin: 404
+/config: 404
+[0m
+[0m$ [0mcurl -s -D- "https://api.hornbach.de/" 2>&1
+HTTP/1.1 404 Not Found
+Date: Fri, 04 Sep 2026 09:45:52 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-50939a6a06307835498f74a5 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0mcurl -s -X OPTIONS -D- "https://api.hornbach.de/" 2>&1
+HTTP/1.1 404 Not Found
+Date: Fri, 04 Sep 2026 09:46:08 GMT
+Allow: CONNECT, DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, TRACE
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-60939a6a45329eab55d7a000 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0mfor path in "/store" "/stores" "/product" "/products" "/catalog" "/inventory" "/order" "/orders" "/cart" "/checkout" "/customer" "/user" "/account" "/search" "/category" "/categories" "/price" "/availability" "/stock" "/delivery" "/pickup" "/service" "/rental" "/installation" "/diy" "/project" "/tool" "/tools" "/brand" "/brands" "/shop" "/basket" "/wishlist" "/storelocator" "/store-locator" "/filialfinder" "/filial" "/markt" "/filiale"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.hornbach.de$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+Done
+[0m
+[0m$ [0mfor path in "/graphql" "/gql" "/v1/graphql" "/api/graphql" "/internal" "/internal/api" "/backend" "/bff" "/mobile" "/app" "/rest" "/rest/api" "/api/rest" "/store-api" "/shop-api" "/commerce" "/commerce-api"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.hornbach.de$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+Done
+[0m
+[0m$ [0mcurl -s -D- "https://hornbach-mp.mirakl.net/" 2>&1 | head -30
+HTTP/2 302 
+date: Fri, 04 Sep 2026 09:47:25 GMT
+content-length: 0
+location: https://hornbach-mp.mirakl.net/login/oauth2/mirakl-sso?prompt=none
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+content-language: en-GB
+content-security-policy: upgrade-insecure-requests
+expires: 0
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+pragma: no-cache
+referrer-policy: strict-origin-when-cross-origin
+set-cookie: XSRF-TOKEN=d6fc0dbb-68ed-4c9b-ad20-e8f1039aa79c; Path=/; Secure
+strict-transport-security: max-age=31536000 ; includeSubDomains
+x-content-type-options: nosniff
+x-correlation-id: 886c0167-61a1-46ee-9ba1-5a49187b3872
+x-frame-options: SAMEORIGIN
+x-robots-tag: noindex
+x-xss-protection: 1; mode=block
+via: 1.1 google
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=ubZkplC2kxoje7Dzqdxvd70S%2B%2BUq4O261HQW7FD%2BqKDqJQmaGzk4lQX%2Fz96VwBiawgLKcRwX8mMu1TwuftKvtjLoOFnVS3pmEvBePsIEp8gMlia36p09LXhlbxCF0jgmCmGwi2zlAxg%3D"}]}
+server: cloudflare
+cf-ray: a35c12995d67000a-ORD
+[0m
+[0m$ [0mfor path in "/api" "/api/products" "/api/offers" "/api/stores" "/api/orders" "/api/shoppers" "/api/sellers" "/front" "/storefront" "/shop" "/products" "/offers" "/sellers"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://hornbach-mp.mirakl.net$path" 2>&1)
+  echo "$path: $code"
+done
+/api: 302
+/api/products: 401
+/api/offers: 401
+/api/stores: 401
+/api/orders: 401
+/api/shoppers: 401
+/api/sellers: 401
+/front: 404
+/storefront: 404
+/shop: 302
+/products: 404
+/offers: 404
+/sellers: 404
+[0m
+[0m$ [0mcurl -s -D- "https://hornbach-mp.mirakl.net/api/products" 2>&1 | head -40
+HTTP/2 401 
+date: Fri, 04 Sep 2026 09:47:43 GMT
+content-type: application/json
+content-length: 39
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+expires: 0
+original-username: -
+pragma: no-cache
+strict-transport-security: max-age=31536000 ; includeSubDomains
+x-content-type-options: nosniff
+x-correlation-id: 6aedaaca-07fa-4f28-9113-1b11977a4f28
+x-frame-options: DENY
+x-xss-protection: 0
+via: 1.1 google
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=x1AIv0lyg0EOEE65g1hj9GqnDy4sGRi3tTAkmpCAJSEs05jUkgD3OMDCt%2BOMCAGJejFWz1zJH7ODA09MlkxneTNQ9hNRqEhsRtqHUQswzdyC3k8yYv8DGeB5z0GM0er%2BdOlbKDr1UVY%3D"}]}
+server: cloudflare
+cf-ray: a35c130c3d4f50bb-ORD
+
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.de/" 2>&1 | head -40
+HTTP/1.1 302 Object Moved
+Location: /logon/LogonPoint/tmindex.html
+Strict-Transport-Security: max-age=157680000
+Content-Security-Policy: default-src 'self'; script-src 'self'; connect-src 'self'; img-src http://localhost:* 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self'; child-src 'self' com.citrix.agmacepa://* citrixng://* com.citrix.nsgclient://* vmware-view:// nsgcepa://nsgcepa application://*; form-action  'self'; object-src 'none'; base-uri 'self'; report-uri /nscsp_violation/report_uri
+Set-Cookie: NSC_DLGE=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_USER=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_CERT=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_TEMP=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_PERS=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_TEMP=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+Set-Cookie: NSC_PERS=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Connection: close
+Content-Length: 413
+Cache-control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Content-Type: text/html; charset=utf-8
+
+<html><head><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"><script type="text/javascript" src="/vpn/resources.js"></script><script type="text/javascript" src="/vpn/init/redirection_body_resources.js"></script></head><body><span id="This object may be found "></span><a href="/logon/LogonPoint/tmindex.html"><span id="here"></span></a><span id="Trailing phrase after here"></span></body></html>
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.de/logon/LogonPoint/tmindex.html" 2>&1 | head -60
+HTTP/1.1 200 OK
+Age:         45
+Date: Fri, 04 Sep 2026 09:48:04 GMT
+Cache-Control: no-cache,no-store,must-revalidate
+Connection: Keep-Alive
+Via: NS-CACHE-10.0: 131
+ETag: "a89a-65a484aeb611a"
+Server: Apache
+X-Frame-Options: SAMEORIGIN
+Last-Modified: Sun, 30 Aug 2026 19:00:01 GMT
+Accept-Ranges: bytes
+Content-Length: 43162
+Feature-Policy: camera 'none'; microphone 'none'; geolocation 'none'
+Referrer-Policy: no-referrer
+X-XSS-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+Content-Security-Policy: default-src 'self'; script-src https://www.google.com/recaptcha/api.js https://www.gstatic.com/recaptcha/releases/ 'self'; connect-src 'self'; img-src http://localhost:* 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https://www.google.com/recaptcha/ com.citrix.agmacepa://* citrixng://* com.citrix.nsgclient://* vmware-view://* nsgcepa://* application://* receiver://* 'self'; child-src 'self' com.citrix.agmacepa://* citrixng://* com.citrix.nsgclient://* vmware-view://* nsgcepa://nsgcepa application://*; form-action 'self'; object-src 'none'; base-uri 'self'; report-uri /nscsp_violation/report_uri
+Content-Type: text/html; charset=utf-8
+Strict-Transport-Security: max-age=157680000
+
+<!DOCTYPE html>
+<html _manifest="receiver.appcache">
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="utf-8" />
+    <title class="_ctxstxt_NetscalerAAA">NetScaler AAA</title>
+    <link rel="ICON" href="/logon/LogonPoint/receiver/images/common/icon_vpn.ico" sizes="16x16 32x32 48x48 64x64" type="image/vnd.microsoft.icon" />
+    <link rel="SHORTCUT ICON" href="/logon/LogonPoint/receiver/images/common/icon_vpn.ico" sizes="16x16 32x32 48x48 64x64" type="image/vnd.microsoft.icon" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <!-- Allow app to use the full screen if it is launched from a web clip on the springboard -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+    <noscript>
+        <link href="/logon/LogonPoint/receiver/css/ctxs.no-js-ui.min.css" rel="stylesheet" />
+    </noscript>
+
+    <script src="/logon/LogonPoint/receiver/js/external/jquery.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/jquery-ui.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/jquery.ui.touch-punch.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/jquery-migrate.min.js"></script>
+    <script src="/logon/LogonPoint/init.js" type="text/javascript"></script>
+    <![if gte IE 9]><script src="/logon/LogonPoint/receiver/js/external/hammer.min.js"></script><![endif]>
+    <script src="/logon/LogonPoint/receiver/js/external/jquery.dotdotdot.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/velocity.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/slick.min.js"></script>
+    <script src="/logon/LogonPoint/receiver/js/external/elliptic.min.js"></script>
+    <style> body { display: none;}</style>
+
+</head>
+<body>
+
+    <noscript>
+        <!-- JavaScript is not enabled, text in this section cannot be localized using JavaScript -->
+        <div>
+            <section id="no-javascript-screen" class="no-javascript-view fullscreen-pane web-screen" style="display: block;">
+                <div class="vertical-center-outer">
+[0m
+[0m$ [0mfor path in "/api/v1/products" "/api/v2/products" "/api/v3/products" "/api/docs" "/api/swagger" "/api/openapi" "/swagger-ui.html" "/api-docs" "/v2/api-docs" "/v3/api-docs" "/swagger-resources" "/webjars/swagger-ui" "/actuator" "/actuator/health" "/actuator/env" "/actuator/info" "/actuator/configprops" "/actuator/mappings"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://hornbach-mp.mirakl.net$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+HIT: /api/v1/products: 401
+HIT: /api/v2/products: 401
+HIT: /api/v3/products: 401
+HIT: /api/docs: 401
+HIT: /api/swagger: 401
+HIT: /api/openapi: 401
+Done
+[0m
+[0m$ [0mcurl -s "https://hornbach-mp.mirakl.net/api/docs" 2>&1
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0mcurl -s -D- "https://hornbach-mp.mirakl.net/shop" 2>&1 | head -20
+HTTP/2 302 
+date: Fri, 04 Sep 2026 09:48:47 GMT
+content-length: 0
+location: https://hornbach-mp.mirakl.net/mmp/shop
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+content-language: en-GB
+content-security-policy: upgrade-insecure-requests
+expires: 0
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+pragma: no-cache
+referrer-policy: strict-origin-when-cross-origin
+set-cookie: XSRF-TOKEN=5a5e820c-2e96-4b07-b910-4fa8a638028c; Path=/; Secure
+strict-transport-security: max-age=31536000 ; includeSubDomains
+x-content-type-options: nosniff
+x-correlation-id: 0f95d10f-cf8c-4a86-800b-850d65f3eb4d
+x-frame-options: SAMEORIGIN
+x-robots-tag: noindex
+x-xss-protection: 1; mode=block
+via: 1.1 google
+cf-cache-status: DYNAMIC
+[0m
+[0m$ [0mcurl -s -D- "https://hornbach-mp.mirakl.net/mmp/shop" 2>&1 | head -40
+HTTP/2 302 
+date: Fri, 04 Sep 2026 09:48:51 GMT
+content-length: 0
+location: https://hornbach-mp.mirakl.net/login/oauth2/mirakl-sso?prompt=none
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+content-security-policy: upgrade-insecure-requests
+expires: 0
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+pragma: no-cache
+referrer-policy: strict-origin-when-cross-origin
+set-cookie: XSRF-TOKEN=621e32e2-83bd-4089-9899-a49558fa5ada; Path=/; Secure
+set-cookie: REQUEST-CACHE=aHR0cHM6Ly9ob3JuYmFjaC1tcC5taXJha2wubmV0L21tcC9zaG9w; Path=/; Secure; HttpOnly; SameSite=None
+strict-transport-security: max-age=31536000 ; includeSubDomains
+x-content-type-options: nosniff
+x-correlation-id: 0e07a1bc-5c28-48f4-a934-570204c17d85
+x-frame-options: SAMEORIGIN
+x-robots-tag: noindex
+x-xss-protection: 1; mode=block
+via: 1.1 google
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=jgktFviSTTnd1Yv8G99BXdbEXA2ERhnl0Nmao1ue2dpx5ctSvMu4kLZjdsuWL5jx5ySBLT5WjJJqJjCHTzukH0fb%2BjpNz4%2F25pV%2FH9UZ%2BGtN2JyUtVY%2B65pcJXHHVm5g9mxDh5PZCEQ%3D"}]}
+server: cloudflare
+cf-ray: a35c14b5c92761f8-ORD
+[0m
+[0m$ [0mecho "aHR0cHM6Ly9ob3JuYmFjaC1tcC5taXJha2wubmV0L21tcC9zaG9w" | base64 -d
+https://hornbach-mp.mirakl.net/mmp/shop
+[0m
+[0m$ [0mcurl -s -D- "https://hornbach-mp.mirakl.net/login/oauth2/mirakl-sso?prompt=none" 2>&1 | head -30
+HTTP/2 302 
+date: Fri, 04 Sep 2026 09:49:04 GMT
+content-length: 0
+location: https://login.mirakl.net/authorize?response_type=code&client_id=UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq&scope=openid%20email&state=https://hornbach-mp.mirakl.net/login/oauth2/code/connect?prompt%3Dnone%7Cnone&redirect_uri=https://redirect.mirakl.net&nonce=0BU1NhV4LScMsJd68W_OxY-jfq8Z_rlrt9-UHKWdLSw&code_challenge=_qDDYGmiW8oDL-pFOXY95eu34GZDoT-KCt8X9CyiEoY&code_challenge_method=S256&audience=platform&ext-client-logo-url=https://hornbach-mp.mirakl.net/media/operator-interface-logo&origin=hornbach-mp.mirakl.net&prompt=none
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+content-security-policy: upgrade-insecure-requests
+expires: 0
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+pragma: no-cache
+referrer-policy: strict-origin-when-cross-origin
+set-cookie: XSRF-TOKEN=66bd2284-5779-4513-a771-ccaafabe2f24; Path=/; Secure
+set-cookie: oauth2_authorization_request=JAAAAAIAAAABAAAAAAAAOhUNI/MxrHqGU7zAwEw6DJMmjt1NKmygUHWBvVQPvV2Bo2GkI3/WxPKvC+Tf/oy5n6qP7aI9pFTCnA9rZbvZcT/ABDvmWm9oVuwbeA9VMnAqCPR3tTNVzZtJYU+uKUK64ZBtpwGROUJZZPvw2we9UgogxNBjNh7H/Sz/5+q1LUaQoLFjs3J645RJi5nqVIDv0/DQsFmFQjcdxwvhneWvAcIbaPb1Eb2gRunvMx7deeXZDYkowefDr2OlJwgxKKouGSiulnpDdy5RTiXa7eJ2Y4IygDf2oRLVGTEA3D7n5n4PqCYNLh9r0FfigBjPqPtKQVdOcffsUyU1rrOEbOFTifE244tmbA+vlCiCxv2n2OyIVp02TRHjFDUPscTjELQoS88BnE4x1i6I2YBd/KhlYGV+987LQ94VoSQyC5fwLht28tAExfOQANJmCok//944KDYSGGzO33atfe3O3h4SZ7/whVCY/8aSgan7InSpjGsEwsv2OpA46xl3p3vE2N97MXt6FMeWpCw5Vjecev7h4zjPRMBar7Nq6tthOXKDL4C4Xl8yGsuBWB5da+3kJZCWYM3UIhM26zH0X2Vm1Ad6Pe3/g4tajJ8kzUeg2gyLy2X0mf40pId+XE6wycEC1KeJb3xtIwKVwT0Z5DwaQUOUmlEBwA3KOn+U/dKQRN57RHjYA4NGWlih7BdPjlvzMDhAQdguUPJRmhAKkKhS2F0pqwtSzQtJp9+n3/WUf6Gg9xegkBlPF2SVFHfZS8WvimCF2dcf9mfg6xqH+vhR790usMxj6kuDGzpXW1omiS4vNesi8jgQgbCMkRx2fCvcVWwCl7rPrYg59c5YH8BfXH+zr88zR+5VBpogqtGb/w7eCvA8i0k7xk9LSKZDscERXRO7ih4O1VpP7EKjFVj9EGW4kNBbOn5emqsMbqMHlOyTb0Sd/d7rugAYOt9YHYJ84C1q4PKRHfX9+b52sU8Nt5bkVNG4jhfHWnCVXb+s/4VszI/FLvDRNj1aERookEOBOrVolZdYncnHdTfIvASw9K57ziY1RhY2B4HLwu22VP0biP6w+uHf6X10T/5eRoe9n8TPI/0W+ZJy0938z9fWKlM9/ZV8C0mqxaGb5Psg32r/b3axhjnOko6GNgxRnSmWyrcRX+l4sL7r21DTc88YkcUpX9+pS51ACiBFP1Sx7FNDJY3zbhGn+VjJ5MzaT98d3oWxzWZdFQpmnBr4BA3Zx6jWJHgNjnDmFLU16Xp6XvPqc0S5Y6kLZZFNsxGXa6RakrarUAijH9sQoJjLPkX+giDHMajaCVXvjMQbO6k5P5ypdEbCjeR/sbDkybxj4YKfffhVDBssHdzP/yOdHaqxzVEA0P6iei1+f5TZYm96s7n21o78ShY6HG3t9JEYrAed5lNk0zOqjjyyAc+gMhk7DHHjaQ/UbmjbFboiqEgA46mQ2grCf8qdeLdWi7+gksoq+ijHcwWwSpdmjVKXlvDj+nqtvtFkygW3skJ0T95oXCeknwkpC8Bw7wNhNPjHt9kxtm9fH25DTtFQhjTCQOyos4+kf1zZMfUgcOufdQ8XUWhdFNLOOWl+LbBa9a/5KlO8siRnKCRALjYKDpbLZcQ3prpD8gfu5gZHifEbbAEkx8D+OnSy1W1Zv6yzcrHeYJPk5a9zCF9xpgc0s7kfxWjLWF1GZpAWn5NFoK2f95tbhshV8rxBO2v+Pc2ULr+n0T+UyRteUguW7hw7wGrSse9yNBX7GvxhdjEE03F39M70TvXQmGJpWjkZat58JQ6UStBGWJxU89msu6DF3vZvk+7H7pPa2kWcDNh/wXqGzxusud6Fx5qhMfoD2zm+0fB8obFA5EkguSGnO+YKy7dY2bgUjgjP9T1y/ufr9qIxXSRJeUe/U4lvmFge6xxaOYVbt+8nHOVvkWO4iedEGmBVyKfInl0NWcNYa8YT8YVngzDx5G6dD3nXXD89bth1Ll6v+fgDts18FeYhIeDYrSLEw/hEBk/lvX+Vs6YfOATlvbMB+pJBXwV1Xv+RPFqdcfhyhhOY3+DBYUpbRr7+u5yIUDXRjPJD4ptoU3SEqHxix97/GDLbbF+GSHAy25xcsNjLfj8KDC9+/jxkA8B4firGrnrEFm5a3hQ17WHfSJHcetUNCDY71u1Y6VYuZ/e7NrzI/W0FtCthGuOPLjzkFE2F5X8mNzAdZ+9//03MD3O+0vFrGoZTz9HIRRsF/k3k+wc0f/eFHn5tALU1nVMoBW5wGzqSfsYUzckdJR/gBHmpfBUmnO0pVx1AQioX+IyWklmFwxmovgFCKmWOLAuHkg8EiJvePP1X7TAM+1VJUS76Nuw9eMMsvgP2hSCKcmKgf0q4Hjk2JUifww6hCq2qiusXqK10EU3d6eOEVpr0HW6oYlKLzI2v0gjp7pI=; Path=/; Secure; HttpOnly; SameSite=Lax
+strict-transport-security: max-age=31536000 ; includeSubDomains
+x-content-type-options: nosniff
+x-correlation-id: 87941d3e-eff5-4597-b860-0cf4b6cf4965
+x-frame-options: SAMEORIGIN
+x-robots-tag: noindex
+x-xss-protection: 1; mode=block
+via: 1.1 google
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=CJokwxH%2Be1vEffsJotOYdwrmqAo2tUfZnqW1UaIkWWgK8B9jLLpd3eEqdvq1fQC2hFsikOTuN%2BssrA0%2FJfuZCcfMDuRPymHmVmEzy3duNJ55uwXVyrOEhUKzbTUDlKrWTuxtmquD7DA%3D"}]}
+server: cloudflare
+cf-ray: a35c150609cfe7f9-ORD
+[0m
+[0m$ [0m# Try POST with JSON body on api.hornbach.de
+curl -s -D- -X POST "https://api.hornbach.de/" -H "Content-Type: application/json" -d '{"query":"test"}' 2>&1 | head -20
+HTTP/1.1 404 Not Found
+Date: Fri, 04 Sep 2026 09:49:11 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-17949a6af451e897f2579450 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0m# Try more API path patterns
+for path in "/api/restaurants" "/api/stores" "/api/warehouses" "/api/services" "/api/projects" "/api/inspiration" "/api/content" "/api/cms" "/api/pim" "/api/erp" "/api/sap" "/api/logistics" "/api/supply-chain" "/api/b2b" "/api/loyalty" "/api/coupon" "/api/voucher" "/api/diy" "/api/workshop" "/api/installation" "/api/advice" "/api/planning" "/api/3d" "/api/ar" "/api/storefinder" "/api/nearby" "/api/opening-hours" "/api/availability-check" "/api/stock-check" "/api/price" "/api/pricing" "/api/promotion" "/api/campaign"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.hornbach.de$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+Done
+[0m
+[0m◈ [0mExa Web Search "HORNBACH app android OAuth client_id cidaas"
+[0m◈ [0mExa Web Search ""de.hornbach" app Google Play client_id OAuth"
+[0m% [0mWebFetch https://reports.exodus-privacy.eu.org/en/reports/363860/
+[0m
+[0m$ [0m# Try different headers on api.hornbach.de
+for header in "X-Api-Key: test" "Authorization: Bearer test" "X-HORNBACH-API-Key: test" "apikey: test" "X-Client-ID: test"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" -H "$header" "https://api.hornbach.de/" 2>&1)
+  echo "$header -> $code"
+done
+X-Api-Key: test -> 404
+Authorization: Bearer test -> 404
+X-HORNBACH-API-Key: test -> 404
+apikey: test -> 404
+X-Client-ID: test -> 404
+[0m
+[0m$ [0m# Check api.hornbach.de with various approaches
+# Try trailing slashes, different path patterns
+for path in "//" "/api/v1/" "/v1/" "/v2/" "/v3/" "/graphql/" "/rest/" "/ws" "/socket" "/healthcheck" "/ready" "/live" "/metrics" "/prometheus" "/trace" "/zipkin"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.hornbach.de$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+HIT: //: 400
+HIT: /healthcheck: 200
+Done
+[0m
+Two hits. Let me investigate those immediately.
+[0m$ [0mcurl -s -D- "https://api.hornbach.de//healthcheck" 2>&1
+HTTP/1.1 404 Not Found
+Date: Fri, 04 Sep 2026 09:51:17 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-95949a6af76617ade57aeb46 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0m# Recheck the two hits
+echo "=== /healthcheck ==="
+curl -s -D- "https://api.hornbach.de/healthcheck" 2>&1
+echo ""
+echo "=== // ==="
+curl -s -D- "https://api.hornbach.de//" 2>&1
+=== /healthcheck ===
+HTTP/1.1 200 OK
+Max-Forwards: 20
+Via: 1.0 sapigwprd01 (Gateway), 1.0 sapigwprd01 (Gateway)
+Connection: close
+X-CorrelationID: Id-9e949a6acb0352d67e3b7507 0; Id-9e949a6acc033072071e4539 0
+Accept: */*
+Date: Fri, 04 Sep 2026 09:51:26 GMT
+Host: localhost:8080
+Server: Gateway
+User-Agent: curl/8.5.0
+Content-Type: text/xml
+
+<status>ok</status>
+=== // ===
+HTTP/1.1 400 Bad Request
+Date: Fri, 04 Sep 2026 09:51:27 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-9f949a6a0704a656a5a4fb17 0
+
+Invalid URI
+[0m
+Critical finding! The `Via` header reveals **SAP API Gateway** (`sapigwprd01`). This changes everything — SAP APIM has well-known endpoint patterns.
+[0m$ [0m# SAP API Gateway well-known paths
+for path in "/healthcheck" "/api" "/sap" "/sap/apim" "/sap/btp" "/sap/hcp" "/sap/api" "/sap/apim/api" "/sap/rest" "/sap/odata" "/sap/public" "/sap/public/ping" "/sap/public/opi" "/sap/opu" "/sap/bc" "/sap/bc/adt" "/sap/bc/webdynpro" "/sap/bc/iframe" "/zapi" "/z_api" "/api/v1" "/api/v2" "/api/public" "/api/internal" "/internal-api" "/api-gateway" "/gateway"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.hornbach.de$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+HIT: /healthcheck: 200
+Done
+[0m
+[0m$ [0m# Try SAP API Gateway with API version patterns
+for path in "/api/1.0" "/api/1.0/" "/api/2.0" "/api/2.0/" "/api/3.0" "/api/1.0/healthcheck" "/api/1.0/ping" "/api/v1/healthcheck" "/api/v2/healthcheck"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.hornbach.de$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+
+# Also try POST on /healthcheck and try to get more info
+echo "=== POST /healthcheck ==="
+curl -s -D- -X POST "https://api.hornbach.de/healthcheck" 2>&1 | head -15
+
+# Try /healthcheck with different methods
+for method in PUT DELETE PATCH; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" -X $method "https://api.hornbach.de/healthcheck" 2>&1)
+  echo "METHOD $method /healthcheck: $code"
+done
+
+echo "Done"
+=== POST /healthcheck ===
+HTTP/1.1 405 Method Not Allowed
+Date: Fri, 04 Sep 2026 09:52:01 GMT
+Allow: GET, HEAD, OPTIONS
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-c1949a6af008b996bfd92b68 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"405","text":"Method Not Allowed"}}METHOD PUT /healthcheck: 405
+METHOD DELETE /healthcheck: 405
+METHOD PATCH /healthcheck: 405
+Done
+[0m
+[0m$ [0m# Explore Mirakl API more - check for IDOR patterns, different auth methods, interesting endpoints
+for path in "/api/products/1" "/api/products/0" "/api/products/test" "/api/offers/1" "/api/offers/0" "/api/stores/1" "/api/shoppers/1" "/api/sellers/1" "/api/orders/1" "/api/users/1" "/api/accounts/1" "/api/categories" "/api/shops" "/api/config" "/api/settings" "/api/admin" "/api/system" "/api/health" "/api/info" "/api/version" "/api/me" "/api/user" "/api/customer" "/api/merchant" "/api/seller" "/api/vendor"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://hornbach-mp.mirakl.net$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+HIT: /api/products/1: 401
+HIT: /api/products/0: 401
+HIT: /api/products/test: 401
+HIT: /api/offers/1: 401
+HIT: /api/offers/0: 401
+HIT: /api/stores/1: 401
+HIT: /api/shoppers/1: 401
+HIT: /api/sellers/1: 401
+HIT: /api/orders/1: 401
+HIT: /api/users/1: 401
+HIT: /api/accounts/1: 401
+HIT: /api/categories: 401
+HIT: /api/shops: 401
+HIT: /api/config: 401
+HIT: /api/settings: 401
+HIT: /api/admin: 401
+HIT: /api/system: 401
+HIT: /api/health: 401
+HIT: /api/info: 401
+HIT: /api/version: 200
+HIT: /api/me: 401
+HIT: /api/user: 401
+HIT: /api/customer: 401
+HIT: /api/merchant: 401
+HIT: /api/seller: 401
+HIT: /api/vendor: 401
+Done
+[0m
+[0m$ [0mcurl -s -D- "https://hornbach-mp.mirakl.net/api/version" 2>&1
+HTTP/2 200 
+date: Fri, 04 Sep 2026 09:53:16 GMT
+content-type: application/json
+content-length: 20
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+expires: 0
+mirakl-api-code: V01
+original-username: -
+pragma: no-cache
+strict-transport-security: max-age=31536000 ; includeSubDomains
+x-content-type-options: nosniff
+x-correlation-id: d75731b9-f74a-4d52-82d2-6a8ff9159d27
+x-frame-options: DENY
+x-xss-protection: 0
+via: 1.1 google
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=%2FTAIGxXqy1lobvrW4XeC3ueIVrRWljhDcky%2Be6rILKrfRGz5fsHkzX9ifU7udp4UoZm47mTWiRO9xWTPEKds9%2FB4%2BzN0XBr2kydjrDHMyh2rq%2Fq0iIvaGqyosdP%2Bpq1ubYbOuOq%2B56M%3D"}]}
+server: cloudflare
+cf-ray: a35c1b2f583f90cb-ORD
+
+{"version":"3.1301"}
+[0m
+`/api/version` returned 200! That's unauthenticated!
+[0m$ [0m# Check more unauthenticated Mirakl endpoints
+for path in "/api/version" "/api/public" "/api/public/" "/api/public/version" "/api/public/info" "/api/public/config" "/api/openapi.json" "/api/swagger.json" "/api/swagger.yaml" "/api-docs" "/api/docs" "/api/help" "/api/support"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://hornbach-mp.mirakl.net$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+HIT: /api/version: 200
+HIT: /api/public: 401
+HIT: /api/public/: 401
+HIT: /api/public/version: 401
+HIT: /api/public/info: 401
+HIT: /api/public/config: 401
+HIT: /api/openapi.json: 401
+HIT: /api/swagger.json: 401
+HIT: /api/swagger.yaml: 401
+HIT: /api/docs: 401
+HIT: /api/help: 401
+HIT: /api/support: 401
+Done
+[0m
+[0m$ [0m# SAP API Gateway specific probing - try SAP-specific endpoints
+for path in "/sap/apim" "/sap/apim/" "/sap/hcp" "/sap/btp" "/sap/public" "/sap/bc/adt" "/sap/bc/adt/discovery" "/sap/bc/adt/core" "/sap/bc/adt/core/services" "/sap/opu/odata" "/sap/bc/webdynpro" "/sap/bc/ui5_ui5" "/sap/bc/ping" "/sap/public/ping" "/sap/bc/iframe" "/z" "/z/" "/zhealth" "/ztest" "/default" "/sap/apim/healthcheck" "/sap/api/healthcheck" "/sap/btp/healthcheck"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.hornbach.de$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+Done
+[0m
+[0m$ [0m# Try more creative paths on api.hornbach.de
+for path in "/api/v1/healthcheck" "/api/v2/healthcheck" "/v1/healthcheck" "/v2/healthcheck" "/health" "/live" "/ready" "/readyz" "/livez" "/startupz" "/metrics" "/prometheus" "/actuator" "/debug/pprof" "/debug/vars"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.hornbach.de$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+Done
+[0m
+[0m$ [0m# Try to discover more subdomains of hornbach.de
+for subdomain in api dev staging test qa preprod sandbox internal backend bff app mobile m gateway gw proxy edge cdn static media assets img images cms content crm erp sap pos shop store ecommerce ecom web portal admin manage panel dashboard grafana kibana jenkins gitlab ci cd deploy release monitor log status health metrics prometheus; do
+  result=$(dig +short "$subdomain.hornbach.de" A 2>/dev/null)
+  [ -n "$result" ] && echo "$subdomain.hornbach.de -> $result"
+done
+echo "Done"
+api.hornbach.de -> 91.240.77.159
+dev.hornbach.de -> t.sni.global.fastly.net.
+140.248.147.52
+preprod.hornbach.de -> www.stg.gcp.hornbach.de.
+34.117.201.203
+cdn.hornbach.de -> n.sni.global.fastly.net.
+140.248.145.91
+media.hornbach.de -> media.prd.hornbach.de.
+n.sni.global.fastly.net.
+140.248.145.91
+Done
+[0m
+[0m$ [0m# Probe the new subdomains
+echo "=== dev.hornbach.de ==="
+curl -s -D- "https://dev.hornbach.de/" 2>&1 | head -20
+
+echo ""
+echo "=== preprod.hornbach.de ==="
+curl -s -D- --max-time 10 "https://preprod.hornbach.de/" 2>&1 | head -20
+
+echo ""
+echo "=== media.hornbach.de ==="
+curl -s -D- --max-time 10 "https://media.hornbach.de/" 2>&1 | head -20
+=== dev.hornbach.de ===
+HTTP/2 403 
+server: Varnish
+retry-after: 0
+content-type: text/html; charset=utf8
+accept-ranges: bytes
+date: Fri, 04 Sep 2026 09:54:31 GMT
+content-length: 2551
+
+
+      <html>
+      <head>
+          <title>HORNBACH - Oops!</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta charset="utf-8">
+          <style>
+              body {
+                  margin-top: 3rem;
+                  background-color: #f2f2f2;
+              }
+
+
+=== preprod.hornbach.de ===
+HTTP/2 404 
+content-length: 134
+content-type: text/html; charset=UTF-8
+date: Fri, 04 Sep 2026 09:54:31 GMT
+alt-svc: h3=":443"; ma=2592000
+
+<!doctype html><meta charset="utf-8"><meta name=viewport content="width=device-width, initial-scale=1"><title>404</title>404 Not Found
+=== media.hornbach.de ===
+HTTP/2 404 
+server: Varnish
+retry-after: 0
+content-type: text/html; charset=utf8
+accept-ranges: bytes
+date: Fri, 04 Sep 2026 09:54:31 GMT
+content-length: 2551
+
+
+      <html>
+      <head>
+          <title>HORNBACH - Oops!</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta charset="utf-8">
+          <style>
+              body {
+                  margin-top: 3rem;
+                  background-color: #f2f2f2;
+              }
+[0m
+[0m$ [0m# Explore preprod GCP surface more
+echo "=== www.stg.gcp.hornbach.de ==="
+curl -s -D- --max-time 10 "https://www.stg.gcp.hornbach.de/" 2>&1 | head -30
+
+echo ""
+echo "=== preprod paths ==="
+for path in "/api" "/health" "/healthcheck" "/actuator" "/swagger" "/openapi" "/graphql" "/debug" "/admin" "/internal" "/.well-known" "/robots.txt"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://preprod.hornbach.de$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+
+echo ""
+echo "=== dev.hornbach.de paths ==="
+for path in "/api" "/health" "/healthcheck" "/actuator" "/swagger" "/openapi" "/graphql" "/debug" "/admin" "/internal" "/.well-known" "/robots.txt"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://dev.hornbach.de$path" 2>&1)
+  [ "$code" != "403" ] && [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+=== www.stg.gcp.hornbach.de ===
+HTTP/2 404 
+content-length: 134
+content-type: text/html; charset=UTF-8
+date: Fri, 04 Sep 2026 09:54:43 GMT
+alt-svc: h3=":443"; ma=2592000
+
+<!doctype html><meta charset="utf-8"><meta name=viewport content="width=device-width, initial-scale=1"><title>404</title>404 Not Found
+=== preprod paths ===
+
+=== dev.hornbach.de paths ===
+Done
+[0m
+[0m$ [0m# Check dev.hornbach.de more carefully - it returned 403 (not 404)
+echo "=== dev.hornbach.de root ==="
+curl -s -D- --max-time 10 "https://dev.hornbach.de/" 2>&1 | head -60
+
+echo ""
+echo "=== dev paths ==="
+for path in "/" "/api" "/health" "/healthcheck" "/swagger" "/openapi" "/graphql" "/debug" "/admin" "/internal" "/.well-known" "/robots.txt" "/sitemap.xml" "/login" "/customer" "/checkout" "/cart" "/search" "/api/v1" "/api/v2"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://dev.hornbach.de$path" 2>&1)
+  echo "$path: $code"
+done
+echo "Done"
+=== dev.hornbach.de root ===
+HTTP/2 403 
+server: Varnish
+retry-after: 0
+content-type: text/html; charset=utf8
+accept-ranges: bytes
+date: Fri, 04 Sep 2026 09:54:55 GMT
+content-length: 2551
+
+
+      <html>
+      <head>
+          <title>HORNBACH - Oops!</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta charset="utf-8">
+          <style>
+              body {
+                  margin-top: 3rem;
+                  background-color: #f2f2f2;
+              }
+
+              .img-tool {
+                  max-width: 100%;
+                  -ms-grid-column: 1;
+                  -ms-grid-row: 3;
+                  height: 300px;
+              }
+
+              .sorry-grid {
+                  display: -ms-grid;
+                  display: grid;
+                  -ms-grid-columns: 1fr;
+                  grid-template-columns: 1fr;
+                  justify-items: center;
+                  grid-gap: 30px;
+                  text-align: center;
+              }
+
+              .logo {
+                  -ms-grid-row: 1;
+                  -ms-grid-column: 1;
+              }
+
+              .internetex-da-fehlt {
+                  -ms-grid-column: 1;
+                  -ms-grid-row: 2;
+              }
+
+              .da-fehlt-was {
+                  font-family: Arial;
+                  color: #333333;
+                  font-weight: bold;
+                  font-size: 2.7em;
+                  line-height: 55px;
+              }
+
+              .img-tool > svg {
+                  max-width: 100%;
+              }
+
+              @media (max-width: 480px) {
+
+=== dev paths ===
+/: 403
+/api: 403
+/health: 403
+/healthcheck: 403
+/swagger: 403
+/openapi: 403
+/graphql: 403
+/debug: 403
+/admin: 403
+/internal: 403
+/.well-known: 403
+/robots.txt: 403
+/sitemap.xml: 403
+/login: 403
+/customer: 403
+/checkout: 403
+/cart: 403
+/search: 403
+/api/v1: 403
+/api/v2: 403
+Done
+[0m
+[0m$ [0m# Check cidaas introspect endpoint - was it returning 200 without auth?
+curl -s -D- -X POST "https://auth.hornbach.com/token-srv/introspect" -H "Content-Type: application/x-www-form-urlencoded" -d "token=test_token_value" 2>&1 | head -30
+HTTP/2 200 
+date: Fri, 04 Sep 2026 09:55:15 GMT
+content-type: application/json
+content-length: 16
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: f81bd057-aa27-4d0a-9a91-31f5fc51a021
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=jVgoHWeP_EpopmLyRfXEKXqf41KuXvWt_xqOTMHCwq0-1788515715.1844783-1.0.1.1-eAkrlOuMCLKM6BiN2tEbxYbWCjQItwrBEnTQit1OgoulzrBG5YouomKhYLQz5UrX3YLYjo66Y6Hwvzyo22_E8FVPxMShmecm8YgffxgdXFXb3VIUy.Zuo65arGrKJHRr; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 10:25:15 GMT
+server: cloudflare
+cf-ray: a35c1e13ea37016f-CDG
+alt-svc: h3=":443"; ma=86400
+
+{"active":false}
+[0m
+[0m$ [0m# Citrix NetScaler probing on auth.hornbach.de
+for path in "/vpn/index.html" "/vpn/pluginlist.xml" "/epa/epa.html" "/epa/epa.js" "/logon/LogonPoint/index.html" "/logon/LogonPoint/config.json" "/logon/LogonPoint/custom.json" "/logon/LogonPoint/custom.js" "/logon/LogonPoint/custom.xml" "/gwtest.jsp" "/vpn/resources.js" "/vpn/init.js" "/vpn/init/redirection_body_resources.js" "/vpn/pluginlist.json" "/vpn/pluginlist.xml" "/vpn/js/epa.js" "/epa/run.js" "/epa/run" "/cgi/viewrc" "/epa/epa.html" "/logon/LogonPoint/tmindex.html" "/logon/doLogon.do" "/logon/doLogoff.do" "/logon/login.do"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://auth.hornbach.de$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+HIT: /vpn/index.html: 302
+HIT: /vpn/pluginlist.xml: 200
+HIT: /epa/epa.html: 200
+HIT: /logon/LogonPoint/index.html: 200
+HIT: /gwtest.jsp: 500
+HIT: /vpn/resources.js: 200
+HIT: /vpn/init/redirection_body_resources.js: 200
+HIT: /vpn/pluginlist.xml: 200
+HIT: /cgi/viewrc: 302
+HIT: /epa/epa.html: 200
+HIT: /logon/LogonPoint/tmindex.html: 200
+Done
+[0m
+[0m$ [0mecho "=== gwtest.jsp 500 ==="
+curl -s -D- "https://auth.hornbach.de/gwtest.jsp" 2>&1 | head -30
+
+echo ""
+echo "=== pluginlist.xml ==="
+curl -s "https://auth.hornbach.de/vpn/pluginlist.xml" 2>&1 | head -50
+
+echo ""
+echo "=== /cgi/viewrc ==="
+curl -s -D- "https://auth.hornbach.de/cgi/viewrc" 2>&1 | head -20
+=== gwtest.jsp 500 ===
+HTTP/1.1 500 Internal Server Error
+Content-Length: 71
+Connection: close
+Cache-Control: no-cache,no-store
+Pragma: no-cache
+
+<html><body><b>Http/1.1 Internal Server Error 43549 </b></body> </html>
+=== pluginlist.xml ===
+<repositories>
+	<repository name="default" >
+		<plugin
+			name="Netscaler Gateway EPA plug-in for Windows (32 bit)" type="WIN-EPA"
+			version="25.5.1.15" path="/epa/scripts/win/nsepa_setup.exe"
+			compatibleFrom="12.1.0.0" compatibleTill=""
+		/>
+
+		<plugin
+			name="Netscaler Gateway EPA plug-in for Windows (64 bit)" type="WIN-EPA64"
+			version="25.5.1.15" path="/epa/scripts/win/nsepa_setup.exe"
+			compatibleFrom="12.1.0.0" compatibleTill=""
+		/>
+
+		<plugin
+			name="Netscaler Gateway VPN plug-in for Windows" type="WIN-VPN"
+			version="25.5.1.15" path="/vpns/scripts/vista/AGEE_setup.exe"
+			compatibleFrom="12.1.0.0" compatibleTill=""
+		/>
+
+		<plugin
+			name="EPA scanning Engine (Opswat) for Windows" type="WIN-EPA-ENGINE"
+			version="25.5.1.15" path="/epa/scripts/win/epaPackage.exe" opswatVersion="4.3.4619.0"
+		/>
+
+		<plugin
+			name="Netscaler Gateway EPA plug-in for Mac" type="MAC-EPA"
+			version="22.11.3" path="/epa/scripts/mac/Citrix_Endpoint_Analysis.dmg"
+			compatibleFrom="22.11.3" compatibleTill=""
+		/>
+
+		<plugin
+			name="Netscaler Gateway VPN plug-in for Mac" type="MAC-VPN"
+			version="4.4.8 (518)" path="/vpns/scripts/mac/Citrix_Access_Gateway.dmg"
+			compatibleFrom="4.4.8 (518)" compatibleTill=""
+		/>
+
+		<plugin
+			name="EPA scanning Engine (Opswat) for Mac" type="MAC-EPA-ENGINE"
+			version="1.3.5.7" path="/epa/scripts/mac/MacLibs.zip" opswatVersion="4.3.2138.0"
+		/>
+
+		<plugin
+			name="Netscaler Gateway RfWeb GUI" type="RFWEB-GUI"
+			version="25.5.1.15" path="/logon/logonPoint/"
+		/>
+	</repository>
+</repositories>
+
+=== /cgi/viewrc ===
+HTTP/1.1 302 Object Moved
+Location: /logon/LogonPoint/tmindex.html
+Strict-Transport-Security: max-age=157680000
+Content-Security-Policy: default-src 'self'; script-src 'self'; connect-src 'self'; img-src http://localhost:* 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self'; child-src 'self' com.citrix.agmacepa://* citrixng://* com.citrix.nsgclient://* vmware-view:// nsgcepa://nsgcepa application://*; form-action  'self'; object-src 'none'; base-uri 'self'; report-uri /nscsp_violation/report_uri
+Set-Cookie: NSC_AAAC=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_EPAC=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_USER=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_TEMP=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_PERS=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_BASEURL=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: CsrfToken=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: CtxsAuthId=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: ASP.NET_SessionId=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_TMAA=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+Set-Cookie: NSC_TMAS=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_TEMP=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+Set-Cookie: NSC_PERS=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+Set-Cookie: NSC_AAAC=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+[0m
+[0m$ [0m# Check Citrix NetScaler version and known CVEs
+echo "=== Citrix NetScaler version check ==="
+curl -s -D- "https://auth.hornbach.de/vpn/pluginlist.xml" 2>&1 | grep -i "version"
+
+echo ""
+echo "=== EPA scripts accessible? ==="
+for path in "/epa/scripts/win/nsepa_setup.exe" "/epa/scripts/win/epaPackage.exe" "/epa/scripts/mac/Citrix_Endpoint_Analysis.dmg" "/epa/scripts/mac/MacLibs.zip" "/vpns/scripts/vista/AGEE_setup.exe" "/vpns/scripts/mac/Citrix_Access_Gateway.dmg"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://auth.hornbach.de$path" 2>&1)
+  echo "$path: $code"
+done
+
+echo ""
+echo "=== init.js content ==="
+curl -s "https://auth.hornbach.de/logon/LogonPoint/init.js" 2>&1 | head -30
+=== Citrix NetScaler version check ===
+			version="25.5.1.15" path="/epa/scripts/win/nsepa_setup.exe"
+			version="25.5.1.15" path="/epa/scripts/win/nsepa_setup.exe"
+			version="25.5.1.15" path="/vpns/scripts/vista/AGEE_setup.exe"
+			version="25.5.1.15" path="/epa/scripts/win/epaPackage.exe" opswatVersion="4.3.4619.0"
+			version="22.11.3" path="/epa/scripts/mac/Citrix_Endpoint_Analysis.dmg"
+			version="4.4.8 (518)" path="/vpns/scripts/mac/Citrix_Access_Gateway.dmg"
+			version="1.3.5.7" path="/epa/scripts/mac/MacLibs.zip" opswatVersion="4.3.2138.0"
+			version="25.5.1.15" path="/logon/logonPoint/"
+
+=== EPA scripts accessible? ===
+/epa/scripts/win/nsepa_setup.exe: 200
+/epa/scripts/win/epaPackage.exe: 200
+/epa/scripts/mac/Citrix_Endpoint_Analysis.dmg: 200
+/epa/scripts/mac/MacLibs.zip: 200
+/vpns/scripts/vista/AGEE_setup.exe: 302
+/vpns/scripts/mac/Citrix_Access_Gateway.dmg: 302
+
+=== init.js content ===
+// Calculates the minimum width that would be available to the web UI on this device
+function calculateMinimumAvailableWidth(urlParams) {
+    var availableWidth, availableHeight,
+        deviceSupportsRotation = true,
+        screenWidthInUrl = urlParams.match(/screenwidth=(\d+)(&|$)/i),
+        screenHeightInUrl = urlParams.match(/screenheight=(\d+)(&|$)/i);
+
+    if (screenWidthInUrl && screenHeightInUrl) {
+        // Screen dimensions have been provided by the native client in the URL - use them
+        availableWidth = screenWidthInUrl[1];
+        availableHeight = screenHeightInUrl[1];
+    } else if (navigator.userAgent.match(/(Android)\s+([\d.]+)/) || navigator.userAgent.match(/(Windows Phone)/i)) {
+        // Android and Windows Phone give inconsistent screen dimensions - either physical pixels or CSS pixels depending on the device
+        // We can attempt to work out which dimensions we've got by comparing with window size
+        var screenWidth = window.screen.width,
+            screenHeight = window.screen.height,
+            windowWidth = document.documentElement.clientWidth,
+            windowHeight = document.documentElement.clientHeight,
+            pixelRatio = window.devicePixelRatio;
+
+        if (screenWidth == windowWidth) {
+            // Screen dimensions seem to be provided in CSS pixels - use them
+            availableWidth = screenWidth;
+            availableHeight = screenHeight;
+        } else if (screenWidth == (windowWidth * pixelRatio)) {
+            // Screen dimensions seem to be provided in physical pixels - convert to CSS pixels
+            availableWidth = Math.floor(screenWidth / pixelRatio);
+            availableHeight = Math.floor(screenHeight / pixelRatio);
+        } else {
+            // No discernable relationship between screen and window dimensions - fall back to using window dimensions
+[0m
+Now I have enough data. Let me compile the 8-step analysis.
+[0m$ [0m# One more check - the Citrix NetScaler config.json and custom.json
+curl -s "https://auth.hornbach.de/logon/LogonPoint/config.json" 2>&1 | head -40
+echo "---"
+curl -s "https://auth.hornbach.de/logon/LogonPoint/custom.json" 2>&1 | head -20
+echo "---"
+curl -s "https://auth.hornbach.de/logon/LogonPoint/custom.xml" 2>&1 | head -20
+echo "---"
+# Check for known Citrix NetScaler vulns - path traversal, etc
+curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://auth.hornbach.de/vpns/cfg/smb.conf" 2>&1
+echo " vpns/cfg/smb.conf"
+curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://auth.hornbach.de/vpns/cfg/portal.conf" 2>&1
+echo " vpns/cfg/portal.conf"
+curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://auth.hornbach.de/vpns/traces" 2>&1
+echo " vpns/traces"
+curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://auth.hornbach.de/vpns/js/gateway_login_view.js" 2>&1
+echo " vpns/js/gateway_login_view.js"
+curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://auth.hornbach.de/epa/epa.jar" 2>&1
+echo " epa/epa.jar"
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>404 Not Found</title>
+</head><body>
+<h1>Not Found</h1>
+<p>The requested URL was not found on this server.</p>
+</body></html>
+---
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>404 Not Found</title>
+</head><body>
+<h1>Not Found</h1>
+<p>The requested URL was not found on this server.</p>
+</body></html>
+---
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>404 Not Found</title>
+</head><body>
+<h1>Not Found</h1>
+<p>The requested URL was not found on this server.</p>
+</body></html>
+---
+302 vpns/cfg/smb.conf
+302 vpns/cfg/portal.conf
+302 vpns/traces
+302 vpns/js/gateway_login_view.js
+404 epa/epa.jar
+[0m
+[0m$ [0m# Final check - try Citrix NetScaler known sensitive endpoints
+curl -s -D- --max-time 10 "https://auth.hornbach.de/logon/LogonPoint/customView.js" 2>&1 | head -10
+echo "---"
+# Check the Citrix NetScaler login form for CSRF token / interesting fields
+curl -s --max-time 10 "https://auth.hornbach.de/logon/LogonPoint/tmindex.html" 2>&1 | grep -iE "form|input|action|token|csrf|password|login|client_id|oauth|saml" | head -20
+echo "---"
+# Check for Citrix ADC CVE-2023-3519, CVE-2022-27510, CVE-2022-27513 paths
+for path in "/vpn/plugin/vpx" "/vpn/index.html?cloakurl=" "/logon/LogonPoint/index.html?loginEndpoint=" "/logon/LogonPoint/index.html?domain=" "/epa/epa.html?epacurl=" "/logon/doLogon.do"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://auth.hornbach.de$path" 2>&1)
+  [ "$code" != "404" ] && echo "HIT: $path: $code"
+done
+echo "Done"
+HTTP/1.1 404 Not Found
+Date: Fri, 04 Sep 2026 09:57:43 GMT
+Server: Apache
+X-Frame-Options: SAMEORIGIN
+Content-Length: 196
+Content-Type: text/html; charset=iso-8859-1
+Strict-Transport-Security: max-age=157680000
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+---
+    <p id="recolor-actions" style="display: none;" class="theme-highlight-sprite theme-highlight-color"></p>
+    <div id="bundle-actions" style="display: none;" class="bundleDetail"></div>
+            <a id="myAppsBtnPhone" class="toggle-view-button myapps-view primary menu-action theme-header-color">
+                <div class="action-icon-container"><div class="action-icon view-sprite"></div></div>
+                <span class="action-text _ctxstxt_QuickAccess"></span>
+            <a id="desktopsBtnPhone" class="toggle-view-button desktops-view primary menu-action theme-header-color">
+                <div class="action-icon-container"><div class="action-icon view-sprite"></div></div>
+                <span class="action-text _ctxstxt_Desktops"></span>
+            <a id="allAppsBtnPhone" class="toggle-view-button store-view primary menu-action theme-header-color">
+                <div class="action-icon-container"><div class="action-icon view-sprite"></div></div>
+                <span class="action-text _ctxstxt_AllApps"></span>
+            <!-- <a class="toggle-view-button updates-view primary menu-action theme-header-color"><div class="action-icon-container"><div class="action-icon view-sprite"></div></div><span class="action-text _todo_ctxstxt_Update" data-updates=""></span></a>
+            <div class="action-separator"></div>
+            <a href="#" class="settings menu-action settings-button theme-header-color">
+                <div class="action-icon-container"><div class="action-icon view-sprite"></div></div>
+                <span class="action-text _ctxstxt_Preferences"></span>
+            <a href="#" class="help menu-action help-button theme-header-color hide">
+                <div class="action-icon-container"><div class="action-icon view-sprite"></div></div>
+                <span class="action-text _ctxstxt_Help"></span>
+            <a href="#" class="about menu-action about-button theme-header-color">
+---
+HIT: /vpn/index.html?cloakurl=: 302
+HIT: /logon/LogonPoint/index.html?loginEndpoint=: 200
+HIT: /logon/LogonPoint/index.html?domain=: 200
+HIT: /epa/epa.html?epacurl=: 200
+Done
+[0m
+Now I have enough data. Here's the full 8-step output:
+
+---
+
+**STEP 1 — DELTA**
+
+- [NEW] api.hornbach.de: `/healthcheck` returns 200, reveals SAP API Gateway (`Via: 1.0 sapigwprd01`); all other paths 404 with structured JSON errors
+- [NEW] api.hornbach.de: Via header leaks internal hostname `sapigwprd01` — SAP API Management Gateway
+- [NEW] hornbach-mp.mirakl.net: Mirakl OAuth SSO redirects to `login.mirakl.net/authorize` leaking Mirakl platform client_id `UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq` (not cidaas — separate Mirakl IdP)
+- [NEW] hornbach-mp.mirakl.net: `/api/version` unauthenticated returns `{"version":"3.1301"}`; all `/api/*` return 401
+- [NEW] auth.hornbach.de: Citrix NetScaler Gateway **v25.5.1.15**; EPA/VPN plugins publicly downloadable (200); gwtest.jsp returns 500
+- [NEW] dev.hornbach.de: Fastly-fronted, 403 everywhere (IP-restricted)
+- [NEW] preprod.hornbach.de: resolves to `www.stg.gcp.hornbach.de` (GCP `34.117.201.203`) — staging environment on GCP
+- [NEW] cdn.hornbach.de, media.hornbach.de: Fastly CDN-fronted
+- [CHANGED] auth.hornbach.com `/token-srv/introspect`: confirmed POST returns 200 `{"active":false}` WITHOUT client authentication — abnormal per RFC 7662
+
+**STEP 2 — PRIORITIZE**
+
+- [PRIO] auth.hornbach.com,8.6, attack_surface:9,business_value:9,tech_exposure:9,gate_ease:7,cloud_surface:8,freshness:9
+- [PRIO] auth.hornbach.de,6.8, attack_surface:7,business_value:7,tech_exposure:8,gate_ease:5,cloud_surface:5,freshness:8
+- [PRIO] hornbach-mp.mirakl.net,5.8, attack_surface:7,business_value:6,tech_exposure:6,gate_ease:3,cloud_surface:5,freshness:7
+- [PRIO] api.hornbach.de,4.2, attack_surface:4,business_value:5,tech_exposure:5,gate_ease:3,cloud_surface:3,freshness:7
+
+**STEP 3 — HYPOTHESES**
+
+[HYP] Unauthenticated token introspection leaks token metadata
+class: AUTH
+asset: auth.hornbach.com/token-srv/introspect
+confidence: 50
+reasoning: POST to /token-srv/introspect with `token=fake` returns HTTP 200 `{"active":false}` without ANY client authentication (no Basic auth, no client_secret, no client_assertion). RFC 7662 §2.1 requires resource server to authenticate itself; cidaas metadata lists `introspection_endpoint_auth_methods_supported`. Unauthenticated acceptance is a concrete misconfiguration — if valid tokens are accepted, attacker gets sub/scope/exp/token_type metadata for any access token without credentials.
+evidence_needed: valid access_token from cidaas (requires client_id + user login) to prove data exfiltration; the unauthenticated acceptance itself is the misconfiguration
+verify_steps: (DONE) POST with fake token returns 200; NEXT: obtain real token from mobile app flow, introspect unauthenticated, verify response contains token metadata (sub, scope, exp, client_id)
+impact: token metadata disclosure (active sessions, scopes, user identity, expiry); severity MEDIUM; chain potential: introspect stolen/leaked tokens to map session state
+testability: AUTH_HELPED (needs valid client_id + user login to obtain token)
+
+[HYP] api.hornbach.de internal hostname disclosure via Via header
+class: MISCONFIG
+asset: api.hornbach.de
+confidence: 55
+reasoning: Via response header leaks `Via: 1.0 sapigwprd01 (Gateway), 1.0 sapigwprd01 (Gateway)` — reveals internal SAP API Gateway hostname and software. Combined with `/healthcheck` returning 200 XML `<status>ok</status>` with `Host: localhost:8080` in response, this confirms SAP APIM backend on localhost:8080 behind the gateway. Gateway also returns structured JSON error messages with X-CorrelationID for request tracing.
+evidence_needed: already confirmed via passive probing
+verify_steps: (DONE) GET /healthcheck returns 200 with Via header leak; impact is information disclosure
+impact: internal hostname + software fingerprinting enables targeted attacks against SAP APIM; severity LOW; but if path discovery yields API endpoints, combined with gateway bypass could lead to backend access
+testability: PASSIVE
+
+[HYP] Citrix NetScaler version exposure + downloadable EPA/VPN binaries
+class: MISCONFIG
+asset: auth.hornbach.de
+confidence: 45
+reasoning: Citrix NetScaler Gateway v25.5.1.15 fully exposed: pluginlist.xml reveals exact versions (NS 25.5.1.15, Opswat EPA 4.3.4619.0/4.3.2138.0); EPA/VPN installer binaries are publicly downloadable (HTTP 200): nsepa_setup.exe, epaPackage.exe, Citrix_Endpoint_Analysis.dmg, MacLibs.zip. gwtest.jsp returns HTTP 500 with internal error code 43549. This is employee-facing VPN infrastructure — may have separate vuln class vs cidaas.
+evidence_needed: confirmed via passive probing; version 25.5.1.15 maps to Citrix NetScaler ADC — check for CVE-2023-4966 (Citrix Bleed), CVE-2024-6235, CVE-2025-6543 etc; current version likely patched for known CVEs but surface is worth monitoring
+verify_steps: (DONE) pluginlist.xml returns full version info; EPA binaries downloadable; gwtest.jsp 500; NEXT: check if version 25.5.1.15 is current/latest or if any unpatched CVE applies
+impact: version fingerprinting enables targeted exploit; downloadable binaries can be reverse-engineered for client-side auth flaws; gwtest.jsp 500 may indicate misconfiguration; severity LOW-MEDIUM
+testability: PASSIVE
+
+**STEP 4 — SELF-CRITIQUE**
+
+- [PARKED] cidaas OIDC JWT alg confusion: confidence 40 < 45 — requires valid client_id + token capture; mature provider per-client config; no path to obtain client_id without mobile app access
+- [PARKED] cidaas OIDC JWT algorithm confusion: duplicate of above — blocked on client_id
+- [FINAL] 1. Unauthenticated token introspection (confidence 50, AUTH_HELPED, HIGH) — confirmed misconfiguration, needs real token to prove impact
+- [FINAL] 2. api.hornbach.de Via header hostname leak + SAP APIM healthcheck (confidence 55, PASSIVE, LOW) — confirmed info disclosure
+- [FINAL] 3. Citrix NetScaler v25.5.1.15 version exposure + downloadable binaries (confidence 45, PASSIVE, LOW-MEDIUM)
+
+**STEP 5 — NEXT ACTION**
+
+[NEXT] HUMAN: The critical unlock for all OAuth hypotheses is obtaining a valid cidaas client_id. Options: (1) extract from HORNBACH mobile app (de.hornbach on Google Play) via APK decompile — look for `ClientId` in cidaas SDK config (strings.xml or Cidaas initialization); (2) intercept OAuth redirect in browser during manual login at www.hornbach.de to capture client_id from authz redirect; (3) check Apple App Store listing for OAuth redirect URI scheme. Until client_id is obtained, unauthenticated introspection testing and Citrix NetScaler version audit are the most productive passive activities.
+
+**STEP 6 — LEARNING**
+
+- [LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: SAP API Gateway (sapigwprd01) with `/healthcheck` returning 200 and Via header leaking internal hostname; structured JSON errors with correlation IDs; all other paths 404 — limited surface without API route knowledge
+- [LEARN] ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: Mirakl API v3.1301 confirmed; `/api/version` unauthenticated; all `/api/*` return 401; Mirakl OAuth SSO client_id `UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq` leaked in redirect chain (platform-level, not HORNBACH cidaas)
+- [LEARN] ACCEPTED class MISCONFIG @ auth.hornbach.de: Citrix NetScaler Gateway v25.5.1.15 with publicly downloadable EPA/VPN binaries and gwtest.jsp returning 500
+- [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: SAP API Gateway has limited discoverable surface — no API routes found via 80+ path probes; only /healthcheck returns 200
+
+**STEP 7 — RISK**
+
+[RISK] hornbach: 43/100 — cidaas tenant is primary live auth surface; unauthenticated introspection endpoint confirmed abnormal (RFC 7662 violation) but impact gated on client_id; SAP API Gateway on api.hornbach.de identified but minimal route surface; Citrix NetScaler AAA on auth.hornbach.de is employee-facing VPN with full version disclosure; dev/preprod subdomains exist but are IP-restricted/GCP-gated; www.hornbach.de bot-walled (FingerprintJS); Mirakl marketplace is separate auth-gated surface; scope broad but CDN-heavy and gates hard.
