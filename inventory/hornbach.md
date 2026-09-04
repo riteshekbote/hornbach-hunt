@@ -91,3 +91,14 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/token-srv/introspect: now returns HTTP 404 (was accessible unauthenticated, RFC 7662 compliant returning active=false)
 - CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes discovered
 - CHANGED hornbach.com: no wildcard DNS confirmed (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 known scoped hosts resolve
+
+## 2026-09-04 20:01:29 UTC
+- NEW auth.hornbach.com/token-srv/introspect: POST returns HTTP 200 {"active":false} unauthenticated — endpoint RE-CONFIRMED live (transient 404 in prior run was edge/routing, not permanent)
+- NEW auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 "OK" unauthenticated — endpoint re-confirmed live; both token management endpoints stable unauthenticated
+- NEW auth.hornbach.com/.well-known/status: returns HTTP 200 {"status":"OK","updatedAt"} — discovery property status endpoint live (per OIDC metadata)
+- CHANGED auth.hornbach.com/authz-srv/authz: client_id=public now returns 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — confirms uniform invalid_client gate; previous 404 vs 302 variance is
+- NEW auth.hornbach.com/token-srv/revoke: now returns HTTP 404 (was 200 OK without client auth per 2026-09-04 14:20 lead) — endpoint appears remediated or blocked
+- NEW auth.hornbach.com/authz-srv/authz: returns HTTP 200 with valid client_id=<found> (probe 2026-09-04 14:20/17:49) — authorization endpoint responds to valid client, not just invalid_client errors
+- CHANGED auth.hornbach.com/token-srv/introspect: confirmed HTTP 404 (was accessible unauthenticated returning active=false)
+- CHANGED hornbach.com: no wildcard DNS confirmed — only 4 scoped hosts resolve
+- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes

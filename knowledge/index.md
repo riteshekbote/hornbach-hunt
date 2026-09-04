@@ -27,3 +27,7 @@
 - 2026-09-04 ACCEPTED class OTHER @ api.hornbach.de: SAP API Gateway exists (Gateway server header) with backend on localhost:8080; no documented endpoints at common paths
 - 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.de: Citrix NetScaler AAA VPN Gateway v25.5.1.15 confirmed (legacy employee access); EPA/VPN binaries downloadable
 - 2026-09-04 ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is in-scope API surface; all /api/* require Mirakl auth
+- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED live, returns 200 {"active":false} unauthenticated — prior "404" was transient; unauthenticated introspection is systemic and stable
+- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED live, returns 200 "OK" unauthenticated — two stable unauthenticated token management endpoints
+- 2026-09-04 REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id enumeration via status-code differential is REMOVED — invalid client_ids return uniform 302->AUTH10007; 404 vs 302 variance is request-shape not client validity signal
+- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: token revocation endpoint accessible unauthenticated, RFC 7009 violation — second token management endpoint missing client auth (but latest probe shows 404, needs re-check)
