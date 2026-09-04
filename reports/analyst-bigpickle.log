@@ -4204,3 +4204,515 @@ testability: PASSIVE
 **STEP 7 — RISK**
 
 [RISK] hornbach: 43/100 — cidaas tenant is primary live auth surface; unauthenticated introspection endpoint confirmed abnormal (RFC 7662 violation) but impact gated on client_id; SAP API Gateway on api.hornbach.de identified but minimal route surface; Citrix NetScaler AAA on auth.hornbach.de is employee-facing VPN with full version disclosure; dev/preprod subdomains exist but are IP-restricted/GCP-gated; www.hornbach.de bot-walled (FingerprintJS); Mirakl marketplace is separate auth-gated surface; scope broad but CDN-heavy and gates hard.
+===== ANALYST bigpickle 2026-09-04 14:20:23 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -D- -X POST https://auth.hornbach.com/token-srv/introspect -d "token=fake_token" 2>&1 | head -30
+HTTP/2 200 
+date: Fri, 04 Sep 2026 14:06:21 GMT
+content-type: application/json
+content-length: 16
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: b0345f85-3f79-40a9-b380-5fd2959aab39
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=saZhqdQOpOSpiswxJ6MA8HXp6zEXo1gBx4w6ATPe0bA-1788530781.555196-1.0.1.1-PV1kxaD9KRKPEFXHJGDp.NQJ2pq1MkiyrrlstXqrxMoDAN8HupbX_DAY0F1DlncEiulgsdXpFLVmYiRWAEx56EnT_gjnmYWGooK0RzXDZNALFOdJxPnrruQWDezaAgki; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:36:21 GMT
+server: cloudflare
+cf-ray: a35d8de8bc62c48b-HAM
+alt-svc: h3=":443"; ma=86400
+
+{"active":false}
+[0m
+[0m$ [0mcurl -s -D- -X POST https://auth.hornbach.com/token-srv/introspect -d "token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.fake" 2>&1 | head -30
+HTTP/2 200 
+date: Fri, 04 Sep 2026 14:06:43 GMT
+content-type: application/json
+content-length: 16
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: e0d95176-b54d-49f7-a6ef-11f36581c967
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=4AU2X2WAe9WQwG9SQhlJBbsyhuMyR6.UmmYCWjXGdzU-1788530803.6959236-1.0.1.1-qbTuB8Itc5kYaT.kxxp7hFptF0um.pTLTkn9pcoUuqu1EXLtykC6Ue0EWQmEN1m1GCerIirMWez8Mw_ow3iPUk30kgodRJpkKzl.Z4gTyJPF48z6E_VijypjmROJ3SVo; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:36:43 GMT
+server: cloudflare
+cf-ray: a35d8e731c31131b-HAM
+alt-svc: h3=":443"; ma=86400
+
+{"active":false}
+[0m
+[0m$ [0mcurl -s -D- https://auth.hornbach.com/.well-known/openid-configuration 2>&1 | head -80
+HTTP/2 200 
+date: Fri, 04 Sep 2026 14:06:44 GMT
+content-type: application/json; charset=utf-8
+cache-control: public, max-age=900
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 425e7e92-c697-45e5-aa71-96a07e8a5e5e
+x-xss-protection: 1; mode=block
+set-cookie: __cf_bm=PDxEP7IcK8FbnCz5IDrAWPrYVdTdzLR5g5oHesbBZ2I-1788530804.2562966-1.0.1.1-iSZ6VeWTH_ecHwQSQr0BQSnoiRFgbZn8uEKfrlJWRN_0jIea2H7PjS3RqFR0d_EkMLdrIL2rTD9107OcN1x35M3NyXe3T1JgAI3dxePMUVE7fqbc37vNfD31nh1U7S8e; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:36:44 GMT
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35d8e769aa12af8-CPH
+alt-svc: h3=":443"; ma=86400
+
+{"issuer":"https://auth.hornbach.com","authorization_endpoint":"https://auth.hornbach.com/authz-srv/authz","token_endpoint":"https://auth.hornbach.com/token-srv/token","userinfo_endpoint":"https://auth.hornbach.com/users-srv/userinfo","https://discovery.netid.de/properties/status_endpoint":"https://auth.hornbach.com/.well-known/status","jwks_uri":"https://auth.hornbach.com/.well-known/jwks.json","scopes_supported":["openid","profile","email","phone","address","offline_access","identities","roles","groups"],"response_types_supported":["code","token","id_token","code token","code id_token","token id_token","code token id_token"],"response_modes_supported":["query","fragment","form_post"],"subject_types_supported":["public"],"id_token_signing_alg_values_supported":["HS256","RS256"],"token_endpoint_auth_methods_supported":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"],"claims_supported":["aud","auth_time","created_at","email","email_verified","exp","family_name","given_name","iat","identities","iss","mobile_number","name","nickname","phone_number","picture","sub"],"token_endpoint_auth_signing_alg_values_supported":["HS256","RS256"],"check_session_iframe":"https://auth.hornbach.com/session/check_session","end_session_endpoint":"https://auth.hornbach.com/session/end_session","social_provider_token_resolver_endpoint":"https://auth.hornbach.com/login-srv/social/token","registration_endpoint":"https://auth.hornbach.com/apps-srv/clients/register","userinfo_signing_alg_values_supported":["HS256","RS256"],"userinfo_encryption_alg_values_supported":["RS256"],"userinfo_encryption_enc_values_supported":["A128CBC-HS256"],"id_token_encryption_alg_values_supported":["RS256"],"id_token_encryption_enc_values_supported":["A128CBC-HS256"],"display_values_supported":["page","popup"],"claim_types_supported":["normal"],"service_documentation":"https://docs.cidaas.de/","ui_locales_supported":["en-US","de-DE"],"introspection_endpoint":"https://auth.hornbach.com/token-srv/introspect","introspection_async_update_endpoint":"https://auth.hornbach.com/token-srv/introspect/async/tokenusage","revocation_endpoint":"https://auth.hornbach.com/token-srv/revoke","introspection_endpoint_auth_methods_supported":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"],"introspection_endpoint_auth_signing_alg_values_supported":["HS256","RS256"],"revocation_endpoint_auth_methods_supported":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"],"revocation_endpoint_auth_signing_alg_values_supported":["HS256","RS256"],"claims_locales_supported":["en-US"],"op_policy_uri":"https://www.cidaas.com/privacy-policy/","op_tos_uri":"https://www.cidaas.com/terms-of-use/","grant_types_supported":["implicit","authorization_code","refresh_token","password","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code"],"code_challenge_methods_supported":["plain","S256"],"device_authorization_endpoint":"https://auth.hornbach.com/authz-srv/device/authz","backchannel_logout_supported":true,"scim_endpoint":"https://auth.hornbach.com/user-scim-srv/v2"}
+[0m
+[0m$ [0mcurl -s -D- https://api.hornbach.de/ 2>&1 | head -30
+HTTP/1.1 404 Not Found
+Date: Fri, 04 Sep 2026 14:06:42 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-72d09a6ae8d8e68093ed9a6a 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0mcurl -s -D- -X POST https://auth.hornbach.com/authz-srv/device/authz -H "Content-Type: application/x-www-form-urlencoded" -d "client_id=test&scope=openid" 2>&1 | head -20
+HTTP/2 400 
+date: Fri, 04 Sep 2026 14:07:00 GMT
+content-type: application/json
+content-length: 212
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: c863e04e-d504-4c7a-aef3-594bfad0687b
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=TqfTDo3BxywMizF4zIvaJfyVLpLtQXFnR0IodlC55BY-1788530820.9338517-1.0.1.1-lxBU_eXmtMR9gJQZT6x0FhdtOHeTmOwxojCdBDPBCUvkkaMiz.knoWcywsc1NxvpNPZPoD.9lJI_V.F2706pCLsBy1G5QNF0B5O.6n1gNjypxR7iUOniitpOfGYerWoi; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:37:00 GMT
+server: cloudflare
+cf-ray: a35d8ededf2bb564-HAM
+alt-svc: h3=":443"; ma=86400
+
+{"error":"invalid_client","error_code":"AUTH10007","error_description":"invalid_client: invalid client_id passed","error_hint":"please check if you passing correct client_id or the client is disabled or deleted"}
+[0m
+[0m$ [0mcurl -s -D- -X POST https://auth.hornbach.com/authz-srv/authz -H "Content-Type: application/x-www-form-urlencoded" -d "response_type=code&client_id=de.hornbach&redirect_uri=de.hornbach://callback&scope=openid" 2>&1 | head -30
+HTTP/2 302 
+date: Fri, 04 Sep 2026 14:07:01 GMT
+content-length: 0
+location: https://auth.hornbach.com/identity/error?error=invalid_request&error_code=AUTH10001&error_description=invalid_request%3A+request+is+missing+a+required+parameter%2C+client_id+is+missing&error_hint=client_id+is+a+required+parameter+that+you+need+to+pass+in+query&iss=https%253A%252F%252Fauth.hornbach.com
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: e39899e2-24a0-4a4f-be75-a0437808eb85
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=an5sNEGjAGki_25h4eKBIv4e7W_ynhFzRtvVy7yeEkA-1788530821.4658425-1.0.1.1-QXnte5i03WWPtfjPnM5TIaPIajKEUJnhQPtY6MyAQbMtT9lpuTAj1m6zKpPHBCNb902HZXwa0nQUQ42Umc025DSNEFAkaxPe93DMgpUvNcearkkTmqOo61hzPqfuWr1A; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:37:01 GMT
+server: cloudflare
+cf-ray: a35d8ee22b60a898-HAM
+alt-svc: h3=":443"; ma=86400
+[0m
+[0m$ [0mcurl -s -D- -X POST https://auth.hornbach.com/user-scim-srv/v2 -H "Content-Type: application/json" -d '{"schemas":["urn:ietf:params:scim:api:messages:2.0:SearchRequest"]}' 2>&1 | head -30
+HTTP/2 404 
+date: Fri, 04 Sep 2026 14:07:02 GMT
+content-type: text/plain; charset=utf-8
+set-cookie: __cf_bm=scxZOpU6ss00VRbDDCr0gAJZiCZS26T.5hJycrpiG18-1788530822.4301322-1.0.1.1-dbbbynEXLibotncVgFkgUKLLWS1PngSOwjtDbgnzng5aL6Z7HP5CV1Y3Q4yh5MRZ24vSYMUu2q6WMx5AUQ.aBcIjCw4uPwKi9kU8KV7Fx4gVaEgd4okHJNgTUkFxSgg8; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:37:02 GMT
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-ref-number: fa60aec6-bf94-4675-bbd8-85d741d6e016
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35d8ee828a862f5-HAM
+alt-svc: h3=":443"; ma=86400
+
+Cannot POST /user-scim-srv/v2
+[0m
+[0m$ [0mcurl -s -D- -X GET "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=de.hornbach&redirect_uri=https://www.hornbach.de&scope=openid" 2>&1 | head -30
+HTTP/2 302 
+date: Fri, 04 Sep 2026 14:07:17 GMT
+content-length: 0
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 86f92885-b3c6-42e4-b10b-14e5d83ead77
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=vhZU7mkzbVMSSqLaXWZ5_dyY9hK.BBVNGMriS73VN8c-1788530837.2555256-1.0.1.1-cdYwDiIa7mg7T2__ympPJ9OADRNUZawD8YTFtOIryC6cYNYhkPOVpJni9y79rWx6L_gW_EGuAHhYgZQNdYofvKh7b_SefbnXjKlb.Y9bNvv5b_3Ya6VFnTsey35u4D2m; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:37:17 GMT
+server: cloudflare
+cf-ray: a35d8f44d8eba9d8-HAM
+alt-svc: h3=":443"; ma=86400
+[0m
+[0m$ [0mcurl -s -D- -X GET "https://auth.hornbach.com/login-srv/social/token" 2>&1 | head -20
+HTTP/2 500 
+date: Fri, 04 Sep 2026 14:07:17 GMT
+content-type: application/json; charset=utf-8
+content-length: 41
+access-control-allow-origin: *
+etag: W/"29-3rekA97WHU/ns5EjebSJYlEQPOM"
+strict-transport-security: max-age=15724800; includeSubDomains
+x-cidaas-ref-number: f2fbaaee-4d35-47ae-a4ff-e0f8be9aa0c3
+x-ref-number: f2fbaaee-4d35-47ae-a4ff-e0f8be9aa0c3
+set-cookie: __cf_bm=VxvflHLUjowC9tkZm4GnMZVBYDhd.UhkbXRcqSnviSQ-1788530837.5412202-1.0.1.1-tXfA4iGuRtLTZ01Zld7OoiHsyzMdzTTUVmCiEHWut5MBAskOzH0zJ84HNJMWsHSDYuCo.4JtNJp9qXv_IyuKjxE8kzq4EHeg7WOulx345rjKGqEQuu8jlc2wElu5orTo; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:37:17 GMT
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35d8f469d9614ad-CPH
+alt-svc: h3=":443"; ma=86400
+
+{"success":false,"status":500,"error":{}}
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.com/token-srv/revoke" -X POST -d "token=test" 2>&1 | head -20
+HTTP/2 200 
+date: Fri, 04 Sep 2026 14:07:17 GMT
+content-type: text/plain; charset=utf-8
+content-length: 2
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: e16c7d2c-4036-4ce3-9841-976469c7897c
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=FnHvfODcpal2gw1k2eHRDYnhRdBdcvI8pFow.fBPGqA-1788530837.8118849-1.0.1.1-wPQfs7xsiALzNdkiRD1UdQ5ZgnTypeEfGvyQoFzPTMR4jlFtYX1nVAX1MvVuy3Ji2jW3nswotMHRbrjKIsMnvLQNWbK5Y5SuwKyuNKlgkVbEZYMqKB3F8MGdLjFfjux4; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:37:17 GMT
+server: cloudflare
+cf-ray: a35d8f4858bb62c5-HAM
+alt-svc: h3=":443"; ma=86400
+
+OK
+[0m
+[0m$ [0mcurl -s -D- -X POST "https://auth.hornbach.com/token-srv/revoke" -H "Content-Type: application/x-www-form-urlencoded" -d "token=fake_token&token_type_hint=access_token" 2>&1 | head -20
+HTTP/2 200 
+date: Fri, 04 Sep 2026 14:07:42 GMT
+content-type: text/plain; charset=utf-8
+content-length: 2
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 844068aa-eb79-4283-90e9-a8b9cd31eb76
+x-xss-protection: 1; mode=block
+set-cookie: __cf_bm=jo7QX_4v8lVDvDWwXeCdX8n6IaLi_tJBBco8c7o0zSM-1788530862.07574-1.0.1.1-8LFY8Oxod9gyKt9ptpXKmLr4wZmw7bo.ABk.cnta9cwbrSk.mGD8WxaCCf_4Iha9EwclnLqVBAi7zJJSEYBmAF3veGitkcfn1Ph72gz1NLNm0NJUfcih9WJPzv_SxcSa; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:37:42 GMT
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35d8fdffd4196ae-CPH
+alt-svc: h3=":443"; ma=86400
+
+OK
+[0m
+[0m$ [0mcurl -s -D- -X POST "https://auth.hornbach.com/token-srv/introspect/async/tokenusage" -d "token=fake" 2>&1 | head -30
+HTTP/2 404 
+date: Fri, 04 Sep 2026 14:07:42 GMT
+content-type: application/json
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-ref-number: 8f024ba8-63ca-4d88-a714-1e68007bee0c
+set-cookie: __cf_bm=vvDhwPLAT6bH.l.NeBVZ0x2PVIyZHXPfAzFLlUhtwsA-1788530862.540558-1.0.1.1-xoMTC3jczMyyF_mJ6IXE8SDwZ2eomZAQv3T0aEWO2nMQ7p7xVrriiGDgQaGIFfbByjLx.6ptAZCwqwW3cu4uGyuOKOunr8a9GQy2fQDglmrXGUE_6eCkSsw1JK8X4cUn; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:37:42 GMT
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35d8fe2dbf2aea7-CPH
+alt-svc: h3=":443"; ma=86400
+
+{"error":"router doesn't exist"}
+[0m
+[0m$ [0mcurl -s -D- -X GET "https://auth.hornbach.com/session/check_session" 2>&1 | head -20
+HTTP/2 200 
+date: Fri, 04 Sep 2026 14:07:42 GMT
+content-type: text/html;charset=UTF-8
+set-cookie: __cf_bm=nWPc5fSsJRq5regHMrhgkrMUSWA_LOisaDikrZXlUEQ-1788530862.9077804-1.0.1.1-dUBhgdNjMOenIo4p9U_FNcOB06m8FigS5wa3TjFrPIuMgEsC7KqvLtig9jGvwb9wYeoL3vrhlVrhogVXrrnt6m30jYyxoiPlqCtK0wH8uLDiW63LPWhLydkISbxXg5ic; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:37:42 GMT
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 8a6ebd5c-0c0f-4549-a5dd-e9b06162203d
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35d8fe52ccfae67-HAM
+alt-svc: h3=":443"; ma=86400
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Check Session Iframe</title>
+[0m
+[0m$ [0mcurl -s -D- -X POST "https://auth.hornbach.com/authz-srv/authz" -H "Content-Type: application/x-www-form-urlencoded" -d "response_type=code&client_id=hornbach&redirect_uri=https://www.hornbach.de&scope=openid" 2>&1 | grep -E "location:|error" | head -5
+location: https://auth.hornbach.com/identity/error?error=invalid_request&error_code=AUTH10001&error_description=invalid_request%3A+request+is+missing+a+required+parameter%2C+client_id+is+missing&error_hint=client_id+is+a+required+parameter+that+you+need+to+pass+in+query&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m$ [0mcurl -s -D- -X POST "https://auth.hornbach.com/login-srv/social/token" -H "Content-Type: application/json" -d '{"provider":"google","token":"fake"}' 2>&1 | head -20
+HTTP/2 404 
+date: Fri, 04 Sep 2026 14:08:15 GMT
+content-type: text/html; charset=utf-8
+access-control-allow-origin: *
+content-security-policy: default-src 'none'
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-ref-number: aa3784e4-a83e-4e64-8c12-7dad3fe7b86a
+set-cookie: __cf_bm=bZSgSPbCh_WUFti2IBSo4L36e1.WgnzrniR4ZTbX9SM-1788530895.1918263-1.0.1.1-kK2zV9jBf7SwbR.Gi5BZ6CZ7AUZDPPkh0srDAFkd8rSFxuZMaGEoGJ7NYWuNqpKFoJX.8F61eq719JDoSHxpix2lldhoZEH4L61LH8PhRxEpLlkvj7jEOrLNEd_3QwxH; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:38:15 GMT
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35d90aefe93aed7-CPH
+alt-svc: h3=":443"; ma=86400
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+[0m
+[0m$ [0mcurl -s -D- -X POST "https://auth.hornbach.com/token-srv/token" -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials&client_id=test&client_secret=test" 2>&1 | head -20
+HTTP/2 400 
+date: Fri, 04 Sep 2026 14:08:15 GMT
+content-type: application/json
+content-length: 104
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: bc0fe78c-a850-4287-894a-77b6a1f1c8cd
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=sL5YVt.Q06U7DTY8UledKB2Qo.ActfsZgKuHMCzBigI-1788530895.7072976-1.0.1.1-tKM2Fd5s63_2kJSUZgJtXP26g8O0mwT1fzmVOmmWcbBPR6CN2KGeCxtRJCPD5lLXyxUmdeLVNm6Fxn5KRVOTiU.HhTtUzgKRFJRN2Hu7WAQ0XszsRFLgWKLEg10iGBM.; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:38:15 GMT
+server: cloudflare
+cf-ray: a35d90b22a6c62cd-HAM
+alt-svc: h3=":443"; ma=86400
+
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=de.hornbach&redirect_uri=https://www.hornbach.de&scope=openid" 2>&1 | grep -i "location:" | head -5
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=hornbach-de&redirect_uri=https://www.hornbach.de&scope=openid" 2>&1 | grep -i "location:" | head -5
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m$ [0mcurl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=www-hornbach-de&redirect_uri=https://www.hornbach.de&scope=openid" 2>&1 | grep -i "location:" | head -5
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m◈ [0mExa Web Search "site:auth.hornbach.com client_id OR oauth OR cidaas hornbach"
+[0m
+[0m$ [0m# Try more cidaas-style client_id patterns
+for cid in "cidaas_hornbach" "hornbach_cidaas" "hornbach_web" "hornbach_app" "web_hornbach" "app_hornbach" "hornbach_portal" "m.hornbach.de" "shop.hornbach.de"; do
+  resp=$(curl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=$cid&redirect_uri=https://www.hornbach.de&scope=openid" 2>&1 | grep -i "location:")
+  echo "$cid => $resp"
+done
+cidaas_hornbach => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+hornbach_cidaas => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+hornbach_web => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+hornbach_app => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+web_hornbach => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+app_hornbach => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+hornbach_portal => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+m.hornbach.de => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+shop.hornbach.de => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m◈ [0mExa Web Search "hornbach.de "client_id" OR "client_secret" OR "cidaas" site:github.com OR site:pastebin.com"
+[0m
+[0m$ [0m# Try UUID-style client_ids (cidaas uses UUIDs) - check if there's a pattern in common cidaas apps
+# Also try looking at the Hornbach login page source for embedded client_id
+curl -s "https://www.hornbach.de/myhornbach/login" 2>&1 | grep -iE "client_id|clientid|oauth|cidaas|redirect" | head -10
+(no output)
+[0m
+[0m◈ [0mExa Web Search "hornbach app oauth redirect_uri "auth.hornbach.com" OR "cidaas""
+[0m◈ [0mExa Web Search ""de.hornbach" app client_id oauth cidaas OR android OR apk"
+[0m
+[0m$ [0m# Check PAR endpoint mentioned in cidaas docs
+curl -s -D- -X POST "https://auth.hornbach.com/authz-srv/par" -H "Content-Type: application/x-www-form-urlencoded" -d "client_id=test&response_type=code&redirect_uri=https://www.hornbach.de&scope=openid" 2>&1 | head -20
+HTTP/2 400 
+date: Fri, 04 Sep 2026 14:10:21 GMT
+content-type: application/json
+content-length: 161
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: 4457f273-ae07-4d8f-bbc8-9ea5f4c344be
+set-cookie: __cf_bm=Hfm4GRzeJGt_QhsMKzb2rSBUymSZbuDL4PfMLb2_Hpo-1788531021.0478642-1.0.1.1-k_bFCVvGDK94yq6F_owRckKNb_8O0jCbG._pdVXS_9WT19CtD.rkXjrg2K688xXcZlJmJMQviO_d34H.h1cmb7Z_7NlLyzpRpuoiXSPRcEzmqubqo6fdUzGvlyT_nEP0; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Fri, 04 Sep 2026 14:40:21 GMT
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a35d93c18d566456-CPH
+alt-svc: h3=":443"; ma=86400
+
+{"error":"unauthorized_client","error_code":"AUTH10053","error_description":"par is not enabled for this tenant","error_hint":"please enable par for the tenant"}
+[0m
+[0m$ [0m# Check if the revoke endpoint has different behavior for different token formats
+# RFC 7009 says revoke without auth is a vulnerability
+curl -s -D- -X POST "https://auth.hornbach.com/token-srv/revoke" -H "Content-Type: application/x-www-form-urlencoded" -d "token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.fake&token_type_hint=access_token" 2>&1 | head -10
+HTTP/2 200 
+date: Fri, 04 Sep 2026 14:10:22 GMT
+content-type: text/plain; charset=utf-8
+content-length: 2
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 35b25395-02de-4235-b1fc-c85146f669dd
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+[0m
+[0m$ [0m# Check a few more potential client_id patterns - common UUIDs in cidaas demo apps
+for cid in "103a3f9c-1a2d-4e47-940k-bad7f19d9604" "61234567-89ab-cdef-0123-456789abcdef" "a1b2c3d4-e5f6-7890-abcd-ef1234567890"; do
+  resp=$(curl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=$cid&redirect_uri=https://www.hornbach.de&scope=openid" 2>&1 | grep -i "location:")
+  echo "$cid => $resp"
+done
+103a3f9c-1a2d-4e47-940k-bad7f19d9604 => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+61234567-89ab-cdef-0123-456789abcdef => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+a1b2c3d4-e5f6-7890-abcd-ef1234567890 => location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m$ [0mls /home/runner/work/hornbach-hunt/hornbach-hunt/
+README.md
+analyst-out.txt
+analyst-prompt.txt
+ctx.txt
+inventory
+knowledge
+leads
+probe-results.md
+recon-notes
+reports
+reposcan-raw
+scope.yml
+scripts
+state_bigpickle.json
+state_laguna.json
+state_ling3.json
+state_longcat.json
+state_mimo.json
+state_nemotron3.json
+triage
+[0m
+Now let me update the knowledge base and state files with the new findings.
+[0m→ [0mRead state_bigpickle.json
+[0m→ [0mRead knowledge
+[0m→ [0mRead leads
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead knowledge/index.md
+[0m
+[0m← [0mEdit leads/lead-bigpickle.md
+Index: /home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md
+===================================================================
+--- /home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md
++++ /home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md
+@@ -146,4 +146,48 @@
+ impact: version fingerprinting enables targeted exploit; downloadable binaries can be reverse-engineered for client-side auth flaws; gwtest.jsp 500 may indicate misconfiguration; severity LOW-MEDIUM
+ testability: PASSIVE
+ [NEXT] HUMAN: The critical unlock for all OAuth hypotheses is obtaining a valid cidaas client_id. Options: (1) extract from HORNBACH mobile app (de.hornbach on Google Play) via APK decompile — look for `ClientId` in cidaas SDK config (strings.xml or Cidaas initialization); (2) intercept OAuth redirect in browser during manual login at www.hornbach.de to capture client_id from authz redirect; (3) check Apple App Store listing for OAuth redirect URI scheme. Until client_id is obtained, unauthenticated introspection testing and Citrix NetScaler version audit are the most productive passive activities.
+ [RISK] hornbach: 43/100 — cidaas tenant is primary live auth surface; unauthenticated introspection endpoint confirmed abnormal (RFC 7662 violation) but impact gated on client_id; SAP API Gateway on api.hornbach.de identified but minimal route surface; Citrix NetScaler AAA on auth.hornbach.de is employee-facing VPN with full version disclosure; dev/preprod subdomains exist but are IP-restricted/GCP-gated; www.hornbach.de bot-walled (FingerprintJS); Mirakl marketplace is separate auth-gated surface; scope broad but CDN-heavy and gates hard.
++## 2026-09-04 14:06:00 UTC [target] (model bigpickle)
++[NEW] auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 "OK" without ANY client authentication — RFC 7009 §2.1 requires client auth for revocation; this is a second unauthenticated token management endpoint alongside introspection
++[NEW] auth.hornbach.com/login-srv/social/token: GET returns HTTP 500 with empty error JSON `{"success":false,"status":500,"error":{}}` — server-side error without auth, different from 404 pattern
++[CHANGED] auth.hornbach.com/authz-srv/par: POST returns 400 `{"error":"unauthorized_client","error_code":"AUTH10053","error_description":"par is not enabled for this tenant"}` — PAR explicitly disabled, no bypass possible
++[CHANGED] api.hornbach.de: POST to root returns 404 with structured JSON `{"message":{"status":"404","text":"Not Found"}}` and X-CorrelationID — consistent SAP APIM error pattern, no new routes discovered
++[PRIO] auth.hornbach.com, 8.6, attack_surface:9, business_value:9, tech_exposure:9, gate_ease:7, cloud_surface:8, freshness:9
++[PRIO] auth.hornbach.de, 6.4, attack_surface:6, business_value:7, tech_exposure:8, gate_ease:5, cloud_surface:4, freshness:8
++[PRIO] hornbach-mp.mirakl.net, 5.5, attack_surface:6, business_value:6, tech_exposure:6, gate_ease:3, cloud_surface:5, freshness:7
++[HYP] Unauthenticated token revocation enables silent session killing
++class: AUTH
++asset: auth.hornbach.com/token-srv/revoke
++confidence: 55
++reasoning: POST to /token-srv/revoke accepts any token value without client authentication and returns HTTP 200 "OK". RFC 7009 §2.1 explicitly requires the authorization server to require client authentication (e.g., client_secret_basic) for revocation requests. The cidaas metadata confirms `revocation_endpoint_auth_methods_supported: ["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"]` but the live endpoint ignores this entirely. Combined with the unauthenticated introspection, this means the entire token management suite (introspection + revocation) lacks client authentication. An attacker who obtains a valid access token (via XSS, log leak, token theft) can silently revoke any user's session without credentials.
++evidence_needed: a valid access_token to demonstrate revocation of an active session; alternatively the unauthenticated acceptance itself is the RFC violation
++verify_steps: (DONE) POST with fake token returns 200 "OK" without auth; NEXT: obtain valid token via mobile app flow, revoke it unauthenticated, confirm session killed on user side
++impact: silent session revocation → denial of service on individual accounts; combined with token theft chain: steal token → revoke → user forced to re-authenticate → attacker intercepts new login; severity MEDIUM
++testability: AUTH_HELPED (needs valid token to prove session-kill impact)
++[HYP] Unauthenticated token introspection leaks token metadata
++class: AUTH
++asset: auth.hornbach.com/token-srv/introspect
++confidence: 55
++reasoning: POST to /token-srv/introspect with token=fake returns HTTP 200 {"active":false} without ANY client authentication. This is the second endpoint (alongside /revoke) that ignores the required client auth methods. Previously reported at confidence 50; strengthened by parallel finding on revoke endpoint — both endpoints share the same auth bypass pattern, indicating a systemic misconfiguration in cidaas token management for this tenant.
++evidence_needed: valid access_token to prove metadata exfiltration (sub, scope, exp, client_id, token_type)
++verify_steps: (DONE) unauthenticated POST returns 200; NEXT: introspect a real token to confirm metadata leak
++impact: token metadata disclosure (active sessions, user identity, scopes, expiry); severity MEDIUM; chain: introspect stolen tokens → map active sessions → targeted session hijack
++testability: AUTH_HELPED (needs valid client_id + user login to obtain token)
++[HYP] Social token endpoint server error disclosure
++class: OTHER
++asset: auth.hornbach.com/login-srv/social/token
++confidence: 40
++reasoning: GET to /login-srv/social/token returns HTTP 500 with `{"success":false,"status":500,"error":{}}` and Access-Control-Allow-Origin: * header. The empty error object suggests an unhandled exception. POST with JSON body returns HTTP 404 (different path/route). The endpoint is the social provider token resolver for third-party login flows. The 500 on GET vs 404 on POST suggests the GET route exists but crashes on missing params, while POST hits a different (non-existent) route.
++evidence_needed: POST with various provider/token params to trigger different error paths; may leak internal error details
++verify_steps: POST to /login-srv/social/token with Content-Type: application/json and {"provider":"google","token":"fake"} and variations
++impact: potential information disclosure via error messages; severity LOW
++testability: PASSIVE
++[PARKED] Unauthenticated OAuth client registration @ apps-srv/clients/register: REJECTED — 404 on ALL methods including POST; registration explicitly disabled at routing level
++[PARKED] OAuth redirect_uri validation bypass: confidence 50 but blocked on client_id; ~15+ client_id patterns attempted (de.hornbach, hornbach, hornbach_web, cidaas_hornbach, UUID patterns), ALL rejected with AUTH10007; www.hornbach.de bot-walled (FingerprintJS) blocks the frontend that would embed client_id
++[PARKED] cidaas JWT alg confusion (HS256/RS256): confidence 40 < 45 — blocked on client_id + token; mature CIAM provider likely per-client alg pinned
++[PARKED] Device code flow abuse: confidence 45 — requires valid client_id; social engineering element makes it less reliable
++[NEXT] HUMAN: The critical unlock for all OAuth hypotheses is obtaining a valid cidaas client_id. cidaas Android SDK stores it as `<item name="ClientId" type="string">` in cidaas.xml or strings.xml. Options: (1) download HORNBACH APK from APK mirror (apkpure.com/apk/hornbach-baumarkt-ag/) and extract ClientId via strings/grep; (2) use a proxy (mitmproxy/Charles) during manual hornbach.de login to capture the authz redirect with client_id parameter; (3) check GitHub repos for hardcoded HORNBACH cidaas client_ids. Until client_id is obtained, the unauthenticated revocation+introspection pair is the strongest confirmed finding.
++[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: token revocation endpoint accessible unauthenticated, RFC 7009 violation — second token management endpoint missing client auth alongside introspection
++[LEARN] REJECTED class OTHER @ auth.hornbach.com/authz-srv/par: PAR explicitly disabled for tenant (AUTH10053) — no PAR-based bypass possible
++[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: social provider token resolver returns HTTP 500 on GET — server error suggests unhandled exception path
++[RISK] hornbach: 44/100 — cidaas tenant has TWO unauthenticated token management endpoints (introspection + revocation) violating RFC 7662/7009, forming a confirmed token-management auth bypass pattern; dynamic client registration disabled; PAR disabled; ~15+ client_id guessing attempts failed (UUID-format IDs used); www.hornbach.de bot-walled; Citrix NetScaler AAA on auth.hornbach.de with full version exposure; SAP API Gateway on api.hornbach.de with internal hostname leak; broad scope but CDN-heavy and gate-hard; critical blocker remains client_id acquisition for all OAuth hypothesis testing.
+
+[0m
+Now let me update the lead file with the new session findings:
+Now I'll output the structured analysis:
+
+---
+
+**STEP 1 — DELTA**
+
+[NEW] auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 "OK" without client auth — RFC 7009 violation; second unauthenticated token management endpoint alongside introspection
+[NEW] auth.hornbach.com/login-srv/social/token: GET returns HTTP 500 with empty error JSON + `Access-Control-Allow-Origin: *`
+[CHANGED] auth.hornbach.com/authz-srv/par: PAR explicitly disabled (AUTH10053 "par is not enabled for this tenant")
+[CHANGED] api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes
+
+---
+
+**STEP 2 — PRIORITIZE**
+
+[PRIO] auth.hornbach.com, 8.6, attack_surface:9, business_value:9, tech_exposure:9, gate_ease:7, cloud_surface:8, freshness:9
+[PRIO] auth.hornbach.de, 6.4, attack_surface:6, business_value:7, tech_exposure:8, gate_ease:5, cloud_surface:4, freshness:8
+[PRIO] hornbach-mp.mirakl.net, 5.5, attack_surface:6, business_value:6, tech_exposure:6, gate_ease:3, cloud_surface:5, freshness:7
+
+---
+
+**STEP 3 — HYPOTHESES**
+
+[HYP] Unauthenticated token revocation enables silent session killing
+class: AUTH
+asset: auth.hornbach.com/token-srv/revoke
+confidence: 55
+reasoning: POST to /token-srv/revoke accepts any token value without client authentication (HTTP 200 "OK"). RFC 7009 §2.1 requires client auth; cidaas metadata confirms auth_methods_required but live endpoint ignores them entirely. Parallel to unauthenticated introspection — systemic cidaas token management auth bypass for this tenant.
+evidence_needed: valid access_token to demonstrate revocation of an active session
+verify_steps: (DONE) POST fake token → 200 "OK" without auth; NEXT: obtain real token, revoke unauthenticated, confirm session killed
+impact: silent session revocation → individual account DoS; combined with token theft: steal → revoke → user forced re-auth → attacker intercepts; severity MEDIUM
+testability: AUTH_HELPED
+
+[HYP] Unauthenticated token introspection leaks token metadata
+class: AUTH
+asset: auth.hornbach.com/token-srv/introspect
+confidence: 55
+reasoning: POST to /token-srv/introspect returns HTTP 200 {"active":false} without any client auth. Confirmed alongside unauthenticated revocation — both endpoints share the same auth bypass pattern, indicating systemic misconfiguration in cidaas token management for this tenant. Previously at confidence 50; strengthened by parallel revoke finding.
+evidence_needed: valid access_token to prove metadata exfiltration (sub, scope, exp, client_id)
+verify_steps: (DONE) unauthenticated POST returns 200; NEXT: introspect real token to confirm metadata leak
+impact: token metadata disclosure (active sessions, user identity, scopes, expiry); severity MEDIUM
+testability: AUTH_HELPED
+
+[HYP] Social token endpoint server error disclosure
+class: OTHER
+asset: auth.hornbach.com/login-srv/social/token
+confidence: 40
+reasoning: GET to /login-srv/social/token returns HTTP 500 with `{"success":false,"status":500,"error":{}}` + `Access-Control-Allow-Origin: *`. The empty error object suggests unhandled exception. CORS header on error response is unusual.
+evidence_needed: POST with various provider/token params to trigger different error paths
+verify_steps: POST with Content-Type: application/json and {"provider":"google","token":"fake"}
+impact: potential information disclosure via error messages; severity LOW
+testability: PASSIVE
+
+---
+
+**STEP 4 — SELF-CRITIQUE**
+
+[PARKED] Unauthenticated OAuth client registration: REJECTED — 404 on ALL methods; registration disabled at routing
+[PARKED] OAuth redirect_uri validation bypass: confidence 50 but blocked on client_id; ~15+ patterns attempted, all AUTH10007; www.hornbach.de bot-walled blocks frontend
+[PARKED] cidaas JWT alg confusion: confidence 40 < 45 — blocked on client_id + token; mature provider likely pinned
+[PARKED] Device code flow abuse: confidence 45 — requires valid client_id; social engineering makes it unreliable
+
+[FINAL] 1. Unauthenticated token revocation (confidence 55, AUTH_HELPED, MEDIUM)
+[FINAL] 2. Unauthenticated token introspection (confidence 55, AUTH_HELPED, MEDIUM)
+[FINAL] 3. Social token endpoint 500 (confidence 40, PASSIVE, LOW)
+
+---
+
+**STEP 5 — NEXT ACTION**
+
+[NEXT] HUMAN: The critical unlock is obtaining a valid cidaas client_id. cidaas Android SDK stores it as `<item name="ClientId" type="string">` in cidaas.xml or strings.xml. Options: (1) download HORNBACH APK from APK mirror and extract ClientId via strings/grep; (2) use mitmproxy/Charles during manual hornbach.de login to capture authz redirect with client_id; (3) check GitHub repos for hardcoded HORNBACH cidaas client_ids. Until obtained, the unauthenticated revocation+introspection pair is the strongest confirmed finding.
+
+---
+
+**STEP 6 — LEARNING**
+
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: token revocation endpoint accessible unauthenticated, RFC 7009 violation — second token management endpoint missing client auth
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: unauthenticated introspection confirmed systemic; strengthened by parallel revoke finding
+[LEARN] REJECTED class OTHER @ auth.hornbach.com/authz-srv/par: PAR explicitly disabled (AUTH10053)
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: social token resolver returns HTTP 500 on GET + CORS wildcard
+
+---
+
+**STEP 7 — RISK**
+
+[RISK] hornbach: 44/100 — cidaas tenant has TWO unauthenticated token management endpoints (introspection + revocation) forming confirmed RFC 7662/709 violation pattern; dynamic client registration disabled; PAR disabled; ~15+ client_id patterns failed (UUID-format); www.hornbach.de bot-walled; Citrix NetScaler AAA with full version exposure; SAP APIM with internal hostname leak; scope broad but CDN-heavy and gate-hard; critical blocker: client_id acquisition for all OAuth testing.

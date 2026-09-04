@@ -77,3 +77,9 @@ www.hornbach.com
 ## 2026-09-04 05:17:56 UTC
 
 ## 2026-09-04 09:58:02 UTC
+
+## 2026-09-04 14:20:23 UTC
+- NEW auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 "OK" without client auth — RFC 7009 violation; second unauthenticated token management endpoint alongside introspection
+- NEW auth.hornbach.com/login-srv/social/token: GET returns HTTP 500 with empty error JSON + `Access-Control-Allow-Origin: *`
+- CHANGED auth.hornbach.com/authz-srv/par: PAR explicitly disabled (AUTH10053 "par is not enabled for this tenant")
+- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes

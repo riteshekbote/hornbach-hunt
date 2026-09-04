@@ -215,3 +215,48 @@ testability: PASSIVE
 [LEARN] ACCEPTED class OTHER @ api.hornbach.de: API gateway exists (Gateway server header) but no documented endpoints discovered at common paths
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.de: Citrix NetScaler AAA VPN Gateway surface confirmed (legacy employee access)
 [RISK] hornbach: 70 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) discovered but no endpoints enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz.
+## 2026-09-04 14:20:09 UTC [target] (model nemotron3)
+[PRIO] auth.hornbach.com,8.65,attack_surface=9,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=5
+[PRIO] api.hornbach.de,6.35,attack_surface=6,business_value=8,tech_exposure=6,gate_ease=10,cloud_surface=7,freshness=4
+[PRIO] auth.hornbach.de,6.20,attack_surface=6,business_value=7,tech_exposure=6,gate_ease=10,cloud_surface=5,freshness=4
+[PRIO] hornbach-mp.mirakl.net,5.55,attack_surface=5,business_value=7,tech_exposure=5,gate_ease=8,cloud_surface=6,freshness=4
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 50
+reasoning: Authorization endpoint live at authz-srv/authz; returns verbose invalid_client error with error_description/error_hint; redirect_uri parameter accepted before client validation per OAuth flow; cidaas CIAM may use regex/wildcard matching for redirect_uri allowlists
+evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, https://hornbach.de.evil.com, https://hornbach.de@evil.com, path traversal /..;/evil.com) accepted and authorization code delivered to attacker URI
+verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) curl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid" --max-redirs 0; 3) Test redirect_uri variations if login page returned
+impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
+testability: AUTH_HELPED
+[HYP] Mirakl marketplace API BOLA/IDOR via cross-tenant order access on hornbach-mp.mirakl.net
+class: IDOR
+asset: hornbach-mp.mirakl.net/api/v1/orders
+confidence: 45
+reasoning: Mirakl marketplace v3.1301 is HORNBACH-operated; all /api/* require Mirakl auth (API key); multi-tenant marketplace platforms commonly have BOLA on order/offer endpoints where user-controlled IDs (order_id, offer_id) lack ownership validation
+evidence_needed: Authenticated API key returns order data for order_id not belonging to authenticated seller/account; cross-tenant PII exposure (buyer details, addresses, payment refs)
+verify_steps: 1) Obtain valid Mirakl API key via seller onboarding or test account; 2) GET /api/v1/orders/{other_seller_order_id} — observe 200 with foreign order data vs 403/404; 3) Test /api/v1/offers/{id}, /api/v1/invoices/{id} for same pattern
+impact: Cross-tenant order/PII disclosure → GDPR violation, fraud enablement (IDOR class, HIGH)
+testability: AUTH_HELPED
+[HYP] SAP API Gateway route discovery + backend SSRF via api.hornbach.de
+class: SSRF
+asset: api.hornbach.de
+confidence: 40
+reasoning: SAP API Gateway (sapigwprd01) fronts backend on localhost:8080 (leaked via /healthcheck Host header); Gateway returns structured JSON errors with X-CorrelationID; undocumented routes may exist for mobile/b2b/internal integrations; SAP APIM supports dynamic routing to internal services
+evidence_needed: Hidden endpoint returns 200 with API functionality (GraphQL introspection, REST resources, Swagger/OpenAPI spec) OR SSRF via backend route parameter (e.g., /api/internal/metadata, /actuator/gateway/routes)
+verify_steps: 1) Fuzz common API paths with wordlist (feroxbuster -w /usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt -u https://api.hornbach.de); 2) Test GraphQL introspection on /graphql, /api/graphql, /v1/graphql; 3) Check for OpenAPI spec at /openapi.json, /swagger.json, /api-docs; 4) Probe Spring Actuator /actuator/gateway/routes for route disclosure
+impact: Undocumented API access → data exposure, BOLA/IDOR, business logic flaws; SSRF to localhost:8080 → internal service metadata, cloud credentials (SSRF class, HIGH)
+testability: PASSIVE
+[PARKED] Mirakl marketplace API BOLA/IDOR via cross-tenant order access: confidence 45 but requires valid Mirakl API key (seller onboarding) — gated by auth acquisition, no passive path
+[PARKED] SAP API Gateway route discovery + backend SSRF: confidence 40 at threshold; fuzzing-only verify steps with no specific target; SSRF requires发现可控参数
+[FINAL] 1. OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 50, AUTH_HELPED, HIGH)
+[NEXT] PROBE: Obtain valid cidaas client_id from HORNBACH mobile app (de.hornbach) by downloading APK from Google Play and extracting OAuth config (client_id + redirect_uri scheme) — required prerequisite for OAuth redirect_uri validation testing on authz-srv/authz
+[LEARN] REJECTED class MISCONFIG @ login.hornbach.com: Fastly CNAME takeover confirmed unlikely — active service (Varnish header, 200 response, resolving IP) eliminates takeover vector
+[LEARN] REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 known scoped hosts resolve
+[LEARN] REJECTED class AUTH @ auth.hornbach.com/apps-srv/clients/register: POST returns 404 — unauthenticated dynamic client registration (RFC 7591) not enabled
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: token introspection endpoint now returns 404 (was accessible unauthenticated, RFC 7662 compliant returning active=false)
+[LEARN] ACCEPTED class OTHER @ api.hornbach.de: SAP API Gateway exists (Gateway server header) with backend on localhost:8080; no documented endpoints at common paths
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.de: Citrix NetScaler AAA VPN Gateway v25.5.1.15 confirmed (legacy employee access); EPA/VPN binaries downloadable
+[LEARN] ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is in-scope API surface; all /api/* require Mirakl auth
+[RISK] hornbach: 70 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled; token introspection now 404. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) identified as SAP APIM with localhost:8080 backend leak but no routes enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra (version 25.5.1.15, likely patched). Mirakl marketplace is separate auth-gated surface. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz.
