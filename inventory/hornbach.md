@@ -71,3 +71,5 @@ www.hornbach.com
 - NEW auth.hornbach.com: SCIM endpoint `user-scim-srv/v2` in metadata — returns 404 on GET, worth POST/fuzzing
 - NEW auth.hornbach.com: Introspection endpoint `token-srv/introspect` exposed in metadata
 - CHANGED www.hornbach.com / hornbach.de: Login page returns bot-challenge page (FingerprintJS `_fs_ch_st_` cookie), 3038-byte stub
+
+## 2026-09-04 00:43:49 UTC
