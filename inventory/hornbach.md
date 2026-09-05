@@ -144,3 +144,10 @@ www.hornbach.com
 - NEW auth.hornbach.com/.well-known/status: Returns HTTP 200 {"status":"OK","updatedAt":"2026-09-05T08:40:15.453402952Z"} — discovery status endpoint live
 - CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302->AUTH10007; valid client_id returns HTTP 200 login/consent page (per KB)
 - CHANGED auth.hornbach.com/token-srv/introspect/async/tokenusage: Returns HTTP 200 {"error":"router doesn't exist"} — async introspection not routed
+
+## 2026-09-05 12:18:39 UTC
+- NEW auth.hornbach.com/token-srv/introspect: POST returns HTTP 200 {"active":false} unauthenticated — LIVE (HEAD/GET returns 404, but POST with form data works; parameter-sensitive routing)
+- NEW auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 "OK" unauthenticated — LIVE (HEAD/GET returns 404, but POST with form data works; parameter-sensitive routing)
+- NEW auth.hornbach.com/.well-known/status: Returns HTTP 200 {"status":"OK","updatedAt":"2026-09-05T08:40:15.453402952Z"} — discovery status endpoint live
+- CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302->AUTH10007; valid client_id returns HTTP 200 login/consent page
+- CHANGED auth.hornbach.com/token-srv/introspect/async/tokenusage: Returns HTTP 200 {"error":"router doesn't exist"} — async introspection not routed

