@@ -185,3 +185,11 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302→AUTH10007; valid client_id returns HTTP 200 login/consent page (confirmed vi
 - CHANGED api.hornbach.de: SAP API Gateway confirmed (Server: Gateway header, X-CorrelationID); root returns 404 JSON; backend leak via Host header on /healthcheck points to localhost:8080
 - CHANGED auth.hornbach.de: Citrix NetScaler AAA VPN Gateway confirmed (redirects to /logon/LogonPoint/tmindex.html; CSP shows img-src http://localhost:*)
+
+## 2026-09-05 21:48:55 UTC
+- NEW auth.hornbach.com/token-srv/introspect: POST → 200 `{"active":false}` unauthenticated confirmed across 7+ independent sessions (GET/HEAD→404 was methodology artifact; all historical probes used GET no
+- NEW auth.hornbach.com/token-srv/revoke: POST → 200 `OK` unauthenticated confirmed stable (text/plain response; GET/HEAD→404 parameter-sensitive)
+- NEW auth.hornbach.com/.well-known/status: 200 `{"status":"OK","updatedAt":"2026-09-05T17:40:14.478100144Z"}` discovery status endpoint live and stable
+- CHANGED auth.hornbach.com/authz-srv/authz: client_id=`<found>` literal now returns 302→AUTH10003 `invalid_request` (parsing error) — `<found>` was KB redaction placeholder, not surface change
+- CHANGED api.hornbach.de: SAP API Gateway confirmed (Server: Gateway, X-CorrelationID); root 404 JSON; backend leak via Host header on /healthcheck → localhost:8080
+- CHANGED auth.hornbach.de: Citrix NetScaler AAA VPN Gateway v25.5.1.15 confirmed; redirects to /logon/LogonPoint/tmindex.html; CSP shows img-src http://localhost:*

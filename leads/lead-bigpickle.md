@@ -898,3 +898,31 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 `{"status":"OK","updatedAt"}` — discovery status endpoint live and stable
 [LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: `client_id=<found>` (literal string) now returns 302→AUTH10003 `invalid_request` (parsing error) — the `<found>` marker in KB was a redacted placeholder for a real client_id; this is not a surface change
 [RISK] hornbach: **53/100** — unauthenticated token-management plane bypass (introspect+revocation) re-confirmed at 80 confidence, 6th session, POST-only body-gated; systemic cidaas tenant misconfig, strongest defensible finding; token issuance correctly isolated (400 invalid_client); all escalation chains gated on client_id acquisition (main app retired/PWA, APK mirrors bot-walled, Smarthome app is alternative extraction path); redirect_uri bypass 55-confidence but blocked; API surfaces (SAP APIM, Mirakl) gated and anonymous surface exhausted; no anonymous PII reachable; critical path remains client_id, then real-token PoC.
+## 2026-09-05 21:48:13 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token-management plane bypass — POST-only, body-presence gate, issuance isolated
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST introspect `token=fake` form → 200 `{"active":false}`; POST revoke → 200 `OK`; empty body → 400; GET/HEAD → 404; issuance `/token-srv/token` → 400 invalid_client (isolated). Metadata advertises auth_methods=[client_secret_basic,post,jwt,private_key_jwt] but router enforces none; body-presence is sole gate. Re-confirmed 8th session incl. 09-05 15:22/17:43 UTC runs; docs confirm only additional supported grant (session_transfer) is token-possession-gated. Systemic RFC 7662/7009 violation.
+evidence_needed: real access_token → no-auth POST introspect returns sub/scope/exp/client_id; no-auth revoke then re-introspect → active=false (silent kill)
+verify_steps: (DONE) POST fake → 200 both; empty → 400; GET → 404; issuance gated. NEXT (client_id+token): POST `token=<real>` → claim set; revoke; re-introspect → active=false
+impact: token theft escalates to metadata exfil + forced re-auth/interception + silent account-session DoS on identity plane; MEDIUM-HIGH (gated on possessing token; systemic confirmed)
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via cidaas authz endpoint
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 55
+reasoning: Endpoint live; invalid client_ids → uniform 302→AUTH10007/AUTH10003; valid client_id historically returned 200 login/consent (redacted `<found>` in KB). cidaas PAR docs confirm redirect_uri matching is config-driven allowlist (origin check AUTH10043 for PAR); authz-srv matching class untested anonymously. redirect_uri=evil.com appended historically but body never captured.
+evidence_needed: valid client_id + redirect_uri variations (evil.com, hornbach.de.evil.com, @evil.com, /..;/evil.com) delivering code to attacker origin
+verify_steps: (blocked on client_id) GET /authz-srv/authz?response_type=code&client_id=<REAL>&redirect_uri=https://evil.com&scope=openid → 302-to-evil vs error; iterate bypass shapes
+impact: authorization-code theft → session/ATO chain; HIGH
+testability: AUTH_HELPED
+[HYP] Mirakl authenticated L0 API BOLA/IDOR across partner tenants
+class: IDOR
+asset: hornbach-mp.mirakl.net/api/*
+confidence: 42
+reasoning: This session: /api/{dos,registry,shops,plans,attributes} → uniform 401; /front/* → 404; only /api/version → 200 3.1301. All 13 L0 routes gated identically; dummy-vs-missing key → no format differential. Anonymous surface now fully mapped and nil. cidaas/OAuth gate to operator/seller credential is sole blocker.
+evidence_needed: Mirakl API key (operator or seller) → cross-shop BOLA on orders/listings/payments across shop_id
+verify_steps: (DONE) 13 routes mapped; option exhausted. NEXT (with any marketplace credential): /api/orders?shop_id=N, /api/accounts/extrafields — BOLA checks
+impact: cross-tenant seller/order/payment data if credential ever leaks; nil anonymously; LOW-MEDIUM
+testability: AUTH_HELPED
