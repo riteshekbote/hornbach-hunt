@@ -130,3 +130,17 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/authz-srv/authz: client_id=public returns uniform 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — client_id enumeration via status-code differential REMOVED
 - CHANGED hornbach.com: no wildcard DNS confirmed — only 4 scoped hosts resolve (reconfirmed)
 - CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes discovered
+
+## 2026-09-05 08:45:24 UTC
+- NEW auth.hornbach.com/token-srv/introspect: POST returns HTTP 200 {"active":false} unauthenticated — RE-CONFIRMED live across multiple days (transient 404 was routing, not remediation)
+- NEW auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 "OK" unauthenticated — re-confirmed live; both token management endpoints stable unauthenticated (parameter-sensitive 404 in latest probe)
+- NEW auth.hornbach.com/.well-known/status: returns HTTP 200 {"status":"OK","updatedAt"} — discovery property status endpoint live
+- NEW auth.hornbach.com/authz-srv/authz: returns HTTP 200 with valid client_id=<found> — authorization endpoint responds to valid client (login/consent page)
+- CHANGED auth.hornbach.com/authz-srv/authz: client_id=public returns uniform 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — client_id enumeration via status-code differential REMOVED
+- CHANGED hornbach.com: no wildcard DNS confirmed — only 4 scoped hosts resolve (reconfirmed)
+- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes discovered
+- NEW auth.hornbach.com/token-srv/introspect: POST returns HTTP 200 {"active":false} unauthenticated — LIVE (HEAD/GET returns 404, but POST with form data works; parameter-sensitive routing)
+- NEW auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 "OK" unauthenticated — LIVE (HEAD/GET returns 404, but POST with form data works; parameter-sensitive routing)
+- NEW auth.hornbach.com/.well-known/status: Returns HTTP 200 {"status":"OK","updatedAt":"2026-09-05T08:40:15.453402952Z"} — discovery status endpoint live
+- CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302->AUTH10007; valid client_id returns HTTP 200 login/consent page (per KB)
+- CHANGED auth.hornbach.com/token-srv/introspect/async/tokenusage: Returns HTTP 200 {"error":"router doesn't exist"} — async introspection not routed
