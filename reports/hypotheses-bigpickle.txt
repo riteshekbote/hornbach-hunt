@@ -1,30 +1,30 @@
-## 2026-09-04 22:16:02 UTC [target] (model bigpickle)
-[HYP] Unauthenticated token introspection + revocation persists (RFC 7662/7009 systemic bypass)
+## 2026-09-05 00:14:08 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token-plane bypass remains systemic across days (RFC 7662/7009)
 class: AUTH
 asset: auth.hornbach.com/token-srv/{introspect,revoke}
-confidence: 65
-reasoning: My 22:15Z probes: POST introspect with NO client auth (no basic/secret/assertion) → 200 {"active":false}; POST revoke → 200 "OK". Metadata advertises token_endpoint_auth_methods_supported=[client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt] but runtime JMV both endpoints with zero auth. 20:01 UTC "404" was transient edge/routing — third independent confirmation session today (14:20, 19:53, 22:15).
-evidence_needed: real access_token → (a) unauthenticated introspect leaks sub/scope/exp/client_id (metadata exfil), (b) unauthenticated revoke flips active→false on re-introspect (silent session kill)
-verify_steps: (DONE) fake-token POST→200 on both. NEXT: with client_id + real token, POST token=<real> to /introspect no-auth → read full metadata; POST to /revoke → re-introspect confirms active=false.
-impact: token theft escalates to metadata disclosure + forced re-auth/interception window; silent DoS on account sessions; severity MEDIUM (gated on possessing a token)
+confidence: 70
+reasoning: 2026-09-05 00:12Z POST `token=fake` with zero client auth → introspect 200 `{"active":false}`, revoke 200 `OK`. Metadata still lists `introspection_endpoint_auth_methods_supported` + `revocation_endpoint_auth_methods_supported`=[client_secret_basic,...], router ignores them. Survived 4 sessions (09-04 14:20/19:53/22:16, 09-05 00:12); prior 404 episodes were transient routing, not remediation.
+evidence_needed: real access_token → no-auth introspect leaks sub/scope/exp/client_id (exfil); no-auth revoke flips active→false on re-introspect (silent session kill)
+verify_steps: (DONE) no-auth POST fake token → 200 both; .well-known/status 200. NEXT (client_id+token): POST token=<real> to /token-srv/introspect no-auth, read claim set; POST to /token-srv/revoke; re-introspect to confirm active=false
+impact: token theft escalates to metadata disclosure + forced re-auth/interception; silent account-session DoS on identity plane; MEDIUM (gated on possessing a token)
 testability: AUTH_HELPED
-[HYP] SCIM v2 /Users enumeration/resource access via leaked provisioning tokens
+[HYP] SCIM provisioning controller mounted on multiple paths — cross-tenant PII if token leaks
 class: IDOR
-asset: auth.hornbach.com/user-scim-srv/v2/Users
-confidence: 35
-reasoning: 22:15Z GET → 401 (not 404), proving a provisioning controller is mounted; SCIM auto-provisions/updates HORNBACH customer identities. No anonymous leak observed.
-evidence_needed: any SCIM bearer token or valid customer session → GET /Users & GET /Users/{id}
-verify_steps: (DONE) GET /Users→401. NEXT (passive only): HEAD /v2/, /v2/Schemas, /v2/ResourceTypes to map schema before any auth'd attempt.
-impact: cross-tenant PII/provisioning abuse IF a token is ever obtained; none anonymously; severity LOW
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 40
+reasoning: 2026-09-05 00:12Z /v2/Schemas + /v2/ResourceTypes → 401 JSON (controllers live), /v2/ → 404; metadata `scim_endpoint=…/v2`. cidaas SCIM auto-provisions customer identities; any leaked SCIM/admin bearer reaches /Users CRUD.
+evidence_needed: SCIM bearer or admin session → GET /v2/Users, /v2/Users/{id}
+verify_steps: (DONE) GET /v2/{Schemas,ResourceTypes} → 401. NEXT (blocked anonymously): obtainable only via client_id+admin; no further anonymous probes
+impact: cross-tenant customer identity/provisioning abuse IF credential obtained; nil anonymously; LOW-MEDIUM
 testability: AUTH_HELPED
-[HYP] NetScaler firmware CVE exposure (CVE-2025-5777/6543, CVE-2026-3055/8451 class)
-class: MISCONFIG
-asset: auth.hornbach.de
-confidence: 30
-reasoning: AAA virtual server present (pluginlist.xml, EPA binaries, gwtest.jsp 500/43549). BUT plugin "NS 25.5.1.15" is the Citrix Secure Access Client/EPA client-plugin version (fixed build for client CVE-2025-0320 per Citrix 2025-06 bulletin) — NOT NetScaler ADC firmware (ADC is 14.1/13.1 families). Appliance firmware not fingerprinted; no version→CVE mapping supportable.
-evidence_needed: actual ADC firmware build via ns b/banner/header or docs example; then compare against CTX696300/CTX694788 fixed builds
-verify_steps: (blocked passively) PTARGET pages return no firmware version; requires /vpn banner or error-page differential under auth
-impact: IF firmware found unpatched, unauthenticated memory-read (SAML IdP / AAA) — but currently unprovable; severity LOW until evidenced
-testability: PASSIVE
-[NEXT] HUMAN: Obtain a valid cidaas client_id — sole blocker for turning the confirmed 200/200 unauthenticated token-plane bypass into a reportable PoC. Deterministic path: pull the de.hornbach Android APK (APKMirror), unzip, grep `cidaas.xml`/`strings.xml` for `<item name="ClientId">`; fallback: capture `client_id` from https://auth.hornbach.com/authz-srv/authz redirect during a manual hornbach.de login in a fresh browser profile (before bot-wall).
-[RISK] hornbach: 47/100 — confirmed stable unauthenticated token introspection+revocation pair (RFC 7662/7009 violation, 3 confirmations today); SCIM provisioning surface live (401); client registration/PAR disabled; client_id gate blocks all OAuth escalation (APK extraction is the unlock); Citrix NetScaler downgraded (firmware unfingerprinted, only client-plugins exposed); api surface still gated/no routes; broad scope, CDN-heavy, gate-hard.
+[HYP] Mirakl anonymous route mapping / version-gated issue
+class: OTHER
+asset: hornbach-mp.mirakl.net
+confidence: 35
+reasoning: 2026-09-05 00:12Z /api/version → 200 `{"version":"3.1301"}` anonymous; /api/marketplaces → 401; /monitoring/health + /auth/tokens → 404. HORNBACH-operated marketplace confirmed live.
+evidence_needed: any anonymous non-version route leaking config/PII; else authenticated (seller/operator) session for authz tests
+verify_steps: (DONE) version/marketplaces/health/tokens probes. NEXT (read-only): GET /api, /api/1.0, /api/3.0, /api/catalog, /lob, /.well-known/jwks.json → 404/401 differential only
+impact: version disclosure alone is REJECTED-class; candidate only if a non-version anonymous route leaks data; LOW
+testability: AUTH_HELPED
+[NEXT] HUMAN: Extract a valid cidaas `client_id` from the de.hornbach Android APK (download from APKMirror, unzip, grep `cidaas.xml`/`strings.xml` for the ClientId entry) — the sole gate to converting the 4x-confirmed no-auth introspect/revoke 200/200 into a reportable PoC (real-token metadata exfil + silent revocation); fallback: capture `client_id` from the `/authz-srv/authz` redirect during a manual hornbach.de login in a fresh browser profile before the bot-wall.
+[RISK] hornbach: 48/100 — token-plane bypass confirmed stable through a 4th independent window across 2 days (systemic cidaas tenant misconfig, strongest defensible finding); SCIM provisioning controller confirmed on 3S paths (401-gated); Mirakl 3.1301 commerce surface live; all impact-chain content still gated on client_id (register 404, frontend bot-walled) + token acquisition; no anonymous PII reachable; NetScaler caveat retained (firmware unfingerprinted, client-plugin only); critical path remains client_id acquisition.

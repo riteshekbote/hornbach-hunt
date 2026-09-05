@@ -5570,3 +5570,206 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] hornbach: 47/100 — confirmed stable unauthenticated token introspection+revocation pair (RFC 7662/7009 violation, 3 confirmations today); SCIM provisioning surface live (401); client registration/PAR disabled; client_id gate blocks all OAuth escalation (APK extraction is the unlock); Citrix NetScaler downgraded (firmware unfingerprinted, only client-plugins exposed); api surface still gated/no routes; broad scope, CDN-heavy, gate-hard.
+===== ANALYST bigpickle 2026-09-05 00:15:30 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mUA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
+echo "== status =="; curl -s -m 15 -o /tmp/s.html -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" https://auth.hornbach.com/.well-known/status; head -c 300 /tmp/s.html; echo
+sleep 1.2
+echo "== introspect =="; curl -s -m 15 -o /tmp/i.html -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" -H "Content-Type: application/x-www-form-urlencoded" -X POST -d "token=fake_invalid_token_xyz" https://auth.hornbach.com/token-srv/introspect; head -c 300 /tmp/i.html; echo
+sleep 1.2
+echo "== revoke =="; curl -s -m 15 -o /tmp/r.html -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" -H "Content-Type: application/x-www-form-urlencoded" -X POST -d "token=fake_invalid_token_xyz" https://auth.hornbach.com/token-srv/revoke; head -c 300 /tmp/r.html; echo
+== status ==
+http:200 size:60
+{"updatedAt":"2026-09-05T00:11:59.112674993Z","status":"OK"}
+== introspect ==
+http:200 size:16
+{"active":false}
+== revoke ==
+http:200 size:2
+OK
+[0m
+[0m$ [0mUA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
+echo "== openid-config (keys) =="; curl -s -m 15 -H "User-Agent: $UA" https://auth.hornbach.com/.well-known/openid-configuration | tr ',' '\n' | grep -iE 'introspection|revocation|registration|device_authorization|"scim|scim_support|token_endpoint_auth_methods_supported|response_types' | head -20
+sleep 1.2
+echo "== api.hornbach.de root =="; curl -s -m 15 -o /tmp/ar.txt -w "http:%{http_code} server:%{header_json}" -H "User-Agent: $UA" https://api.hornbach.de/ 2>/dev/null; echo; head -c 300 /tmp/ar.txt; echo
+sleep 1.2
+echo "== api.hornbach.de /api =="; curl -s -m 15 -o /tmp/a2.txt -w "http:%{http_code}\n" -H "User-Agent: $UA" https://api.hornbach.de/api; head -c 300 /tmp/a2.txt; echo
+sleep 1.2
+echo "== mirakl =="; curl -s -m 15 -o /tmp/m.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" https://hornbach-mp.mirakl.net/; head -c 200 /tmp/m.txt; echo
+sleep 1.2
+echo "== www.hornbach.com bot page len =="; curl -s -m 15 -o /tmp/w.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" https://www.hornbach.com/; echo
+== openid-config (keys) ==
+"response_types_supported":["code"
+"token_endpoint_auth_methods_supported":["client_secret_basic"
+"registration_endpoint":"https://auth.hornbach.com/apps-srv/clients/register"
+"introspection_endpoint":"https://auth.hornbach.com/token-srv/introspect"
+"introspection_async_update_endpoint":"https://auth.hornbach.com/token-srv/introspect/async/tokenusage"
+"revocation_endpoint":"https://auth.hornbach.com/token-srv/revoke"
+"introspection_endpoint_auth_methods_supported":["client_secret_basic"
+"introspection_endpoint_auth_signing_alg_values_supported":["HS256"
+"revocation_endpoint_auth_methods_supported":["client_secret_basic"
+"revocation_endpoint_auth_signing_alg_values_supported":["HS256"
+"device_authorization_endpoint":"https://auth.hornbach.com/authz-srv/device/authz"
+"scim_endpoint":"https://auth.hornbach.com/user-scim-srv/v2"}
+== api.hornbach.de root ==
+http:404 server:{"date":["Sat, 05 Sep 2026 00:12:06 GMT"],
+"server":["Gateway"],
+"connection":["close"],
+"x-correlationid":["Id-565e9b6a5157b691c519f053 0"],
+"accept":["*/*"],
+"host":["api.hornbach.de"],
+"user-agent":["Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"],
+"content-type":["application/json"]
+}
+{"message":{"status":"404","text":"Not Found"}}
+== api.hornbach.de /api ==
+http:404
+{"message":{"status":"404","text":"Not Found"}}
+== mirakl ==
+http:302 size:0
+
+== www.hornbach.com bot page len ==
+http:301 size:169
+[0m
+[0m$ [0mUA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
+echo "== async tokenusage HEAD =="; curl -s -m 15 -o /dev/null -w "http:%{http_code}\n" -I -H "User-Agent: $UA" https://auth.hornbach.com/token-srv/introspect/async/tokenusage
+sleep 1.2
+echo "== async tokenusage GET =="; curl -s -m 15 -o /tmp/au.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" https://auth.hornbach.com/token-srv/introspect/async/tokenusage; head -c 300 /tmp/au.txt; echo
+sleep 1.2
+echo "== async tokenusage POST fake =="; curl -s -m 15 -o /tmp/au2.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" -H "Content-Type: application/x-www-form-urlencoded" -X POST -d "token=fake" https://auth.hornbach.com/token-srv/introspect/async/tokenusage; head -c 300 /tmp/au2.txt; echo
+sleep 1.2
+echo "== register POST =="; curl -s -m 15 -o /tmp/reg.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" -H "Content-Type: application/json" -X POST -d '{}' https://auth.hornbach.com/apps-srv/clients/register; head -c 300 /tmp/reg.txt; echo
+== async tokenusage HEAD ==
+http:404
+== async tokenusage GET ==
+http:404 size:32
+{"error":"router doesn't exist"}
+== async tokenusage POST fake ==
+http:404 size:32
+{"error":"router doesn't exist"}
+== register POST ==
+http:404 size:9
+Not Found
+[0m
+[0m$ [0mUA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
+echo "== auth root =="; curl -s -m 15 -o /tmp/authr.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" https://auth.hornbach.com/; grep -ioE 'title>[^<]*|cidaas|fingerprint|error-hint' /tmp/authr.txt | head -5; echo
+sleep 1.2
+echo "== login root =="; curl -s -m 15 -o /tmp/loginr.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" https://login.hornbach.com/; cmp -s /tmp/authr.txt /tmp/loginr.txt && echo "IDENTICAL to auth.hornbach.com root" || echo "differs"; echo
+sleep 1.2
+echo "== authz devicen =="; curl -s -m 15 -o /tmp/d.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" https://auth.hornbach.com/authz-srv/device/authz; head -c 200 /tmp/d.txt; echo
+== auth root ==
+http:302 size:0
+
+== login root ==
+http:302 size:0
+IDENTICAL to auth.hornbach.com root
+
+== authz devicen ==
+http:400 size:216
+{"error":"invalid_request","error_code":"AUTH10003","error_description":"invalid_request: error parsing request parameters","error_hint":"please check the query/form parameters you are passing are in
+[0m
+[0m$ [0mUA="Mozilla/5.0"
+curl -s -m 15 -o /dev/null -D - -H "User-Agent: $UA" https://auth.hornbach.com/ | grep -iE '^(HTTP|location|x-powered-by|cidaas)' ; echo "---login---"; curl -s -m 15 -o /dev/null -D - -H "User-Agent: $UA" https://login.hornbach.com/ | grep -iE '^(HTTP|location)'
+HTTP/2 302 
+location: https://hornbach.de/
+x-powered-by: cidaas
+---login---
+HTTP/2 302 
+location: https://www.hornbach.de/customer
+[0m
+[0m$ [0mUA="Mozilla/5.0"
+echo "== mirakl /api/version =="; curl -s -m 15 -o /tmp/mv.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" https://hornbach-mp.mirakl.net/api/version; head -c 200 /tmp/mv.txt; echo
+sleep 1.2
+echo "== mirakl /monitoring/health =="; curl -s -m 15 -o /tmp/mh.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" https://hornbach-mp.mirakl.net/monitoring/health; head -c 200 /tmp/mh.txt; echo
+sleep 1.2
+echo "== mirakl /api/marketplaces =="; curl -s -m 15 -o /tmp/mm.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" https://hornbach-mp.mirakl.net/api/marketplaces; head -c 200 /tmp/mm.txt; echo
+sleep 1.2
+echo "== mirakl /auth/tokens GET =="; curl -s -m 15 -o /tmp/mt.txt -w "http:%{http_code} size:%{size_download}\n" -H "User-Agent: $UA" https://hornbach-mp.mirakl.net/auth/tokens; head -c 200 /tmp/mt.txt; echo
+== mirakl /api/version ==
+http:200 size:20
+{"version":"3.1301"}
+== mirakl /monitoring/health ==
+http:404 size:64
+{"status":404,"message":"No static resource monitoring/health."}
+== mirakl /api/marketplaces ==
+http:401 size:39
+{"message":"Unauthorized","status":401}
+== mirakl /auth/tokens GET ==
+http:404 size:58
+{"status":404,"message":"No static resource auth/tokens."}
+[0m
+[0m$ [0mUA="Mozilla/5.0"
+for p in "/user-scim-srv/v2/" "/user-scim-srv/v2/Schemas" "/user-scim-srv/v2/ResourceTypes"; do echo "== $p =="; curl -s -m 15 -o /tmp/sx.txt -w "http:%{http_code} size:%{size_download} ct:%{content_type}\n" -H "User-Agent: $UA" "https://auth.hornbach.com$p"; head -c 200 /tmp/sx.txt; echo; sleep 1.2; done
+== /user-scim-srv/v2/ ==
+http:404 size:29 ct:text/plain; charset=utf-8
+Cannot GET /user-scim-srv/v2/
+== /user-scim-srv/v2/Schemas ==
+http:401 size:66 ct:application/json
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+== /user-scim-srv/v2/ResourceTypes ==
+http:401 size:66 ct:application/json
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+[0m
+STEP 1 — DELTA
+- [RE-CONFIRMED] POST no-auth `token-srv/introspect` → 200 `{"active":false}` (2026-09-05 00:12Z) — 4th independent confirmation session (09-04 14:20/19:53/22:16, 09-05 00:12)
+- [RE-CONFIRMED] POST no-auth `token-srv/revoke` → 200 `OK` — stable, both endpoints still unauthenticated
+- [NEW] OIDC metadata advertises `introspection_async_update_endpoint=/token-srv/introspect/async/tokenusage` — GET/HEAD/POST all 404 `{"error":"router doesn't exist"}` (metadata ahead of routing)
+- [CHANGED] `auth.hornbach.com` + `login.hornbach.com` roots reverted to 302 (auth→hornbach.de, login→www.hornbach.de/customer; `x-powered-by: cidaas`) — the 09-03/04 200-len-3038 body was a transient shared stub
+- [NEW] SCIM controller live beyond `/Users`: `/user-scim-srv/v2/Schemas` and `/v2/ResourceTypes` → 401 JSON (not 404); `/v2/` → 404 `Cannot GET`
+- [NEW] `hornbach-mp.mirakl.net/api/version` → 200 `{"version":"3.1301"}` unauthenticated; `/api/marketplaces` → 401; `/monitoring/health` + `/auth/tokens` → 404
+- [CONFIRMED] `apps-srv/clients/register` POST → 404 (RFC 7591 still off); `authz-srv/device/authz` → 400 AUTH10003 (parse); `.well-known/status` → 200 `{"status":"OK"}`
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke} 7.9 → 8/7/8/10/4/10 (a/b/t/g/c/f) — unauthenticated token plane, highest exposure
+- [PRIO] auth.hornbach.com/user-scim-srv/v2 6.8 → 7/8/7/5/3/9 — provisioning surface, 401-gated, PII if token leaks
+- [PRIO] hornbach-mp.mirakl.net 6.5 → 7/8/5/6/3/8 — live commerce/money surface, auth-gated
+
+STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token-plane bypass remains systemic across days (RFC 7662/7009)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 70
+reasoning: 2026-09-05 00:12Z POST `token=fake` with zero client auth → introspect 200 `{"active":false}`, revoke 200 `OK`. Metadata still lists `introspection_endpoint_auth_methods_supported` + `revocation_endpoint_auth_methods_supported`=[client_secret_basic,...], router ignores them. Survived 4 sessions (09-04 14:20/19:53/22:16, 09-05 00:12); prior 404 episodes were transient routing, not remediation.
+evidence_needed: real access_token → no-auth introspect leaks sub/scope/exp/client_id (exfil); no-auth revoke flips active→false on re-introspect (silent session kill)
+verify_steps: (DONE) no-auth POST fake token → 200 both; .well-known/status 200. NEXT (client_id+token): POST token=<real> to /token-srv/introspect no-auth, read claim set; POST to /token-srv/revoke; re-introspect to confirm active=false
+impact: token theft escalates to metadata disclosure + forced re-auth/interception; silent account-session DoS on identity plane; MEDIUM (gated on possessing a token)
+testability: AUTH_HELPED
+[HYP] SCIM provisioning controller mounted on multiple paths — cross-tenant PII if token leaks
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 40
+reasoning: 2026-09-05 00:12Z /v2/Schemas + /v2/ResourceTypes → 401 JSON (controllers live), /v2/ → 404; metadata `scim_endpoint=…/v2`. cidaas SCIM auto-provisions customer identities; any leaked SCIM/admin bearer reaches /Users CRUD.
+evidence_needed: SCIM bearer or admin session → GET /v2/Users, /v2/Users/{id}
+verify_steps: (DONE) GET /v2/{Schemas,ResourceTypes} → 401. NEXT (blocked anonymously): obtainable only via client_id+admin; no further anonymous probes
+impact: cross-tenant customer identity/provisioning abuse IF credential obtained; nil anonymously; LOW-MEDIUM
+testability: AUTH_HELPED
+[HYP] Mirakl anonymous route mapping / version-gated issue
+class: OTHER
+asset: hornbach-mp.mirakl.net
+confidence: 35
+reasoning: 2026-09-05 00:12Z /api/version → 200 `{"version":"3.1301"}` anonymous; /api/marketplaces → 401; /monitoring/health + /auth/tokens → 404. HORNBACH-operated marketplace confirmed live.
+evidence_needed: any anonymous non-version route leaking config/PII; else authenticated (seller/operator) session for authz tests
+verify_steps: (DONE) version/marketplaces/health/tokens probes. NEXT (read-only): GET /api, /api/1.0, /api/3.0, /api/catalog, /lob, /.well-known/jwks.json → 404/401 differential only
+impact: version disclosure alone is REJECTED-class; candidate only if a non-version anonymous route leaks data; LOW
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] Mirakl version 3.1301 disclosure: version-only = known-vendor-version REJECTED without program-specific exploit; no anonymous non-version route found (conf 35)
+- [PARKED] cidaas device-flow phishing (authz-srv/device/authz): parse-error 400 only; gated on valid client_id + flow-enabled tenant; untestable anonymously (conf 30)
+- [PARKED] SAP APIM internal-hostname leak: descriptive-error REJECTED class
+- [FINAL] 1. token-srv unauthenticated introspect+revoke pair (conf 70, AUTH_HELPED, MEDIUM) — 4x confirmed, stable, most defensible finding
+- [FINAL] 2. SCIM 401-mounted provisioning surface on 3 paths (conf 40, AUTH_HELPED, LOW-MEDIUM) — surface realism confirmed
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Extract a valid cidaas `client_id` from the de.hornbach Android APK (download from APKMirror, unzip, grep `cidaas.xml`/`strings.xml` for the ClientId entry) — the sole gate to converting the 4x-confirmed no-auth introspect/revoke 200/200 into a reportable PoC (real-token metadata exfil + silent revocation); fallback: capture `client_id` from the `/authz-srv/authz` redirect during a manual hornbach.de login in a fresh browser profile before the bot-wall.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: 4th confirmation (2026-09-05 00:12Z) — no-auth 200/200 persists across days; systemic, no remediation observed
+- [LEARN] REJECTED class OTHER @ auth.hornbach.com/token-srv/introspect/async/tokenusage: metadata-advertised async introspection is unrouted (404 "router doesn't exist" on all methods) — metadata/routing drift only
+- [LEARN] ACCEPTED class OTHER @ hornbach-mp.mirakl.net/api/version: operator version 3.1301 disclosed anonymously — passive fingerprint only, not a finding
+- [LEARN] ACCEPTED class IDOR @ auth.hornbach.com/user-scim-srv/v2/{Schemas,ResourceTypes}: 401-mounted beyond /Users — SCIM provisioning surface broader than initially assessed
+
+STEP 7 — RISK
+[RISK] hornbach: 48/100 — token-plane bypass confirmed stable through a 4th independent window across 2 days (systemic cidaas tenant misconfig, strongest defensible finding); SCIM provisioning controller confirmed on 3S paths (401-gated); Mirakl 3.1301 commerce surface live; all impact-chain content still gated on client_id (register 404, frontend bot-walled) + token acquisition; no anonymous PII reachable; NetScaler caveat retained (firmware unfingerprinted, client-plugin only); critical path remains client_id acquisition.

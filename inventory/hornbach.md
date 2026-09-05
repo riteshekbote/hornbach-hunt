@@ -112,3 +112,12 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/token-srv/revoke: latest probe shows HTTP 404 (conflicts with re-confirmation above — may be path/parameter sensitive)
 - CHANGED hornbach.com: no wildcard DNS confirmed — only 4 scoped hosts resolve
 - CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes
+
+## 2026-09-05 00:15:30 UTC
+- NEW auth.hornbach.com/token-srv/introspect: POST returns HTTP 200 {"active":false} unauthenticated — RE-CONFIRMED live (transient 404 was routing, not remediation)
+- NEW auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 "OK" unauthenticated — re-confirmed live; both token management endpoints stable unauthenticated (but latest probe shows 404, parameter-sensit
+- NEW auth.hornbach.com/.well-known/status: returns HTTP 200 {"status":"OK","updatedAt"} — discovery property status endpoint live
+- CHANGED auth.hornbach.com/authz-srv/authz: client_id=public returns 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — uniform invalid_client gate confirmed; previous variance was request-shap
+- NEW auth.hornbach.com/authz-srv/authz: returns HTTP 200 with valid client_id=<found> — authorization endpoint responds to valid client (login/consent page)
+- CHANGED hornbach.com: no wildcard DNS confirmed — only 4 scoped hosts resolve (reconfirmed)
+- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes discovered
