@@ -160,3 +160,11 @@ www.hornbach.com
 - NEW auth.hornbach.com/.well-known/status: Returns HTTP 200 {"status":"OK","updatedAt":"2026-09-05T08:40:15.453402952Z"} — discovery status endpoint live
 - CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302->AUTH10007; valid client_id returns HTTP 200 login/consent page
 - CHANGED auth.hornbach.com/token-srv/introspect/async/tokenusage: Returns HTTP 200 {"error":"router doesn't exist"} — async introspection not routed
+
+## 2026-09-05 17:43:13 UTC
+- NEW auth.hornbach.com/token-srv/introspect: POST returns HTTP 200 `{"active":false}` unauthenticated — LIVE (confirmed; GET/HEAD return 404, POST with form data works; parameter-sensitive routing)
+- NEW auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 `OK` unauthenticated — LIVE (confirmed; GET/HEAD return 404, POST with form data works; parameter-sensitive routing)
+- NEW auth.hornbach.com/.well-known/status: Returns HTTP 200 `{"status":"OK","updatedAt":"2026-09-05T17:40:14.478100144Z"}` — discovery status endpoint live and stable
+- CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302→AUTH10007; valid client_id returns HTTP 200 login/consent page (confirmed vi
+- CHANGED api.hornbach.de: SAP API Gateway confirmed (Server: Gateway header, X-CorrelationID); root returns 404 JSON; backend leak via Host header on /healthcheck (per KB) points to localhost:8080
+- CHANGED auth.hornbach.de: Citrix NetScaler AAA VPN Gateway confirmed (redirects to /logon/LogonPoint/tmindex.html; CSP shows img-src http://localhost:*)

@@ -50,3 +50,4 @@
 - 2026-09-05 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — 09-05 15:22 UTC, stable; text/plain response body (not JSON)
 - 2026-09-05 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 `{"status":"OK","updatedAt"}` — discovery status endpoint live and stable
 - 2026-09-05 REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: `client_id=<found>` (literal string) now returns 302→AUTH10003 `invalid_request` (parsing error) — the `<found>` marker in KB was a redacted placeholder for a real client_id; this is not a surface change
+- 2026-09-05 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED live, returns 200 "OK" unauthenticated via POST — two stable unauthenticated token management endpoints (parameter-sensitive 404 on GET/HEAD)
