@@ -926,3 +926,4 @@ evidence_needed: Mirakl API key (operator or seller) → cross-shop BOLA on orde
 verify_steps: (DONE) 13 routes mapped; option exhausted. NEXT (with any marketplace credential): /api/orders?shop_id=N, /api/accounts/extrafields — BOLA checks
 impact: cross-tenant seller/order/payment data if credential ever leaks; nil anonymously; LOW-MEDIUM
 testability: AUTH_HELPED
+## 2026-09-05 23:38:59 UTC [target] (model bigpickle)

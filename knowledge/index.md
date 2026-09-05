@@ -53,3 +53,6 @@
 - 2026-09-05 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED live, returns 200 "OK" unauthenticated via POST — two stable unauthenticated token management endpoints (parameter-sensitive 404 on GET/HEAD)
 - 2026-09-05 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 09-05 17:43 UTC, 7th independent session; GET/HEAD returning 404 was methodology artefact (all historical probes used GET, not POST)
 - 2026-09-05 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — 09-05 17:43 UTC, stable; text/plain response body (not JSON)
+- 2026-09-05 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 09-05 23:40 UTC, 8th independent session; GET/HEAD returning 404 was methodology artefact (all historical probes used GET, not POST)
+- 2026-09-05 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — 09-05 23:40 UTC, stable; text/plain response body (not JSON)
+- 2026-09-05 REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id enumeration via status-code differential is REMOVED — invalid client_ids return uniform 302→AUTH10007; 404 vs 302 variance is request-shape not client validity signal

@@ -9005,3 +9005,10 @@ STEP 6 — LEARNING:
 
 STEP 7 — RISK:
 - [RISK] hornbach: **53/100** — systemic unauthenticated token-introspection+revocation pair (RFC 7662/7009 violation) re-confirmed 8th session at 85 confidence, POST-only body-gated, issuance correctly isolated; both api surfaces (SAP APIM, Mirakl) now definitively exhausted/closed; reposcan + root-page client_id vectors confirmed dead → critical path rests solely on HUMAN browser/device capture of `client_id`, after which the 85-confidence finding becomes a reportable real-token PoC (metadata exfil + silent session kill); no anonymous PII reachable anywhere in scope.
+===== ANALYST bigpickle 2026-09-05 23:41:22 UTC =====
+[0m
+> build · big-pickle
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0msleep 0; echo "=== 1 introspect POST ==="; curl -s -o /tmp/intr.txt -w "%{http_code}\n" -X POST https://auth.hornbach.com/token-srv/introspect --data "token=nonexistent_fake_token_123"; cat /tmp/intr.txt; echo; sleep 1.2; echo "=== 2 status ==="; curl -s -w "\n%{http_code}\n" https://auth.hornbach.com/.well-known/status; sleep 1.2; echo "=== 3 metadata endpoint keys ==="; curl -s -o /tmp/md.json https://auth.hornbach.com/.well-known/openid-configuration; grep -o '"[a-z_]*_endpoint"' /tmp/md.json | sort -u; echo "--- grants ---"; grep -o '"grant_types_supported"[^]]*]' /tmp/md.json | head -c 400; echo; grep -o '"response_types_supported"[^]]*]' /tmp/md.json | head -c 300 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
