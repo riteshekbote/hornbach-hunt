@@ -151,3 +151,12 @@ www.hornbach.com
 - NEW auth.hornbach.com/.well-known/status: Returns HTTP 200 {"status":"OK","updatedAt":"2026-09-05T08:40:15.453402952Z"} — discovery status endpoint live
 - CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302->AUTH10007; valid client_id returns HTTP 200 login/consent page
 - CHANGED auth.hornbach.com/token-srv/introspect/async/tokenusage: Returns HTTP 200 {"error":"router doesn't exist"} — async introspection not routed
+
+## 2026-09-05 15:26:18 UTC
+- CHANGED `auth.hornbach.com/authz-srv/authz?...client_id=<found>`: now returns 302 → AUTH10003 `invalid_request` instead of prior 200; the `<found>` literal is being rejected as an invalid client_id format (th
+- CHANGED `probe-results.md`: all historical `token-srv/introspect` and `token-srv/revoke` probes used GET (→404); POST is the correct method (→200); probe methodology error masked stable finding across 6 sessi
+- NEW auth.hornbach.com/token-srv/introspect: POST returns HTTP 200 {"active":false} unauthenticated — LIVE (HEAD/GET returns 404, but POST with form data works; parameter-sensitive routing)
+- NEW auth.hornbach.com/token-srv/revoke: POST returns HTTP 200 "OK" unauthenticated — LIVE (HEAD/GET returns 404, but POST with form data works; parameter-sensitive routing)
+- NEW auth.hornbach.com/.well-known/status: Returns HTTP 200 {"status":"OK","updatedAt":"2026-09-05T08:40:15.453402952Z"} — discovery status endpoint live
+- CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302->AUTH10007; valid client_id returns HTTP 200 login/consent page
+- CHANGED auth.hornbach.com/token-srv/introspect/async/tokenusage: Returns HTTP 200 {"error":"router doesn't exist"} — async introspection not routed
