@@ -5773,3 +5773,45 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] hornbach: 48/100 — token-plane bypass confirmed stable through a 4th independent window across 2 days (systemic cidaas tenant misconfig, strongest defensible finding); SCIM provisioning controller confirmed on 3S paths (401-gated); Mirakl 3.1301 commerce surface live; all impact-chain content still gated on client_id (register 404, frontend bot-walled) + token acquisition; no anonymous PII reachable; NetScaler caveat retained (firmware unfingerprinted, client-plugin only); critical path remains client_id acquisition.
+===== ANALYST bigpickle 2026-09-05 04:42:29 UTC =====
+[0m
+> build · big-pickle
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mmkdir -p /tmp/hbprobe
+UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36"
+probe() {
+  u="$1"; tag="$2"
+  hdr=/tmp/hbprobe/${tag}.hdr; bdy=/tmp/hbprobe/${tag}.body
+  code=$(curl -sS --max-time 25 -A "$UA" -D "$hdr" -o "$bdy" -w "%{http_code}" "$u")
+  ln=$(wc -c < "$bdy")
+  srv=$(grep -i '^server:' "$hdr" | head -1 | sed 's/\r//' | cut -c1-70)
+  loc=$(grep -i '^location:' "$hdr" | head -1 | sed 's/\r//' | cut -c1-90)
+  ct=$(grep -i '^content-type:' "$hdr" | head -1 | sed 's/\r//' | cut -c1-50)
+  echo "HTTP=$code len=$ln | ${srv} | ${ct} | loc=${loc} | $tag"
+  sleep 2
+}
+probe "https://auth.hornbach.com/" root
+probe "https://auth.hornbach.com/.well-known/status" status
+probe "https://auth.hornbach.com/.well-known/openid-configuration" oidc
+probe "https://auth.hornbach.com/authz-srv/authz" authz
+probe "https://auth.hornbach.com/token-srv/introspect" introspect_get
+probe "https://auth.hornbach.com/token-srv/introspect?token=fake" introspect_get_param
+probe "https://auth.hornbach.com/token-srv/revoke" revoke_get
+probe "https://login.hornbach.com/" login
+probe "https://www.hornbach.com/" www
+probe "https://api.hornbach.de/" api
+probe "https://api.hornbach.de/swagger-resources" api_swagger
+probe "https://api.hornbach.de/v2/api-docs" api_docs
+probe "https://auth.hornbach.de/" authde
+probe "https://hornbach-mp.mirakl.net/api/version" mirakl_version
+probe "https://hornbach-mp.mirakl.net/" mirakl_root
+echo "---- OIDC auth-surface keys ----"
+for k in authorization_endpoint token_endpoint introspection_endpoint revocation_endpoint registration_endpoint device_authorization_endpoint userinfo_endpoint scim_endpoint; do
+  grep -o "\"$k\"[^,}]*" /tmp/hbprobe/oidc.body | head -1
+done
+for k in introspection_endpoint_auth_methods_supported revocation_endpoint_auth_methods_supported token_endpoint_auth_methods_supported; do
+  grep -o "\"$k\"[^]]*]" /tmp/hbprobe/oidc.body | head -1
+done failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m◈ [0mExa Web Search "hornbach cidaas client_id auth.hornbach.com"
