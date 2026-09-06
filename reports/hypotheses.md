@@ -468,3 +468,41 @@
 - [40] api.hornbach.de/healthcheck: SAP APIM Host-header backend probe leaks internal routing/healthcheck data (from art/lead_bigpickle.txt)
 - NEXT(hypotheses-bigpickle.txt): PROBE: `GET https://api.hornbach.de/healthcheck` (passive, re-confirm Host→localhost:8080 backend leak) and `GET https://api.hornbach.de/api/version`-style vari
 - LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: continue to confirm SAP APIM Gateway (Server: Gateway, X-CorrelationID) with 404 JSON root and Host-header backend l
+
+## RANKED HYPOTHESES 2026-09-06 14:41:37 UTC
+- [85] auth.hornbach.com/token-srv/{introspect,revoke}: Unauthenticated token introspection + revocation enables silent session kill + metadata leak (from art/lead_nemotron3.txt)
+- [50] api.hornbach.de: SSRF to localhost:8080 backend via SAP API Gateway route manipulation (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Download HORNBACH mobile app (de.hornbach) APK from APKMirror/Google Play, extract OAuth config (client_id + redirect_uri scheme) from assets/cidaas.xml 
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Download HORNBACH mobile app (de.hornbach) APK from APKMirror/Google Play, extract OAuth config (client_id + redirect_uri scheme) from assets/cidaas.xml 
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 09-05 23:40 UTC, 8th independent sess
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — 09-05 23:40 UTC, stable; text/plain response body (not 
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 `{"status":"OK","updatedAt"}` — discovery status endpoint live and stable
+- LEARN: REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id enumeration via status-code differential is REMOVED — invalid client_ids return uniform 302→A
+- LEARN: REJECTED class MISCONFIG @ login.hornbach.com: Fastly CNAME takeover confirmed unlikely — active service (Varnish header, 200 response, resolving IP) eliminates
+- LEARN: REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 know
+- LEARN: REJECTED class AUTH @ auth.hornbach.com/apps-srv/clients/register: POST returns 404 — unauthenticated dynamic client registration (RFC 7591) not enabled
+- LEARN: ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: social token resolver returns HTTP 500 on GET + CORS wildcard
+- LEARN: REJECTED class OTHER @ auth.hornbach.com/authz-srv/par: PAR explicitly disabled (AUTH10053)
+- LEARN: ACCEPTED class OTHER @ api.hornbach.de: SAP API Gateway exists (Gateway server header) with backend on localhost:8080; no documented endpoints at common paths
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.de: Citrix NetScaler AAA VPN Gateway v25.5.1.15 confirmed (legacy employee access); EPA/VPN binaries downloadable
+- LEARN: ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is in-scope API surface; all /api/* require Mirakl auth
+- LEARN: REJECTED class MISCONFIG @ api.hornbach.de: Host/X-Forwarded-Host tampering on /healthcheck yields only 503 (modified Host) or the default localhost:8080 backen
+- LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: re-confirmed SAP APIM Gateway (Via sapigwprd01/sapigwprd02, Server: Gateway, X-CorrelationID) backend on localhost:8
+- LEARN: REJECTED class AUTH @ auth.hornbach.com/apps-srv/clients/register: POST returns 404 — unauthenticated dynamic client registration (RFC 7591) not enabled
+- LEARN: ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: social token resolver returns HTTP 500 on GET + CORS wildcard
+- LEARN: REJECTED class OTHER @ auth.hornbach.com/authz-srv/par: PAR explicitly disabled (AUTH10053)
+- LEARN: ACCEPTED class OTHER @ api.hornbach.de: SAP API Gateway exists (Gateway server header) with backend on localhost:8080; no documented endpoints at common paths
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.de: Citrix NetScaler AAA VPN Gateway v25.5.1.15 confirmed (legacy employee access); EPA/VPN binaries downloadable
+- LEARN: ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is in-scope API surface; all /api/* require Mirakl auth
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 8th independent session; GET/HEAD ret
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — stable; text/plain response body (not JSON)
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 `{"status":"OK","updatedAt"}` — discovery status endpoint live and stable
+- LEARN: REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id enumeration via status-code differential is REMOVED — invalid client_ids return uniform 302→A
+- LEARN: REJECTED class MISCONFIG @ login.hornbach.com: Fastly CNAME takeover confirmed unlikely — active service (Varnish header, 200 response, resolving IP) eliminates
+- LEARN: REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 know
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (06:30Z) — all 6 service endpoints + status advertised; REJ
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: GET with grant_type → 400 `invalid_client` (client required); token plane client-gated, isolating the u
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com: discovery advertises `token-exchange`(RFC 8693), `password`, `client_credentials` grants + `subject_types_supported=["
+- LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: continue to confirm SAP APIM Gateway (Server: Gateway, X-CorrelationID) with 404 JSON root and Host-header backend l

@@ -219,3 +219,10 @@ www.hornbach.com
 - CHANGED auth.hornbach.de: Citrix NetScaler AAA VPN Gateway v25.5.1.15 confirmed; redirects to /logon/LogonPoint/tmindex.html; CSP shows img-src http://localhost:*
 
 ## 2026-09-06 11:22:06 UTC
+
+## 2026-09-06 14:41:37 UTC
+- NEW auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (2026-09-06 06:30Z) — all 6 service endpoints + status advertised; metadata rot flag rejected
+- NEW auth.hornbach.com/token-srv/token: GET with grant_type → 400 `invalid_client` (client required); token plane client-gated, isolating unauthenticated flaw to introspect/revoke only
+- NEW auth.hornbach.com: discovery advertises `token-exchange`(RFC 8693), `password`, `client_credentials` grants + `subject_types_supported=["public"]` — sub non-pairwise across clients
+- CHANGED auth.hornbach.com/authz-srv/authz: previously-200 endpoint may now be deprecated/blocked on cidaas router level — 16:58Z probe showed 404 for `/authz-srv/authz?...token-srv` apart from `introspect`; c
+- CHANGED api.hornbach.de: continue to confirm SAP APIM Gateway (Server: Gateway, X-CorrelationID) with 404 JSON root and Host-header backend leak → localhost:8080 on /healthcheck; no new anonymous route discov
