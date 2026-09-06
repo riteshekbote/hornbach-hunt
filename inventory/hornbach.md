@@ -240,3 +240,10 @@ www.hornbach.com
 - NEW auth.hornbach.com: discovery advertises `token-exchange`(RFC 8693), `password`, `client_credentials` grants + `subject_types_supported=["public"]` — sub non-pairwise across clients
 - CHANGED auth.hornbach.com/authz-srv/authz: previously-200 endpoint may now be deprecated/blocked on cidaas router level — 16:58Z probe showed 404 for `/authz-srv/authz?...` apart from `introspect`
 - CHANGED api.hornbach.de: 8 additional paths tested (graphql, api/graphql, v1/graphql, openapi.json, swagger.json, api-docs, sap/apigateway, sap/bc/adt/discovery, sap/public/ping) — all 404 uniform (47 bytes);
+
+## 2026-09-06 23:38:37 UTC
+- CHANGED auth.hornbach.com/authz-srv/authz: previously-200 endpoint may now be deprecated/blocked on cidaas router level — 16:58Z probe showed 404 for `/authz-srv/authz?...` apart from `introspect`
+- NEW auth.hornbach.com/token-srv/token: GET with grant_type → 400 `invalid_client` (client required); token plane client-gated, isolating unauthenticated flaw to introspect/revoke only
+- NEW auth.hornbach.com: discovery advertises `token-exchange`(RFC 8693), `password`, `client_credentials` grants + `subject_types_supported=["public"]` — sub non-pairwise across clients
+- CHANGED api.hornbach.de: 8 additional paths tested (graphql, api/graphql, v1/graphql, openapi.json, swagger.json, api-docs, sap/apigateway, sap/bc/adt/discovery, sap/public/ping) — all 404 uniform (47 bytes);
+- NEW auth.hornbach.de/nitro/v1/config: 302 → /logon/LogonPoint/tmindex.html — Citrix NetScaler mgmt API NOT exposed unauthenticated (redirect gate closes nitro surface)

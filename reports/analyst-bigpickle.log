@@ -10961,3 +10961,29 @@ STEP 7 — RISK
 [RISK] hornbach: 52/100 — NO_DELTA on every probed surface this session (api root/healthcheck, auth status, Nitro/logon, cidaas); strongest finding (unauth introspect/revoke, 85-conf) persists 9+ sessions but is fully PoC-gated on a single human Smarthome-APK client_id extraction; NetScaler nitro management surface now formally closed (last secondary lead debunked); token-plane isolation strengthens reporting without escalating impact; no anonymous PII reachable; moderate program risk with unchanged program surface.
 
 Files updated: `reports/hypotheses-bigpickle.txt`, `leads/lead-bigpickle.md`, `probe-results.md`.
+===== ANALYST bigpickle 2026-09-06 23:38:37 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mfor u in "https://api.hornbach.de/" "https://api.hornbach.de/healthcheck" "https://auth.hornbach.com/.well-known/status" "https://auth.hornbach.de/" "https://auth.hornbach.com/.well-known/openid-configuration"; do echo "=== $u ==="; curl -sS -k --max-time 15 -o /tmp/probe_body -D /tmp/probe_hdr -w "HTTP %{http_code} size=%{size_download} time=%{time_total}\n" "$u"; grep -iE "^(server|via|x-correlation|x-powered|location):" /tmp/probe_hdr | head -5; sleep 1.2; done; date -u
+=== https://api.hornbach.de/ ===
+HTTP 404 size=47 time=0.532626
+Server: Gateway
+=== https://api.hornbach.de/healthcheck ===
+HTTP 200 size=19 time=0.449416
+Via: 1.0 sapigwprd02 (Gateway), 1.0 sapigwprd02 (Gateway)
+Server: Gateway
+=== https://auth.hornbach.com/.well-known/status ===
+HTTP 200 size=60 time=0.666630
+server: cloudflare
+=== https://auth.hornbach.de/ ===
+HTTP 302 size=413 time=0.642334
+Location: /logon/LogonPoint/tmindex.html
+=== https://auth.hornbach.com/.well-known/openid-configuration ===
+HTTP 200 size=3189 time=0.356954
+server: cloudflare
+Sun Sep  6 23:37:35 UTC 2026
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/probe_body; echo; echo "---headers status---"; curl -sS -k --max-time 15 -o /dev/null -D - "https://auth.hornbach.com/.well-known/status" | grep -iE "^(server|content-type):"; date -u failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
