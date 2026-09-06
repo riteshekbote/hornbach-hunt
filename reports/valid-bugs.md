@@ -13,3 +13,6 @@
   - **Verdict: HOLD** — Valid concern if exploitable, but blocked on client_id + token acquisition. Cannot prove non-invasively. Park until client_id is obtained.
   - | Q4 Provable non-invasively? | **PARTIAL** — can confirm endpoint exists; initiating flow requires valid client_id |
   - | 7 | JWT algorithm confusion | **HOLD** | Valid concern but unprovable without client_id + token |
+
+- 1 lead(s) marked VALID at 2026-09-06 12:54:27 UTC
+  - I'll then run each lead through the 7-Question Gate with verdict, reason, and (for VALID) minimal proof steps, impact, CVSS, and reporting channel.
