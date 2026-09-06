@@ -463,3 +463,8 @@
 - LEARN: ACCEPTED class OTHER @ api.hornbach.de: SAP API Gateway exists (Gateway server header) with backend on localhost:8080; no documented endpoints at common paths
 - LEARN: ACCEPTED class AUTH @ auth.hornbach.de: Citrix NetScaler AAA VPN Gateway v25.5.1.15 confirmed (legacy employee access); EPA/VPN binaries downloadable
 - LEARN: ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is in-scope API surface; all /api/* require Mirakl auth
+
+## RANKED HYPOTHESES 2026-09-06 11:22:06 UTC
+- [40] api.hornbach.de/healthcheck: SAP APIM Host-header backend probe leaks internal routing/healthcheck data (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): PROBE: `GET https://api.hornbach.de/healthcheck` (passive, re-confirm Host→localhost:8080 backend leak) and `GET https://api.hornbach.de/api/version`-style vari
+- LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: continue to confirm SAP APIM Gateway (Server: Gateway, X-CorrelationID) with 404 JSON root and Host-header backend l

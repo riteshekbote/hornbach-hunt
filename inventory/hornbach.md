@@ -217,3 +217,5 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/authz-srv/authz: client_id=`<found>` literal returns 302→AUTH10003 `invalid_request` (parsing error) — `<found>` was KB redaction placeholder, not surface change
 - CHANGED api.hornbach.de: SAP API Gateway confirmed (Server: Gateway, X-CorrelationID); root 404 JSON; backend leak via Host header on /healthcheck → localhost:8080
 - CHANGED auth.hornbach.de: Citrix NetScaler AAA VPN Gateway v25.5.1.15 confirmed; redirects to /logon/LogonPoint/tmindex.html; CSP shows img-src http://localhost:*
+
+## 2026-09-06 11:22:06 UTC

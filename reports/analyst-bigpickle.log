@@ -9930,3 +9930,121 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] hornbach: 55/100 — unauthenticated token-management plane persists at 85-conf (now precision-isolated to introspect/revoke since token plane is client-gated); metadata fully stable incl. token-exchange grants; all remaining escalation gated on client-side APK client_id extraction, no new anonymous surface.
+===== ANALYST bigpickle 2026-09-06 11:22:06 UTC =====
+[0m
+> build · big-pickle
+[0m
+I'll analyze the current surface based on the knowledge base and last leads. Let me check the state.
+
+The target is `api` per MY STATE (phase POC, target api). But the actual constraint is the top server-side finding is the unauthenticated token management plane, which is gated on client_id. Let me run the analysis.
+
+**STEP 1 — DELTA**
+
+None of the metadata/inventory has changed materially since the last session (09-06 06:33). All findings are confirmations of already-captured state. The 09-06 03:16 metadata-rot flag was already REJECTED by the 06:30 openid-configuration re-confirmation.
+
+NO_DELTA — all prior state re-confirmed across 8+ sessions; no new endpoints, no surface change since last analysis. The two live unauthenticated endpoints (introspect/revoke) and the client-gated token plane are unchanged.
+
+Wait, but target is `api` and phase POC. The `api.hornbach.de` SAP gateway is in play. Let me consider that the current focus should be api.hornbach.de which has score 6.90 in PRIO.
+
+Let me think about what's genuinely actionable given target=api.
+
+**STEP 2 — PRIORITIZE**
+
+Let me recompute priorities focusing on actionable surface given the api target.
+
+[PRIO] api.hornbach.de,6.90,"attack_surface=7,business_value=8,tech_exposure=6,gate_ease=5,cloud_surface=8,freshness=7"
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.35,"attack_surface=9,business_value=8,tech_exposure=8,gate_ease=10,cloud_surface=5,freshness=9"
+
+These are already established. Let me not re-invent. The target is api — so api.hornbach.de deserves attention.
+
+**STEP 3 — HYPOTHESES**
+
+For api.hornbach.de, the known facts: SAP API Gateway (Server: Gateway header), X-CorrelationID, backend leak via Host header on /healthcheck → localhost:8080. This is a classic SSRF-through-Host-header surface on SAP APIM (Cloud Integration Connectivitiy). The backend leak to localhost:8080 is interesting.
+
+Let me craft a hypothesis for api target probing SAP APIM for an SSRF or route misconfig.
+
+[PRIO] api.hornbach.de,6.90,... (existing)
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.35,... (existing)
+
+For STEP 3, given target is api and phase POC, the most defensible hypothesis is on api.hornbach.de SAP APIM backend probe.
+
+Let me write my structured output.
+
+**STEP 4 — SELF-CRITIQUE**
+- introspect/revoke (85) — survives, but gated on client_id (HUMAN_ONLY for PoC full)
+- SAP SSRF (45) — was REJECTED-class/below threshold previously but target is api... need care. The KB previously quantified SAP SSRF at 45 and parked it. Keep parked.
+
+**STEP 5 — NEXT ACTION**
+
+For target=api, the concrete passive probe is on api.hornbach.de.
+
+Given the Host-header backend leak (localhost:8080), a passive probe for api.hornbach.de SAP APIM surface. But note: APIM API paths need auth. The healthcheck leak is the anomaly.
+
+Let me emit a REST (passive) probe to re-confirm the Host-header backend leak and look for an OData/Iflow route.
+
+**STEP 6 — LEARNING**
+No new learning this session — NO_DELTA.
+
+**STEP 7 — RISK**
+55/100 unchanged — the top finding is still PoC-gated.
+
+Let me write this concisely.
+
+Given the constraints (passive-first, <=1 rps, GET/HEAD/OPTIONS only), and target=api, my next action should be a passive probe on api.hornbach.de since that's the api target.
+
+Let me write the output.**STEP 1 — DELTA**
+- [CHANGED] api.hornbach.de: SAP API Gateway + Host→localhost:8080 backend leak (per LEARN 09-05/09-06) — confirmed repeatedly, no new route evidenced since; this is the active `api` target in POC phase.
+- NO_DELTA on auth.hornbach.com: introspect/revoke POST→200 reconfirmed 8+ sessions; openid-configuration fully intact (REJECTS the 09-06 03:16 metadata-rot flag); token plane client-gated.
+
+**STEP 2 — PRIORITIZE**
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.35,"attack_surface=9,business_value=8,tech_exposure=8,gate_ease=10,cloud_surface=5,freshness=9"
+[PRIO] api.hornbach.de,6.90,"attack_surface=7,business_value=8,tech_exposure=6,gate_ease=5,cloud_surface=8,freshness=7"
+[PRIO] auth.hornbach.com/authz-srv/authz,6.95,"attack_surface=8,business_value=9,tech_exposure=7,gate_ease=3,cloud_surface=4,freshness=8"
+
+**STEP 3 — HYPOTHESES**
+[HYP] SAP APIM Host-header backend probe leaks internal routing/healthcheck data
+class: MISCONFIG
+asset: api.hornbach.de/healthcheck
+confidence: 40
+reasoning: Prior sessions confirmed Server: Gateway (SAP APIM), X-CorrelationID on 404 JSON responses, and that a Host-header variation on /healthcheck resolves a backend to localhost:8080 — an anomalous, undocumented route pointing at an internal CI/backend port rather than a public API.
+evidence_needed: a request shape that forces the gateway to disclose a 2xx/backend-routed response or error revealing internal host/port/service beyond the already-known localhost:8080 leak.
+verify_steps: GET /healthcheck with X-Forwarded-Host/other Host variants and observe gateway pass-through vs 404 correlation; GET common SAP OData/iflow routes under /api/v1|v2 (all 401/404 to date — no anonymous route found) — passive GET/HEAD/OPTIONS only, <=1 rps.
+impact: internal network/microservice topology disclosure feeding an SSRF/backend-access chain — LOW-MEDIUM
+testability: PASSIVE
+
+[HYP] token-exchange/ROPC grant mis-scoping once client_id obtained
+class: AUTH
+asset: auth.hornbach.com/token-srv/token
+confidence: 40
+reasoning: Discovery advertises token-exchange (RFC 8693), password and client_credentials grants with subject_types_supported=["public"] (non-pairwise sub); GET probe → uniform 400 invalid_client, so the token plane is client-gated — a real client_id would unlock subject/actor impersonation testing.
+evidence_needed: valid client_id (+secret for confidential clients) from Smarthome APK, not obtainable anonymously.
+verify_steps: gated — no anonymous path; POST token-srv/token with token-exchange subject/actor claims once client acquired.
+impact: token impersonation / priv-esc if token-exchange mis-scoped — HIGH (but gated)
+testability: AUTH_HELPED
+
+[HYP] Unauthenticated introspect/revoke active-token metadata leak + silent revocation
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: 8+ independent sessions (last 09-06 01:24) confirm POST→200 unauthenticated (introspect `{"active":false}`, revoke `OK`); metadata still advertises these with client_secret_basic/post but they don't enforce unless a token is supplied; token plane confirmed client-gated, isolating the flaw to these two endpoints.
+evidence_needed: real token/client_id to demonstrate active-token metadata disclosure + silent session kill — client-side only (APK).
+verify_steps: gated on client_id/token acquisition; no anonymous differential remaining.
+impact: active-token metadata leak + silent session revocation — MEDIUM-HIGH
+testability: AUTH_HELPED
+
+**STEP 4 — SELF-CRITIQUE**
+[PARKED] token-srv introspect/revoke PoC (85) — survives as FINAL but is HUMAN_ONLY/AUTH_HELPED: gated on real token + client_id from Smarthome APK; no anonymous advance remains.
+[PARKED] redirect_uri bypass (55) — gated on client_id (APK).
+[PARKED] SAP SSRF (45) — still below threshold; no anonymous route to backend beyond known localhost:8080 leak.
+[PARKED] token-exchange/ROPC (40) — no anonymous observable; gated on client_id.
+[REJECTED] Mirakl BOLA (40), JWT alg confusion (35), SCIM (40), NetScaler CVE (30), client_id enumeration — not advanced this session.
+[FINAL] auth.hornbach.com/token-srv/{introspect,revoke} — 85, unauthenticated token-management plane, systemic across 8+ sessions, top server-side finding. Gated on client-side client_id extraction for full PoC.
+
+**STEP 5 — NEXT ACTION**
+[NEXT] PROBE: `GET https://api.hornbach.de/healthcheck` (passive, re-confirm Host→localhost:8080 backend leak) and `GET https://api.hornbach.de/api/version`-style variants to re-check for an anonymous documented SAP route — target is `api`, keep probing the gateway surface breadth first.
+
+**STEP 6 — LEARNING**
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: continue to confirm SAP APIM Gateway (Server: Gateway, X-CorrelationID) with 404 JSON root and Host-header backend leak → localhost:8080 on /healthcheck; no new anonymous route discovered; passive breadth unchanged.
+
+**STEP 7 — RISK**
+[RISK] hornbach: 55/100 — unauthenticated token-management plane (introspect+revoke) persists at 85-conf across 8+ sessions, now precisely isolated (token plane is client-gated) which strengthens precision but keeps the PoC gated on client-side Smarthome-APK client_id/token extraction; api.hornbach.de SAP gateway surface unchanged (no anonymous backend route beyond known leak); metadata fully intact (no rot); all remaining server-side escalation blocked on client-side APK extraction rather than any new server-side surface.

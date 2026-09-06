@@ -1278,3 +1278,46 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: GET with grant_type → 400 `invalid_client` (client required); token plane client-gated, isolating the unauthenticated flaw to introspect/revoke only.
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com: discovery advertises `token-exchange`(RFC 8693), `password`, `client_credentials` grants + `subject_types_supported=["public"]` — sub non-pairwise across clients; new surface note, client-gated.
 [RISK] hornbach: 55/100 — unauthenticated token-management plane (introspect+revoke) persists at 85-conf across 8+ sessions; newly isolated to those two endpoints (token plane is client-gated) which strengthens the finding's precision but keeps it PoC-gated on client_id; metadata fully intact (no rot) incl. token-exchange/password grants; all server-side escalation blocked on client-side APK client_id extraction.
+## 2026-09-06 11:20:47 UTC [target] (model bigpickle)
+[PRIO] api.hornbach.de,6.90,"attack_surface=7,business_value=8,tech_exposure=6,gate_ease=5,cloud_surface=8,freshness=7"
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.35,"attack_surface=9,business_value=8,tech_exposure=8,gate_ease=10,cloud_surface=5,freshness=9"
+[PRIO] api.hornbach.de,6.90,... (existing)
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.35,... (existing)
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.35,"attack_surface=9,business_value=8,tech_exposure=8,gate_ease=10,cloud_surface=5,freshness=9"
+[PRIO] api.hornbach.de,6.90,"attack_surface=7,business_value=8,tech_exposure=6,gate_ease=5,cloud_surface=8,freshness=7"
+[PRIO] auth.hornbach.com/authz-srv/authz,6.95,"attack_surface=8,business_value=9,tech_exposure=7,gate_ease=3,cloud_surface=4,freshness=8"
+[HYP] SAP APIM Host-header backend probe leaks internal routing/healthcheck data
+class: MISCONFIG
+asset: api.hornbach.de/healthcheck
+confidence: 40
+reasoning: Prior sessions confirmed Server: Gateway (SAP APIM), X-CorrelationID on 404 JSON responses, and that a Host-header variation on /healthcheck resolves a backend to localhost:8080 — an anomalous, undocumented route pointing at an internal CI/backend port rather than a public API.
+evidence_needed: a request shape that forces the gateway to disclose a 2xx/backend-routed response or error revealing internal host/port/service beyond the already-known localhost:8080 leak.
+verify_steps: GET /healthcheck with X-Forwarded-Host/other Host variants and observe gateway pass-through vs 404 correlation; GET common SAP OData/iflow routes under /api/v1|v2 (all 401/404 to date — no anonymous route found) — passive GET/HEAD/OPTIONS only, <=1 rps.
+impact: internal network/microservice topology disclosure feeding an SSRF/backend-access chain — LOW-MEDIUM
+testability: PASSIVE
+[HYP] token-exchange/ROPC grant mis-scoping once client_id obtained
+class: AUTH
+asset: auth.hornbach.com/token-srv/token
+confidence: 40
+reasoning: Discovery advertises token-exchange (RFC 8693), password and client_credentials grants with subject_types_supported=["public"] (non-pairwise sub); GET probe → uniform 400 invalid_client, so the token plane is client-gated — a real client_id would unlock subject/actor impersonation testing.
+evidence_needed: valid client_id (+secret for confidential clients) from Smarthome APK, not obtainable anonymously.
+verify_steps: gated — no anonymous path; POST token-srv/token with token-exchange subject/actor claims once client acquired.
+impact: token impersonation / priv-esc if token-exchange mis-scoped — HIGH (but gated)
+testability: AUTH_HELPED
+[HYP] Unauthenticated introspect/revoke active-token metadata leak + silent revocation
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: 8+ independent sessions (last 09-06 01:24) confirm POST→200 unauthenticated (introspect `{"active":false}`, revoke `OK`); metadata still advertises these with client_secret_basic/post but they don't enforce unless a token is supplied; token plane confirmed client-gated, isolating the flaw to these two endpoints.
+evidence_needed: real token/client_id to demonstrate active-token metadata disclosure + silent session kill — client-side only (APK).
+verify_steps: gated on client_id/token acquisition; no anonymous differential remaining.
+impact: active-token metadata leak + silent session revocation — MEDIUM-HIGH
+testability: AUTH_HELPED
+[PARKED] token-srv introspect/revoke PoC (85) — survives as FINAL but is HUMAN_ONLY/AUTH_HELPED: gated on real token + client_id from Smarthome APK; no anonymous advance remains.
+[PARKED] redirect_uri bypass (55) — gated on client_id (APK).
+[PARKED] SAP SSRF (45) — still below threshold; no anonymous route to backend beyond known localhost:8080 leak.
+[PARKED] token-exchange/ROPC (40) — no anonymous observable; gated on client_id.
+[FINAL] auth.hornbach.com/token-srv/{introspect,revoke} — 85, unauthenticated token-management plane, systemic across 8+ sessions, top server-side finding. Gated on client-side client_id extraction for full PoC.
+[NEXT] PROBE: `GET https://api.hornbach.de/healthcheck` (passive, re-confirm Host→localhost:8080 backend leak) and `GET https://api.hornbach.de/api/version`-style variants to re-check for an anonymous documented SAP route — target is `api`, keep probing the gateway surface breadth first.
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: continue to confirm SAP APIM Gateway (Server: Gateway, X-CorrelationID) with 404 JSON root and Host-header backend leak → localhost:8080 on /healthcheck; no new anonymous route discovered; passive breadth unchanged.
+[RISK] hornbach: 55/100 — unauthenticated token-management plane (introspect+revoke) persists at 85-conf across 8+ sessions, now precisely isolated (token plane is client-gated) which strengthens precision but keeps the PoC gated on client-side Smarthome-APK client_id/token extraction; api.hornbach.de SAP gateway surface unchanged (no anonymous backend route beyond known leak); metadata fully intact (no rot); all remaining server-side escalation blocked on client-side APK extraction rather than any new server-side surface.

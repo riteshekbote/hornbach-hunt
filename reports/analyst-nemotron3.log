@@ -4810,3 +4810,10 @@ testability: PASSIVE
 ## STEP 7 — RISK
 
 [RISK] hornbach: 78 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled; token introspection + revocation both confirmed live unauthenticated via POST (RFC 7009/7662 violations systemic); authorization endpoint responds to valid client_id with login page. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) identified as SAP APIM with localhost:8080 backend leak but no routes enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra (version 25.5.1.15, likely patched). Mirakl marketplace is separate auth-gated surface. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz and token management endpoints.
+===== ANALYST nemotron3 2026-09-06 11:22:06 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mls -la /tmp/hb-metadata-checks.txt 2>/dev/null && cat /tmp/hb-metadata-checks.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
