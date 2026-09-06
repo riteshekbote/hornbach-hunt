@@ -1373,3 +1373,43 @@ testability: AUTH_HELPED
 [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: Host/X-Forwarded-Host tampering on /healthcheck yields only 503 (modified Host) or the default localhost:8080 backend (default Host) — no cross-backend routing, no SSRF-to-metadata vector; reflected Host/XFH headers are descriptive-header only (REJECTED class).
 [LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: re-confirmed SAP APIM Gateway (Via sapigwprd01/sapigwprd02, Server: Gateway, X-CorrelationID) backend on localhost:8080 via /healthcheck; 13 additional common API/OData/iFlow/actuator paths all 404 — anonymous surface breadth confirmed unchanged and gated; no new anonymous route.
 [RISK] hornbach: 55/100 — `api` target fully re-verified this session: SAP APIM gateway unchanged, no new anonymous route, Host/XFH SSRF vector eliminated (503-only), reflecting only descriptive localhost:8080/XFH headers (REJECTED class); the 85-conf unauthenticated token-management plane (introspect+revoke) remains the strongest finding but stays PoC-gated on client-side Smarthome-APK client_id/token extraction; no anonymous PII reachable; all server-side escalation blocked on client-side acquisition rather than any new server-side surface.
+## 2026-09-06 17:25:55 UTC [target] (model bigpickle)
+[PRIO] api.hornbach.de,2/10,a=1,b=2,t=2,g=0,c=0,f=0 — anonymous surface exhausted; Gateway confirmed but no accessible route beyond /healthcheck; TRACE in Allow header is REJECTED class
+[PRIO] auth.hornbach.de,5/10,a=3,b=4,t=3,g=0,c=5,f=8 — Citrix NetScaler AAA v25.5.1.15 confirmed; employee VPN surface; binaries downloadable; new session — not deeply probed for HTTP-level vulns
+[PRIO] auth.hornbach.com,7/10,a=9,b=8,t=8,g=0,c=10,f=10 — 85-conf unauthenticated introspect/revoke + social token 500 + OIDC discovery intact; gated on client_id extraction
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: 8+ sessions confirm POST→200 unauthenticated (introspect {"active":false}, revoke OK); token plane client-gated (400 invalid_client on /token-srv/token) isolates flaw to introspect/revoke management endpoints; RFC 7662/7009 violation systemic and stable across 4 days
+evidence_needed: real token + client_id from Smarthome APK (assets/cidaas.xml) to demonstrate active-token metadata disclosure + silent session revocation
+verify_steps: gated on client_id/token extraction — no further anonymous differential remains
+impact: active-token metadata disclosure (sub, email, scopes, exp, client_id) + silent session revocation → account takeover chain (MEDIUM-HIGH)
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: authorization endpoint live with verbose error messages (AUTH10007 invalid_client, AUTH10003 invalid_request); redirect_uri validation logic not yet tested; cidaas CIAM platforms historically allow registered redirect_uri regex/wildcard bypass
+evidence_needed: valid client_id to supply alongside attacker-controlled redirect_uri and observe whether authorization code is issued to non-registered URI
+verify_steps: gated on client_id acquisition from APK
+impact: OAuth authorization code theft → access/refresh tokens → full account takeover (HIGH)
+testability: AUTH_HELPED
+[HYP] Citrix NetScaler AAA Gateway version-specific attack surface
+class: AUTH
+asset: auth.hornbach.de
+confidence: 40
+reasoning: NetScaler AAA VPN Gateway v25.5.1.15 confirmed (CSP img-src http://localhost:*, EPA binaries downloadable); legacy employee access infra; but specific CVE exploitation is out-of-scope without program-specific PoC; surface is auth-gated VPN gateway
+evidence_needed: information disclosure beyond version string, or authenticated-accessible misconfiguration
+verify_steps: GET /vpn/index.html, GET /logon/LogonPoint/tmindex.html, check for exposed management endpoints (/nitro/, /cfg/, /reboot); all passive
+impact: would be employee credential/VPN access if exploitable (HIGH), but likely patched/rejected class
+testability: PASSIVE
+[PARKED] Citrix NetScaler AAA Gateway: confidence 40 (below actionable threshold); version-specific CVE checks are REJECTED class per scope rules; no evidence of unpatched state; surface is auth-gated. Parked until new version leak or misconfiguration evidence emerges.
+[FINAL] Unauthenticated token introspection + revocation — 85, systemic across 8+ sessions, precisely isolated to management endpoints (token plane client-gated), top server-side finding. Gated on client-side APK extraction for full PoC.
+[FINAL] OAuth redirect_uri validation bypass — 70, authorization endpoint live with verbose errors, redirect_uri validation logic untested. Gated on client_id from APK.
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC, token-exchange grant test, and redirect_uri bypass. The anonymous api.hornbach.de surface is confirmed exhausted (20+ paths tested, all 404; Host/XFH SSRF eliminated; no CORS, no GraphQL, no SAP routes). No further automated PROBE value remains on this target without client-side data.
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: 8 additional paths tested (graphql, api/graphql, v1/graphql, openapi.json, swagger.json, api-docs, sap/apigateway, sap/bc/adt/discovery, sap/public/ping) — all 404 uniform (47 bytes); OPTIONS on root confirms Allow: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE but no CORS config; anonymous surface breadth definitively exhausted
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — systemic and stable across 8+ sessions; GET/HEAD returning 404 was methodology artefact
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain response body; GET/HEAD returning 404 was parameter-sensitive routing
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules (OPTIONS/TRACE excluded from scope)
+[RISK] hornbach: 52/100 — api.hornbach.de anonymous surface definitively exhausted (20+ paths, all 404; SSRF vector eliminated); unauthenticated token-management plane (introspect+revoke) remains strongest finding at 85-conf but is fully gated on client-side Smarthome-APK client_id extraction; no anonymous PII reachable; all server-side escalation blocked on APK data acquisition; remaining attack surface (auth.hornbach.de Citrix, Mirakl marketplace) either auth-gated or at low confidence; program risk is moderate — strong systemic auth finding exists but full PoC requires human APK analysis step.
