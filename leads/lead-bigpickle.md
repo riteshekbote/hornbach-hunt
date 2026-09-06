@@ -927,3 +927,45 @@ verify_steps: (DONE) 13 routes mapped; option exhausted. NEXT (with any marketpl
 impact: cross-tenant seller/order/payment data if credential ever leaks; nil anonymously; LOW-MEDIUM
 testability: AUTH_HELPED
 ## 2026-09-05 23:38:59 UTC [target] (model bigpickle)
+## 2026-09-06 01:20:55 UTC [target] (model bigpickle)
+[PRIO] auth.hornbach.com/token-srv/*,8.5,"attack_surface=9,business_value=7,tech_exposure=8,gate_ease=4,cloud_surface=5,freshness=8"
+[PRIO] auth.hornbach.com/authz-srv/authz,7.5,"attack_surface=8,business_value=8,tech_exposure=9,gate_ease=3,cloud_surface=5,freshness=6"
+[PRIO] hornbach-mp.mirakl.net/api/*,5.5,"attack_surface=6,business_value=7,tech_exposure=5,gate_ease=2,cloud_surface=5,freshness=4"
+[HYP] Cross-check: Hornbach Smarthome app leaks cidaas client_id + redirect_uri scheme
+class: OTHER
+asset: de.hornbach.app.smarthome (app assets) / auth.hornbach.com/authz-srv/authz
+confidence: 55
+reasoning: Kernel/Memory shows the single blocker across all escalation chains is a valid cidaas `client_id`; KB states the main app is retired/PWA and APK mirrors are bot-walled, but the Smarthome app (`de.hornbach.app.smarthome`) shares the same HORNBACH cidaas tenant and was explicitly nominated as fallback extraction path. Expected artifact is `assets/cidaas.xml` (ClientId + redirect_uri scheme). Static client secrets baked into APK would additionally enable confidential-client calls to introspect/revoke.
+evidence_needed: cidaas.xml (ClientId), any redirect_uri scheme (e.g. `de.hornbach.app.smarthome://`), proof same tenant as auth.hornbach.com
+verify_steps: JUDGEMENT: (a) H|apkfiles.com|APKMirror for `de.hornbach.app.smarthome` APK, download; (b) unzip and grep `assets/*` and `res/xml/*` for `cidaas`/`ClientId`/`client_id`/`skipCookieWarning`; (c) no client_secret expected (public client, PKCE/device flow) — mirror upload of same APK to VirusTotal cache possible; (d) if client_id obtained, POST-only authz probe gated until confirmed. No live request fired.
+impact: unlocks client_id → redirect_uri bypass testing (55-conf) and real-token introspect/revoke PoC (85-conf) — HIGH
+testability: HUMAN_ONLY
+[HYP] Mirakl L0 APIs — tenant-ID enumeration under /api requiring Mirakl internal auth
+class: OTHER
+asset: hornbach-mp.mirakl.net/api/*
+confidence: 40
+reasoning: The Mirakl backend at hornbach-mp.mirakl.net is a dedicated HORNBACH marketplace; prior sessions mapped 13 `/api/*` routes, all 401 anonymously, `/api/version` → 3.1301. Mirakl design uses account-scoped APIs keyed per tenant (`shop_id`), so any leaked L0 API key yields cross-shop BOLA. No valid-ish-key-format present.
+evidence_needed: valid seller/operator Mirakl API key → cross-shop `shop_id` iteration on `/api/orders` / `/api/accounts`.
+verify_steps: JUDGEMENT: iterate `/api/version` variants & `/api/catalog/api/version` (needs auth) — passive-only. no anonymous path to a key.
+impact: cross-tenant seller/order data if a key ever leaks — LOW-MEDIUM
+testability: AUTH_HELPED
+[HYP] Verify the `.well-known/openid-configuration` refresh — metadata untouched?
+class: OTHER
+asset: auth.hornbach.com/.well-known/openid-configuration
+confidence: 30
+reasoning: Metadata endpoint surfaced all six service endpoints and the status endpoint earlier; nothing in the Memory suggests re-validation of the metadata since the cidaas fix on /authz-srv/authz and endpoint hardening. If metadata rot (= revoked proxy routes), the whole discovery-driven surface collapses.
+evidence_needed: fresh copy of the discovery doc to confirm the 6 service endpoints + auth methods still advertised
+verify_steps: (DONE) re-fetch `GET /.well-known/openid-configuration` and diff advertised `introspection_endpoint`, `revocation_endpoint`, `authorization_endpoint`, `registration_endpoint`; NO further deep-dive into /authz-srv (AUTH10003/10007 gate persists).
+impact: N/A (recon refresh) — LOW
+testability: PASSIVE
+[PARKED] token-srv introspect/revoke PoC (85) — gated on client_id; no new activity.
+[PARKED] redirect_uri validation bypass (55) — needs client_id; Smarthome APK is cleanest path.
+[PARKED] Mirakl BOLA (40) — blocked on operator/seller API key.
+[PARKED] JWT alg confusion (35), SCIM (40), SAP SSRF (45), NetScaler CVE (30) — below threshold / REJECTED-class.
+[FINAL] auth.hornbach.com/token-srv/{introspect,revoke} — 85, unauthenticated token management plane bypass, systemic (8 sessions); PoC gated on real token/client_id.
+[NEXT] HUMAN: Get `de.hornbach.app.smarthome` APK (VirusTotal/apkfiles/APKMirror), extract `assets/cidaas.xml` → client_id + redirect_uri scheme; feeds both the 85-conf introspect/revoke PoC and the 55-conf redirect_uri bypass; check `de.hornbach.app.smarthome` is genuinely HORNBACH's (checksum/signature) before installing anywhere.
+[LEARN] REJECTED class OTHER @ auth.hornbach.com/-: metadata endpoints rot suspected → re-fetch of 7 known paths returned 404/302 across [16:52–17:0x], but token-srv/introspect POST returned `{"active":false}` at 16:52. This suggests cidaas router did not globally drop /authz-srv but may be deprecating /authz-srv/authz explicitly. See `/tmp/hb-metadata-checks.txt`.
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv: previously-200 authz endpoint may now be deprecated/blocked on cidaas router level — 16:58-UTC probe showed 404 for `/authz-srv/authz?...token-srv` apart from `introspect` — conflicts with earlier 302→AUTH10007/AUTH10003 responses on same path (tracking-space flag; 2026-09-06-03:16:22Z).
+[LEARN] REJECTED class OTHER @ auth.hornbach.com: no access-token-leak in `cid-login` (302, no fragment to reflect), but Rudderstack CONFIG endpoint leaked cidaas account config (base URL, endpoints incl. introspect/revoke, mappings) — NO_INFO.
+[LEARN] REJECTED class OTHER @ auth.hornbach.com: oauth/device + oauth/default + logi/srv + pub/src + user-srv + pub/auth with varying params all 404 — No socratic prominence.
+[RISK] hornbach: 55/100 — unauthenticated token-management plane bypass (introspect+revoke) persists at 85-confidence across 8+ sessions; redirect_uri bypass gated on Smarthome-APK client_id extraction; Mirakl surfaces gated; no new anonymous surface; main escalation remaining is client-side (APK) not server-side.
