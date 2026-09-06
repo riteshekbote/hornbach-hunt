@@ -10474,3 +10474,193 @@ testability: PASSIVE
 ## STEP 7 — RISK
 
 [RISK] hornbach: 52/100 — api.hornbach.de anonymous surface definitively exhausted (20+ paths, all 404; SSRF vector eliminated); unauthenticated token-management plane (introspect+revoke) remains strongest finding at 85-conf but is fully gated on client-side Smarthome-APK client_id extraction; no anonymous PII reachable; all server-side escalation blocked on APK data acquisition; remaining attack surface (auth.hornbach.de Citrix, Mirakl marketplace) either auth-gated or at low confidence; program risk is moderate — strong systemic auth finding exists but full PoC requires human APK analysis step.
+===== ANALYST bigpickle 2026-09-06 19:37:59 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m# [0mTodos
+[•] STEP 1: DELTA — check for surface changes since last session
+[ ] STEP 2: PRIORITIZE — score assets
+[ ] STEP 3: HYPOTHESES — top 3 assets
+[ ] STEP 4: SELF-CRITIQUE
+[ ] STEP 5: NEXT ACTION
+[ ] STEP 6: LEARNING
+[ ] STEP 7: RISK
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" -X POST https://auth.hornbach.com/token-srv/introspect -d "token=test" 2>&1
+200
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" -X POST https://auth.hornbach.com/token-srv/revoke -d "token=test" 2>&1
+200
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://auth.hornbach.com/.well-known/openid-configuration 2>&1
+200
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://api.hornbach.de/healthcheck 2>&1
+200
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://auth.hornbach.com/login-srv/social/token 2>&1
+500
+[0m
+Let me check current state of key endpoints for delta detection.
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://auth.hornbach.com/.well-known/status 2>&1
+200
+[0m
+[0m$ [0mcurl -s -X POST https://auth.hornbach.com/token-srv/introspect -d "token=test" 2>&1
+{"active":false}
+[0m
+[0m$ [0mcurl -s -X POST https://auth.hornbach.com/token-srv/revoke -d "token=test" 2>&1
+OK
+[0m
+[0m$ [0mcurl -s https://auth.hornbach.com/.well-known/openid-configuration 2>&1 | python3 -m json.tool 2>/dev/null | head -60
+{
+    "issuer": "https://auth.hornbach.com",
+    "authorization_endpoint": "https://auth.hornbach.com/authz-srv/authz",
+    "token_endpoint": "https://auth.hornbach.com/token-srv/token",
+    "userinfo_endpoint": "https://auth.hornbach.com/users-srv/userinfo",
+    "https://discovery.netid.de/properties/status_endpoint": "https://auth.hornbach.com/.well-known/status",
+    "jwks_uri": "https://auth.hornbach.com/.well-known/jwks.json",
+    "scopes_supported": [
+        "openid",
+        "profile",
+        "email",
+        "phone",
+        "address",
+        "offline_access",
+        "identities",
+        "roles",
+        "groups"
+    ],
+    "response_types_supported": [
+        "code",
+        "token",
+        "id_token",
+        "code token",
+        "code id_token",
+        "token id_token",
+        "code token id_token"
+    ],
+    "response_modes_supported": [
+        "query",
+        "fragment",
+        "form_post"
+    ],
+    "subject_types_supported": [
+        "public"
+    ],
+    "id_token_signing_alg_values_supported": [
+        "HS256",
+        "RS256"
+    ],
+    "token_endpoint_auth_methods_supported": [
+        "client_secret_basic",
+        "client_secret_post",
+        "client_secret_jwt",
+        "private_key_jwt"
+    ],
+    "claims_supported": [
+        "aud",
+        "auth_time",
+        "created_at",
+        "email",
+        "email_verified",
+        "exp",
+        "family_name",
+        "given_name",
+        "iat",
+        "identities",
+        "iss",
+        "mobile_number",
+        "name",
+        "nickname",
+[0m
+[0m$ [0mcurl -s https://api.hornbach.de/healthcheck 2>&1
+<status>ok</status>
+[0m
+[0m$ [0mcurl -s https://auth.hornbach.com/.well-known/status 2>&1
+{"updatedAt":"2026-09-06T19:30:39.496523435Z","status":"OK"}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://auth.hornbach.com/users-srv/userinfo 2>&1
+401
+[0m
+[0m$ [0mcurl -s https://auth.hornbach.com/users-srv/userinfo 2>&1 | head -200
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://hornbach-mp.mirakl.net/api/accounts 2>&1
+401
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://hornbach-mp.mirakl.net/api/products 2>&1
+401
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://auth.hornbach.com/user-scim-srv/v2 2>&1
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://auth.hornbach.com/users-srv/userinfo -X POST -H "Content-Type: application/json" -d '{"sub":"test"}' 2>&1
+401
+[0m
+[0m# [0mTodos
+[✓] STEP 1: DELTA — check for surface changes since last session
+[✓] STEP 2: PRIORITIZE — score assets
+[✓] STEP 3: HYPOTHESES — top 3 assets
+[✓] STEP 4: SELF-CRITIQUE
+[✓] STEP 5: NEXT ACTION
+[✓] STEP 6: LEARNING
+[✓] STEP 7: RISK
+[0m
+## 2026-09-06 19:31:00 UTC [POC/api] (model bigpickle)
+
+**STEP 1 — DELTA**
+- NO_DELTA: introspect POST → 200 `{"active":false}` (19:31Z), revoke POST → 200 `OK`, status → 200 `{"status":"OK","updatedAt":"...19:30:39Z"}`, OIDC discovery fully intact, api.hornbach.de /healthcheck → 200 `ok`, social/token → 500 — all 8th+ session-stable, no surface rotation.
+- NEW users-srv/userinfo (GET+POST) → 401 JSON `Unavailable`/`Unauthorized` — bearer-token gated as expected; consistent with token plane isolation (only introspect/revoke are glaringly ungated).
+- NEW hornbach-mp.mirakl.net /api/accounts + /api/products → 401 — Mirakl auth gate confirmed live; no anonymous API path added.
+
+**STEP 2 — PRIORITIZE**
+- [PRIO] auth.hornbach.com,7/10,a=9,b=8,t=8,g=0,c=10,f=10 — unchanged; 85-conf introspect/revoke plane + userinfo now confirmed 401 (boundary sharpened); still gated on client_id extraction
+- [PRIO] auth.hornbach.de,5/10,a=3,b=4,t=3,g=0,c=5,f=8 — NetScaler AAA v25.5.1.15; employee VPN surface; binaries downloadable
+- [PRIO] api.hornbach.de,2/10,a=1,b=2,t=2,g=0,c=0,f=0 — anonymous surface exhausted; TRACE/OPTIONS REJECTED class
+- [PRIO] hornbach-mp.mirakl.net,1/10,a=1,b=1,t=2,g=0,c=0,f=0 — 401-gated at /api/*; marketplace API breadth untested but fully auth-gated
+
+**STEP 3 — HYPOTHESES**
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: 19:31Z re-confirm POST→200 unauthenticated on both (introspect `{"active":false}`, revoke `OK`); token plane client-gated (400 invalid_client), userinfo bearer-gated (401) — flaw is precisely isolated to the two management endpoints; RFC 7662/7009 violation systemic across 8+ sessions
+evidence_needed: real token + client_id from Smarthome APK (assets/cidaas.xml) to show active-token metadata disclosure + silent revocation
+verify_steps: gated on client-side token; no further anonymous differential remains
+impact: active-token metadata (sub,email,scopes,exp,client_id) disclosure + silent session revocation → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: authz endpoint live with verbose AUTH10007/AUTH10003 errors; redirect_uri validation logic untested; cidaas historically allows registered redirect_uri regex/wildcard mismatch
+evidence_needed: valid client_id to test attacker-controlled redirect_uri → observe code issued to non-registered URI
+verify_steps: gated on client_id from APK
+impact: auth code theft → access/refresh tokens → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] Citrix NetScaler AAA Gateway exposed management surface
+class: AUTH
+asset: auth.hornbach.de
+confidence: 40
+reasoning: v25.5.1.15 confirmed (CSP img-src http://localhost:*, EPA/VPN binaries downloadable); legacy employee access infra; no new version leak or misconfig evidence this session
+evidence_needed: exposed /nitro/, /cfg/, /reboot management endpoints or info disclosure beyond version string
+verify_steps: GET /vpn/index.html, GET /logon/LogonPoint/tmindex.html, GET /nitro/v1/config — passive
+impact: employee VPN/credential exposure if exploitable — HIGH but unproven/patched
+testability: PASSIVE
+
+**STEP 4 — SELF-CRITIQUE**
+- [PARKED] Citrix NetScaler AAA Gateway: 40 at threshold floor; CVE-specific exploitation is REJECTED class; no new misconfig evidence — parked.
+- [FINAL] Unauthenticated introspect/revoke — 85, re-confirmed 19:31Z, flaw boundary now sharper (userinfo 401, token 400 invalid_client isolates it). Top server-side finding.
+- [FINAL] redirect_uri bypass — 70, gated on client_id.
+
+**STEP 5 — NEXT ACTION**
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` (or `res/values`/strings) → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC, token-exchange grant test, and redirect_uri bypass. All anonymous probes show NO_DELTA — introspect/revoke re-confirmed at 19:31Z; userinfo/mirakl 401-gated; no new server-side surface exists without client-side data.
+
+**STEP 6 — LEARNING**
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/users-srv/userinfo: GET+POST → 401 JSON `{"error":"Unauthorized"}` unauthenticated — userinfo correctly bearer-gated; sharpens the evidence that the unauthenticated introspect/revoke flaw is management-endpoint-specific, not cidaas-wide.
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED 19:31Z POST→200 unauthenticated — 9th independent confirmation; discovery intact same minute → no WAF/edge-cutting between gates.
+- [LEARN] ACCEPTED class OTHER @ hornbach-mp.mirakl.net: /api/accounts + /api/products → 401 unauthenticated — Mirakl API gate confirmed live; no anonymous marketplace endpoint.
+
+**STEP 7 — RISK**
+[RISK] hornbach: 52/100 — NO_DELTA across all known surfaces: introspect+revoke re-confirmed (9th session) as the single systemic server-side flaw but fully PoC-gated on Smarthome-APK client-side extraction; userinfo 401 and Mirakl 401 boundaries confirm no new anonymous reach; token plane/client gate isolates the flaw precisely (strengthens reporting, does not escalate impact); api.hornbach.de and auth.hornbach.de surfaces unchanged; all escalation forked on a single human APK-analysis dependency. Moderate program risk — persistent strong finding, unchanged program surface.

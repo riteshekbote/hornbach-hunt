@@ -228,3 +228,5 @@ www.hornbach.com
 - CHANGED api.hornbach.de: continue to confirm SAP APIM Gateway (Server: Gateway, X-CorrelationID) with 404 JSON root and Host-header backend leak → localhost:8080 on /healthcheck; no new anonymous route discov
 
 ## 2026-09-06 17:40:53 UTC
+
+## 2026-09-06 19:37:59 UTC

@@ -1413,3 +1413,33 @@ testability: PASSIVE
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain response body; GET/HEAD returning 404 was parameter-sensitive routing
 [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules (OPTIONS/TRACE excluded from scope)
 [RISK] hornbach: 52/100 — api.hornbach.de anonymous surface definitively exhausted (20+ paths, all 404; SSRF vector eliminated); unauthenticated token-management plane (introspect+revoke) remains strongest finding at 85-conf but is fully gated on client-side Smarthome-APK client_id extraction; no anonymous PII reachable; all server-side escalation blocked on APK data acquisition; remaining attack surface (auth.hornbach.de Citrix, Mirakl marketplace) either auth-gated or at low confidence; program risk is moderate — strong systemic auth finding exists but full PoC requires human APK analysis step.
+## 2026-09-06 19:31:56 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: 19:31Z re-confirm POST→200 unauthenticated on both (introspect `{"active":false}`, revoke `OK`); token plane client-gated (400 invalid_client), userinfo bearer-gated (401) — flaw is precisely isolated to the two management endpoints; RFC 7662/7009 violation systemic across 8+ sessions
+evidence_needed: real token + client_id from Smarthome APK (assets/cidaas.xml) to show active-token metadata disclosure + silent revocation
+verify_steps: gated on client-side token; no further anonymous differential remains
+impact: active-token metadata (sub,email,scopes,exp,client_id) disclosure + silent session revocation → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: authz endpoint live with verbose AUTH10007/AUTH10003 errors; redirect_uri validation logic untested; cidaas historically allows registered redirect_uri regex/wildcard mismatch
+evidence_needed: valid client_id to test attacker-controlled redirect_uri → observe code issued to non-registered URI
+verify_steps: gated on client_id from APK
+impact: auth code theft → access/refresh tokens → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] Citrix NetScaler AAA Gateway exposed management surface
+class: AUTH
+asset: auth.hornbach.de
+confidence: 40
+reasoning: v25.5.1.15 confirmed (CSP img-src http://localhost:*, EPA/VPN binaries downloadable); legacy employee access infra; no new version leak or misconfig evidence this session
+evidence_needed: exposed /nitro/, /cfg/, /reboot management endpoints or info disclosure beyond version string
+verify_steps: GET /vpn/index.html, GET /logon/LogonPoint/tmindex.html, GET /nitro/v1/config — passive
+impact: employee VPN/credential exposure if exploitable — HIGH but unproven/patched
+testability: PASSIVE
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` (or `res/values`/strings) → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC, token-exchange grant test, and redirect_uri bypass. All anonymous probes show NO_DELTA — introspect/revoke re-confirmed at 19:31Z; userinfo/mirakl 401-gated; no new server-side surface exists without client-side data.
+[RISK] hornbach: 52/100 — NO_DELTA across all known surfaces: introspect+revoke re-confirmed (9th session) as the single systemic server-side flaw but fully PoC-gated on Smarthome-APK client-side extraction; userinfo 401 and Mirakl 401 boundaries confirm no new anonymous reach; token plane/client gate isolates the flaw precisely (strengthens reporting, does not escalate impact); api.hornbach.de and auth.hornbach.de surfaces unchanged; all escalation forked on a single human APK-analysis dependency. Moderate program risk — persistent strong finding, unchanged program surface.
