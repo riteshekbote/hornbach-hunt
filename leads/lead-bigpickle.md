@@ -1443,3 +1443,45 @@ impact: employee VPN/credential exposure if exploitable — HIGH but unproven/pa
 testability: PASSIVE
 [NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` (or `res/values`/strings) → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC, token-exchange grant test, and redirect_uri bypass. All anonymous probes show NO_DELTA — introspect/revoke re-confirmed at 19:31Z; userinfo/mirakl 401-gated; no new server-side surface exists without client-side data.
 [RISK] hornbach: 52/100 — NO_DELTA across all known surfaces: introspect+revoke re-confirmed (9th session) as the single systemic server-side flaw but fully PoC-gated on Smarthome-APK client-side extraction; userinfo 401 and Mirakl 401 boundaries confirm no new anonymous reach; token plane/client gate isolates the flaw precisely (strengthens reporting, does not escalate impact); api.hornbach.de and auth.hornbach.de surfaces unchanged; all escalation forked on a single human APK-analysis dependency. Moderate program risk — persistent strong finding, unchanged program surface.
+## 2026-09-06 21:44:10 UTC [target] (model bigpickle)
+[NEW] auth.hornbach.de/nitro/v1/config: 302 → /logon/LogonPoint/tmindex.html — Citrix NetScaler mgmt API NOT exposed unauthenticated (redirect gate closes nitro surface); tmindex.html 200 len=43162
+[CHANGED] api.hornbach.de: root 404 len=47 + /healthcheck 200 len=19 (Via sapigwprd01) re-confirmed 21:43Z — SAP APIM anonymous surface unchanged
+[CHANGED] auth.hornbach.com/.well-known/status: 200 status endpoint live 21:43Z — unchanged
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.65,attack_surface:9,business_value:9,tech_exposure:9,gate_ease:10,cloud_surface:8,freshness:5
+[PRIO] auth.hornbach.com/authz-srv/authz,7.60,attack_surface:9,business_value:9,tech_exposure:8,gate_ease:4,cloud_surface:7,freshness:6
+[PRIO] api.hornbach.de,7.00,attack_surface:6,business_value:8,tech_exposure:6,gate_ease:10,cloud_surface:7,freshness:4
+[FINAL] 1. Unauthenticated token introspection + revocation (confidence 85, AUTH_HELPED, MEDIUM-HIGH) — systemic RFC 7662/7009 violation, 9+ sessions stable, isolated to management plane
+[FINAL] 2. OAuth redirect_uri validation bypass on authz-srv/authz (confidence 70, AUTH_HELPED, HIGH) — gated on client_id
+[PARKED] Citrix NetScaler exposed management surface: confidence 30 < 40 — /nitro/v1/config 302→logon (management API closed); no firmware leak; no CVE mapping supportable
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC, token-exchange grant test, and 70-conf redirect_uri bypass.
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
+[RISK] hornbach: 52/100 — NO_DELTA all surfaces (api root/healthcheck, auth status, Nitro/logon); 85-conf introspect/revoke persists 9+ sessions but fully PoC-gated on human APK client_id extraction; NetScaler nitro management surface formally closed (last secondary lead); all escalation on a single human dependency; moderate risk, unchanged surface.
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: RFC 7662/7009 violation systemic 9+ sessions (POST introspect→200 `{"active":false}`, POST revoke→200 `OK`, zero client auth); issuance correctly gated (400 invalid_client) — flaw isolated to the two management endpoints; metadata advertises auth_methods the router ignores
+evidence_needed: real access_token + client_id (Smarthome APK `assets/cidaas.xml`) → introspect active token for sub/email/scopes/exp, revoke, re-introspect active=false
+verify_steps: gated on client-side token; POST token=<real> to /token-srv/introspect no-auth, then /token-srv/revoke, re-introspect
+impact: active-token metadata disclosure + silent session revocation → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: authz endpoint live with verbose AUTH10007/AUTH10003 differential; redirect_uri validation never tested (blocked at client_id gate); cidaas historically uses regex/wildcard allowlists
+evidence_needed: valid client_id → redirect_uri evil + bypass variants (hornbach.de.evil.com, @, /..;/) → code to non-registered URI
+verify_steps: gated on client_id; GET authz-srv variants --max-redirs 0, read Location
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] Citrix NetScaler AAA Gateway exposed management surface
+class: AUTH
+asset: auth.hornbach.de
+confidence: 30
+reasoning: 21:42Z /nitro/v1/config → 302 to logon (mgmt API not exposed); only client-plugin version known (NS 25.5.1.15), firmware unfingerprinted; no CVE mapping supportable
+evidence_needed: management exposure (disproven) or firmware build leak
+verify_steps: (DONE) GET /nitro/v1/config → 302; GET /logon/LogonPoint/tmindex.html → 200. No further passive differential remains
+impact: employee VPN exposure if exploitable — HIGH but unproven/patched
+testability: PASSIVE
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` (fallback `res/values`/strings) → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC, token-exchange grant test, and 70-conf redirect_uri bypass. No server-side probe remains — all anonymous surfaces returned NO_DELTA this session.
+[RISK] hornbach: 52/100 — NO_DELTA on every probed surface this session (api root/healthcheck, auth status, Nitro/logon, cidaas); strongest finding (unauth introspect/revoke, 85-conf) persists 9+ sessions but is fully PoC-gated on a single human Smarthome-APK client_id extraction; NetScaler nitro management surface now formally closed (last secondary lead debunked); token-plane isolation strengthens reporting without escalating impact; no anonymous PII reachable; moderate program risk with unchanged program surface.

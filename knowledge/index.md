@@ -91,3 +91,4 @@
 - 2026-09-06 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — systemic and stable across 8+ sessions; GET/HEAD returning 404 was methodology artefact
 - 2026-09-06 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain response body; GET/HEAD returning 404 was parameter-sensitive routing
 - 2026-09-06 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules (OPTIONS/TRACE excluded from scope)
+- 2026-09-06 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session

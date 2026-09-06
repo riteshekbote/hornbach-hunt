@@ -230,3 +230,13 @@ www.hornbach.com
 ## 2026-09-06 17:40:53 UTC
 
 ## 2026-09-06 19:37:59 UTC
+
+## 2026-09-06 21:45:07 UTC
+- NEW auth.hornbach.de/nitro/v1/config: 302 → /logon/LogonPoint/tmindex.html — Citrix NetScaler mgmt API NOT exposed unauthenticated (redirect gate closes nitro surface); tmindex.html 200 len=43162
+- CHANGED api.hornbach.de: root 404 len=47 + /healthcheck 200 len=19 (Via sapigwprd01) re-confirmed 21:43Z — SAP APIM anonymous surface unchanged
+- CHANGED auth.hornbach.com/.well-known/status: 200 status endpoint live 21:43Z — unchanged
+- NEW auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (2026-09-06 06:30Z) — all 6 service endpoints + status advertised; metadata rot flag rejected
+- NEW auth.hornbach.com/token-srv/token: GET with grant_type → 400 `invalid_client` (client required); token plane client-gated, isolating unauthenticated flaw to introspect/revoke only
+- NEW auth.hornbach.com: discovery advertises `token-exchange`(RFC 8693), `password`, `client_credentials` grants + `subject_types_supported=["public"]` — sub non-pairwise across clients
+- CHANGED auth.hornbach.com/authz-srv/authz: previously-200 endpoint may now be deprecated/blocked on cidaas router level — 16:58Z probe showed 404 for `/authz-srv/authz?...` apart from `introspect`
+- CHANGED api.hornbach.de: 8 additional paths tested (graphql, api/graphql, v1/graphql, openapi.json, swagger.json, api-docs, sap/apigateway, sap/bc/adt/discovery, sap/public/ping) — all 404 uniform (47 bytes);

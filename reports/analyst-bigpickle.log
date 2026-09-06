@@ -10664,3 +10664,300 @@ testability: PASSIVE
 
 **STEP 7 — RISK**
 [RISK] hornbach: 52/100 — NO_DELTA across all known surfaces: introspect+revoke re-confirmed (9th session) as the single systemic server-side flaw but fully PoC-gated on Smarthome-APK client-side extraction; userinfo 401 and Mirakl 401 boundaries confirm no new anonymous reach; token plane/client gate isolates the flaw precisely (strengthens reporting, does not escalate impact); api.hornbach.de and auth.hornbach.de surfaces unchanged; all escalation forked on a single human APK-analysis dependency. Moderate program risk — persistent strong finding, unchanged program surface.
+===== ANALYST bigpickle 2026-09-06 21:45:07 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt && ls -la /tmp/hb-metadata-checks.txt 2>/dev/null; ls /tmp/opencode 2>/dev/null
+total 216
+drwxr-xr-x 12 runner runner  4096 Sep  6 21:42 .
+drwxr-xr-x  3 runner runner  4096 Sep  6 21:42 ..
+drwxr-xr-x  7 runner runner  4096 Sep  6 21:42 .git
+drwxr-xr-x  3 runner runner  4096 Sep  6 21:42 .github
+-rw-r--r--  1 runner runner  1901 Sep  6 21:42 README.md
+-rw-r--r--  1 runner runner    32 Sep  6 21:42 analyst-out.txt
+-rw-r--r--  1 runner runner 62819 Sep  6 21:42 analyst-prompt.txt
+-rw-r--r--  1 runner runner 58891 Sep  6 21:42 ctx.txt
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 inventory
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 knowledge
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 leads
+-rw-r--r--  1 runner runner  6888 Sep  6 21:42 probe-results.md
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 recon-notes
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 reports
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 reposcan-raw
+-rw-r--r--  1 runner runner  3341 Sep  6 21:42 scope.yml
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 scripts
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_bigpickle.json
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_laguna.json
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_ling3.json
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_longcat.json
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_mimo.json
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_nemotron3.json
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 triage
+[0m
+[0m✱ [0mGlob "**/*.md"[90m 44 matches[0m
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead probe-results.md
+[0m→ [0mRead scope.yml
+[0m→ [0mRead leads/lead-bigpickle.md[90m [offset=366][0m
+[0m→ [0mRead triage/run-2026-09-06-20-27.md
+[0m
+[0m$ [0mcat analyst-out.txt state_bigpickle.json; ls -la triage/ | tail -5; ls -la knowledge/ leads/ reports/
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt && ls -la /tmp/hb-metadata-checks.txt 2>/dev/null; ls /tmp/opencode 2>/dev/null
+total 216
+drwxr-xr-x 12 runner runner  4096 Sep  6 21:42 .
+drwxr-xr-x  3 runner runner  4096 Sep  6 21:42 ..
+drwxr-xr-x  7 runner runner  4096 Sep  6 21:42 .git
+drwxr-xr-x  3 runner runner  4096 Sep  6 21:42 .github
+-rw-r--r--  1 runner runner  1901 Sep  6 21:42 README.md
+-rw-r--r--  1 runner runner    32 Sep  6 21:42 analyst-out.txt
+-rw-r--r--  1 runner runner 62819 Sep  6 21:42 analyst-prompt.txt
+-rw-r--r--  1 runner runner 58891 Sep  6 21:42 ctx.txt
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 inventory
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 knowledge
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 leads
+-rw-r--r--  1 runner runner  6888 Sep  6 21:42 probe-results.md
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 recon-notes
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 reports
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 reposcan-raw
+-rw-r--r--  1 runner runner  3341 Sep  6 21:42 scope.yml
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 scripts
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_bigpickle.json
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_laguna.json
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_ling3.json
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_longcat.json
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_mimo.json
+-rw-r--r--  1 runner runner    33 Sep  6 21:42 state_nemotron3.json
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 triage
+[0m
+[0m✱ [0mGlob "**/*.md"[90m 44 matches[0m
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead probe-results.md
+[0m→ [0mRead scope.yml
+[0m→ [0mRead leads/lead-bigpickle.md[90m [offset=366][0m
+[0m→ [0mRead triage/run-2026-09-06-20-27.md
+{"phase": "POC", "target": "api"}-rw-r--r--  1 runner runner   279 Sep  6 21:42 run-2026-09-06-09-07.md
+-rw-r--r--  1 runner runner   424 Sep  6 21:42 run-2026-09-06-12-54.md
+-rw-r--r--  1 runner runner   278 Sep  6 21:42 run-2026-09-06-15-56.md
+-rw-r--r--  1 runner runner   220 Sep  6 21:42 run-2026-09-06-18-00.md
+-rw-r--r--  1 runner runner   151 Sep  6 21:42 run-2026-09-06-20-27.md
+knowledge/:
+total 28
+drwxr-xr-x  2 runner runner  4096 Sep  6 21:42 .
+drwxr-xr-x 12 runner runner  4096 Sep  6 21:42 ..
+-rw-r--r--  1 runner runner 19061 Sep  6 21:42 index.md
+
+leads/:
+total 424
+drwxr-xr-x  2 runner runner   4096 Sep  6 21:42 .
+drwxr-xr-x 12 runner runner   4096 Sep  6 21:42 ..
+-rw-r--r--  1 runner runner 220696 Sep  6 21:42 lead-bigpickle.md
+-rw-r--r--  1 runner runner   1275 Sep  6 21:42 lead-laguna.md
+-rw-r--r--  1 runner runner   1250 Sep  6 21:42 lead-ling3.md
+-rw-r--r--  1 runner runner   1300 Sep  6 21:42 lead-longcat.md
+-rw-r--r--  1 runner runner     18 Sep  6 21:42 lead-mimo.md
+-rw-r--r--  1 runner runner 183943 Sep  6 21:42 lead-nemotron3.md
+-rw-r--r--  1 runner runner   2889 Sep  6 21:42 reposcan-hornbach.md
+
+reports/:
+total 1376
+drwxr-xr-x  2 runner runner   4096 Sep  6 21:42 .
+drwxr-xr-x 12 runner runner   4096 Sep  6 21:42 ..
+-rw-r--r--  1 runner runner 831885 Sep  6 21:42 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   5425 Sep  6 21:42 analyst-laguna.log
+-rw-r--r--  1 runner runner   5400 Sep  6 21:42 analyst-ling3.log
+-rw-r--r--  1 runner runner   5450 Sep  6 21:42 analyst-longcat.log
+-rw-r--r--  1 runner runner 422208 Sep  6 21:42 analyst-nemotron3.log
+-rw-r--r--  1 runner runner   3133 Sep  6 21:42 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner     51 Sep  6 21:42 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner     50 Sep  6 21:42 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner     52 Sep  6 21:42 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   9661 Sep  6 21:42 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  79675 Sep  6 21:42 hypotheses.md
+-rw-r--r--  1 runner runner   1784 Sep  6 21:42 valid-bugs.md
+[0m
+[0m→ [0mRead reports/hypotheses.md
+[0m
+[0m$ [0mdate -u +"%Y-%m-%d %H:%M:%S UTC"; git -C /home/runner/work/hornbach-hunt/hornbach-hunt log --oneline -5 2>/dev/null
+2026-09-06 21:42:58 UTC
+d589bda reposcan 2026-09-06-21-24
+[0m
+[0m→ [0mRead reports/hypotheses.md[90m [offset=355][0m
+[0m
+[0m$ [0mls -la reposcan-raw/ 2>/dev/null | head; echo "---REPOSCAN LEAD---"; cat leads/reposcan-hornbach.md; echo "---TRIAGE 18:00---"; cat triage/run-2026-09-06-18-00.md
+total 12
+drwxr-xr-x  2 runner runner 4096 Sep  6 21:42 .
+drwxr-xr-x 12 runner runner 4096 Sep  6 21:42 ..
+-rw-r--r--  1 runner runner   71 Sep  6 21:42 summary.txt
+---REPOSCAN LEAD---
+## REPOSCAN 2026-09-03 15:36:48 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-03 18:52:17 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-03 21:33:04 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-03 23:30:46 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 01:21:37 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 06:01:45 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 11:23:10 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 15:05:43 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 18:27:42 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 21:00:34 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 23:04:10 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 01:00:29 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 05:32:05 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 09:18:22 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 12:47:42 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 15:44:34 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 17:51:14 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 19:48:07 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 21:50:33 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 23:29:45 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 01:18:37 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 06:02:57 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 11:02:07 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 14:13:01 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 17:12:12 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 19:15:20 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 21:24:06 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+---TRIAGE 18:00---
+
+===== TRIAGE 2026-09-06 18:00:30 UTC =====
+[0m
+> build · mimo-v2.5-free
+[0m
+No leads were provided after "LEADS:" in your message. Please share the probe results/leads you want validated against the 7-Question Gate.
+[0m
+[0m$ [0mfor u in "https://api.hornbach.de/" "https://api.hornbach.de/healthcheck" "https://auth.hornbach.com/.well-known/status"; do echo "== $u"; curl -sk -o /dev/null -w "HTTP %{http_code} len=%{size_download} server=[%header{server}] via=[%header{via}]\n" --max-time 15 -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)" "$u"; sleep 1; done
+== https://api.hornbach.de/
+HTTP 404 len=47 server=[Gateway] via=[]
+== https://api.hornbach.de/healthcheck
+HTTP 200 len=19 server=[Gateway] via=[1.0 sapigwprd01 (Gateway), 1.0 sapigwprd01 (Gateway)]
+== https://auth.hornbach.com/.well-known/status
+HTTP 200 len=59 server=[cloudflare] via=[]
+[0m
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m
+[0m$ [0mfor u in "https://auth.hornbach.de/nitro/v1/config" "https://auth.hornbach.de/logon/LogonPoint/tmindex.html"; do echo "== $u"; curl -sk -o /dev/null -w "HTTP %{http_code} len=%{size_download} redirect=%{redirect_url}\n" --max-time 15 -H "User-Agent: Mozilla/5.0" "$u"; sleep 1; done
+== https://auth.hornbach.de/nitro/v1/config
+HTTP 302 len=413 redirect=https://auth.hornbach.de/logon/LogonPoint/tmindex.html
+== https://auth.hornbach.de/logon/LogonPoint/tmindex.html
+HTTP 200 len=43162 redirect=
+[0m
+[0m← [0mWrite reports/hypotheses-bigpickle.txt
+Wrote file successfully.
+[0m
+NO_DELTA confirmed across all probed surfaces. Writing structured output to the session files.
+[0m$ [0mcat >> leads/lead-bigpickle.md <<'EOF'
+
+## 2026-09-06 21:43:00 UTC [api] (model bigpickle)
+[NEW] auth.hornbach.de/nitro/v1/config: 302 → /logon/LogonPoint/tmindex.html — Citrix NetScaler mgmt API NOT exposed unauthenticated (redirect gate closes nitro surface); tmindex.html 200 len=43162
+[CHANGED] api.hornbach.de: root 404 len=47 + /healthcheck 200 len=19 (Via sapigwprd01) re-confirmed 21:43Z — SAP APIM anonymous surface unchanged
+[CHANGED] auth.hornbach.com/.well-known/status: 200 status endpoint live 21:43Z — unchanged
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.65,attack_surface:9,business_value:9,tech_exposure:9,gate_ease:10,cloud_surface:8,freshness:5
+[PRIO] auth.hornbach.com/authz-srv/authz,7.60,attack_surface:9,business_value:9,tech_exposure:8,gate_ease:4,cloud_surface:7,freshness:6
+[PRIO] api.hornbach.de,7.00,attack_surface:6,business_value:8,tech_exposure:6,gate_ease:10,cloud_surface:7,freshness:4
+[FINAL] 1. Unauthenticated token introspection + revocation (confidence 85, AUTH_HELPED, MEDIUM-HIGH) — systemic RFC 7662/7009 violation, 9+ sessions stable, isolated to management plane
+[FINAL] 2. OAuth redirect_uri validation bypass on authz-srv/authz (confidence 70, AUTH_HELPED, HIGH) — gated on client_id
+[PARKED] Citrix NetScaler exposed management surface: confidence 30 < 40 — /nitro/v1/config 302→logon (management API closed); no firmware leak; no CVE mapping supportable
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC, token-exchange grant test, and 70-conf redirect_uri bypass.
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
+[RISK] hornbach: 52/100 — NO_DELTA all surfaces (api root/healthcheck, auth status, Nitro/logon); 85-conf introspect/revoke persists 9+ sessions but fully PoC-gated on human APK client_id extraction; NetScaler nitro management surface formally closed (last secondary lead); all escalation on a single human dependency; moderate risk, unchanged surface.
+EOF
+cat >> probe-results.md <<'EOF'
+
+## 2026-09-06 21:42:58 UTC
+https://api.hornbach.de/ -> HTTP 404 len=47 server=[Gateway]
+https://api.hornbach.de/healthcheck -> HTTP 200 len=19 via=[1.0 sapigwprd01 (Gateway), 1.0 sapigwprd01 (Gateway)]
+https://auth.hornbach.com/.well-known/status -> HTTP 200 len=59 server=[cloudflare]
+https://auth.hornbach.de/nitro/v1/config -> HTTP 302 redirect=logon/LogonPoint/tmindex.html
+https://auth.hornbach.de/logon/LogonPoint/tmindex.html -> HTTP 200 len=43162
+EOF
+echo done
+done
+[0m
+STEP 1 — DELTA
+- NO_DELTA @ api.hornbach.de: root 404 (47B) + /healthcheck 200 (19B, Via sapigwprd01) re-confirmed 21:42Z — SAP APIM anonymous surface unchanged, fully mapped.
+- NO_DELTA @ auth.hornbach.com/.well-known/status: 200 live 21:42Z (stable since 09-05).
+- [NEW] @ auth.hornbach.de: /nitro/v1/config → 302 to /logon/LogonPoint/tmindex.html — NetScaler mgmt API NOT exposed unauthenticated; nitro surface closed (tmindex.html 200 len=43162 unchanged).
+- NO_DELTA @ token-srv/{introspect,revoke}: top finding (context, 9th+ session); no remediation signal.
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke}, 8.65, AUTH/API token plane
+- [PRIO] auth.hornbach.com/authz-srv/authz, 7.60, OAuth authz
+- [PRIO] api.hornbach.de, 7.00, SAP APIM gateway
+
+STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: RFC 7662/7009 violation systemic 9+ sessions (POST introspect→200 `{"active":false}`, POST revoke→200 `OK`, zero client auth); issuance correctly gated (400 invalid_client) — flaw isolated to the two management endpoints; metadata advertises auth_methods the router ignores
+evidence_needed: real access_token + client_id (Smarthome APK `assets/cidaas.xml`) → introspect active token for sub/email/scopes/exp, revoke, re-introspect active=false
+verify_steps: gated on client-side token; POST token=<real> to /token-srv/introspect no-auth, then /token-srv/revoke, re-introspect
+impact: active-token metadata disclosure + silent session revocation → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: authz endpoint live with verbose AUTH10007/AUTH10003 differential; redirect_uri validation never tested (blocked at client_id gate); cidaas historically uses regex/wildcard allowlists
+evidence_needed: valid client_id → redirect_uri evil + bypass variants (hornbach.de.evil.com, @, /..;/) → code to non-registered URI
+verify_steps: gated on client_id; GET authz-srv variants --max-redirs 0, read Location
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] Citrix NetScaler AAA Gateway exposed management surface
+class: AUTH
+asset: auth.hornbach.de
+confidence: 30
+reasoning: 21:42Z /nitro/v1/config → 302 to logon (mgmt API not exposed); only client-plugin version known (NS 25.5.1.15), firmware unfingerprinted; no CVE mapping supportable
+evidence_needed: management exposure (disproven) or firmware build leak
+verify_steps: (DONE) GET /nitro/v1/config → 302; GET /logon/LogonPoint/tmindex.html → 200. No further passive differential remains
+impact: employee VPN exposure if exploitable — HIGH but unproven/patched
+testability: PASSIVE
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] Citrix NetScaler management surface: confidence 30 < 40 — nitro mgmt API closed by 302 logon gate; no firmware leak; no CVE mapping; secondary lead formally exhausted.
+- [FINAL] Unauthenticated introspect/revoke — 85, systemic across 9+ sessions, precisely isolated to management plane; top server-side finding. Gated on APK client_id.
+- [FINAL] OAuth redirect_uri bypass — 70, live endpoint with verbose errors; gated on client_id. Not REJECTED-class; concrete verify steps.
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` (fallback `res/values`/strings) → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC, token-exchange grant test, and 70-conf redirect_uri bypass. No server-side probe remains — all anonymous surfaces returned NO_DELTA this session.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: unauthenticated POST→200 persists 9+ sessions; unchanged (context, no re-probe this session).
+- [LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: root 404 (47B) + /healthcheck 200 (19B, Via sapigwprd01) re-confirmed 21:42Z — SAP APIM anonymous surface unchanged and fully mapped.
+- [LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API.
+- [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 at 21:42Z — cidaas discovery control-plane stable.
+
+STEP 7 — RISK
+[RISK] hornbach: 52/100 — NO_DELTA on every probed surface this session (api root/healthcheck, auth status, Nitro/logon, cidaas); strongest finding (unauth introspect/revoke, 85-conf) persists 9+ sessions but is fully PoC-gated on a single human Smarthome-APK client_id extraction; NetScaler nitro management surface now formally closed (last secondary lead debunked); token-plane isolation strengthens reporting without escalating impact; no anonymous PII reachable; moderate program risk with unchanged program surface.
+
+Files updated: `reports/hypotheses-bigpickle.txt`, `leads/lead-bigpickle.md`, `probe-results.md`.
