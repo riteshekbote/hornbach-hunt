@@ -110,3 +110,4 @@
 - 2026-09-07 ACCEPTED class MISCONFIG @ api.hornbach.de: 8 additional paths tested (graphql, api/graphql, v1/graphql, openapi.json, swagger.json, api-docs, sap/apigateway, sap/bc/adt/discovery, sap/public/ping) — all 404 uniform (47 bytes); OPTIONS on root confirms Allow: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE but no CORS config; anonymous surface breadth definitively exhausted
 - 2026-09-07 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules (OPTIONS/TRACE excluded from scope)
 - 2026-09-07 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
+- 2026-09-07 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 9th+ session; GET/HEAD returning 404 was methodology artefact

@@ -251,3 +251,11 @@ www.hornbach.com
 ## 2026-09-07 01:21:14 UTC
 
 ## 2026-09-07 06:14:58 UTC
+
+## 2026-09-07 12:52:49 UTC
+- CHANGED auth.hornbach.com/token-srv/introspect: probe-results.md shows 15 consecutive GET probes returning 404 (latest 2026-09-07 06:15), but KB confirms POST → 200 `{"active":false}` unauthenticated across 9
+- CHANGED auth.hornbach.com/token-srv/revoke: probe-results.md shows 15 consecutive GET probes returning 404 (latest 2026-09-07 06:15), but KB confirms POST → 200 `OK` unauthenticated across 9+ sessions; method
+- CHANGED auth.hornbach.com/authz-srv/authz: probe-results.md shows 200 responses with `<valid_client_id>` placeholder; KB notes router-level deprecation signal (404 at 16:58Z 2026-09-06) but OIDC discovery sti
+- NEW auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (2026-09-06 06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot flag
+- CHANGED api.hornbach.de: 13+ common API paths exhausted (graphql, openapi, swagger, actuator, sap/*) — all uniform 404 (47 bytes); anonymous surface breadth definitively exhausted per KB
+- CHANGED auth.hornbach.de/nitro/v1/config: 302 → /logon/LogonPoint/tmindex.html — NetScaler management API confirmed NOT exposed unauthenticated
