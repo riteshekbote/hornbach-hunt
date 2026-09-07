@@ -11194,3 +11194,352 @@ testability: PASSIVE
 ```
 [RISK] hornbach: 52/100 — NO_DELTA all surfaces (api root/healthcheck, auth status, Nitro/logon, cidaas); 85-conf introspect/revoke persists 9+ sessions but fully PoC-gated on human APK client_id extraction; NetScaler nitro management surface formally closed (last secondary lead); all escalation on a single human dependency; moderate risk, unchanged program surface.
 ```
+===== ANALYST bigpickle 2026-09-07 18:14:16 UTC =====
+[0m
+> build · big-pickle
+[0m
+I'll analyze the current state against the surface and run the analyst workflow.
+[0m$ [0mls /tmp/hb-metadata-checks.txt /tmp/opencode 2>/dev/null; ls ~/ 2>/dev/null; find / -name "probe-results.md" -o -name "scope.yml" 2>/dev/null | head -20
+/tmp/opencode:
+actions-runner
+work
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mls -la; ls work 2>/dev/null; ls actions-runner 2>/dev/null | head
+total 236
+drwxr-xr-x 12 runner runner  4096 Sep  7 18:10 .
+drwxr-xr-x  3 runner runner  4096 Sep  7 18:09 ..
+drwxr-xr-x  7 runner runner  4096 Sep  7 18:10 .git
+drwxr-xr-x  3 runner runner  4096 Sep  7 18:09 .github
+-rw-r--r--  1 runner runner  1901 Sep  7 18:09 README.md
+-rw-r--r--  1 runner runner   554 Sep  7 18:12 analyst-out.txt
+-rw-r--r--  1 runner runner 70342 Sep  7 18:10 analyst-prompt.txt
+-rw-r--r--  1 runner runner 66414 Sep  7 18:10 ctx.txt
+drwxr-xr-x  2 runner runner  4096 Sep  7 18:09 inventory
+drwxr-xr-x  2 runner runner  4096 Sep  7 18:09 knowledge
+drwxr-xr-x  2 runner runner  4096 Sep  7 18:09 leads
+-rw-r--r--  1 runner runner  8323 Sep  7 18:09 probe-results.md
+drwxr-xr-x  2 runner runner  4096 Sep  7 18:09 recon-notes
+drwxr-xr-x  2 runner runner  4096 Sep  7 18:09 reports
+drwxr-xr-x  2 runner runner  4096 Sep  7 18:09 reposcan-raw
+-rw-r--r--  1 runner runner  3341 Sep  7 18:09 scope.yml
+drwxr-xr-x  2 runner runner  4096 Sep  7 18:09 scripts
+-rw-r--r--  1 runner runner    33 Sep  7 18:09 state_bigpickle.json
+-rw-r--r--  1 runner runner    33 Sep  7 18:09 state_laguna.json
+-rw-r--r--  1 runner runner    33 Sep  7 18:09 state_ling3.json
+-rw-r--r--  1 runner runner    33 Sep  7 18:09 state_longcat.json
+-rw-r--r--  1 runner runner    33 Sep  7 18:09 state_mimo.json
+-rw-r--r--  1 runner runner    33 Sep  7 18:09 state_nemotron3.json
+drwxr-xr-x  2 runner runner  4096 Sep  7 18:09 triage
+[0m
+[0m→ [0mRead probe-results.md
+[0m→ [0mRead scope.yml
+[0m
+[0m$ [0mls inventory knowledge leads recon-notes reports scripts triage
+inventory:
+hornbach.md
+
+knowledge:
+index.md
+
+leads:
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-mimo.md
+lead-nemotron3.md
+reposcan-hornbach.md
+
+recon-notes:
+DEDICATED-DEEP.md
+
+reports:
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+hypotheses-nemotron3.txt
+hypotheses.md
+valid-bugs.md
+
+scripts:
+sync-issues.py
+
+triage:
+run-2026-09-02-21-36.md
+run-2026-09-02-23-32.md
+run-2026-09-03-01-25.md
+run-2026-09-03-06-28.md
+run-2026-09-03-11-41.md
+run-2026-09-03-15-39.md
+run-2026-09-03-18-54.md
+run-2026-09-03-21-33.md
+run-2026-09-04-01-20.md
+run-2026-09-04-06-02.md
+run-2026-09-04-11-25.md
+run-2026-09-04-15-05.md
+run-2026-09-04-18-28.md
+run-2026-09-04-21-01.md
+run-2026-09-04-23-04.md
+run-2026-09-05-01-01.md
+run-2026-09-05-05-48.md
+run-2026-09-05-09-50.md
+run-2026-09-05-13-12.md
+run-2026-09-05-16-06.md
+run-2026-09-05-18-21.md
+run-2026-09-05-20-41.md
+run-2026-09-05-22-35.md
+run-2026-09-06-00-11.md
+run-2026-09-06-04-44.md
+run-2026-09-06-09-07.md
+run-2026-09-06-12-54.md
+run-2026-09-06-15-56.md
+run-2026-09-06-18-00.md
+run-2026-09-06-20-27.md
+run-2026-09-06-22-18.md
+run-2026-09-07-00-03.md
+run-2026-09-07-04-48.md
+run-2026-09-07-09-53.md
+run-2026-09-07-15-27.md
+[0m
+[0m→ [0mRead state_bigpickle.json
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead triage/run-2026-09-07-15-27.md
+[0m→ [0mRead knowledge/index.md
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m→ [0mRead recon-notes/DEDICATED-DEEP.md
+[0m
+[0m$ [0mls reports/; echo ---; cat reports/analyst-bigpickle.log | tail -30
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+hypotheses-nemotron3.txt
+hypotheses.md
+valid-bugs.md
+---
+```
+[PARKED] Citrix NetScaler AAA Gateway exposed management surface: confidence 30 < 40 — /nitro/v1/config 302→logon (management API closed); no firmware leak; no CVE mapping supportable
+[FINAL] 1. Unauthenticated token introspection + revocation (confidence 85, AUTH_HELPED, MEDIUM-HIGH) — systemic RFC 7662/7009 violation, 9+ sessions stable, isolated to management plane
+[FINAL] 2. OAuth redirect_uri validation bypass (confidence 70, AUTH_HELPED, HIGH) — gated on client_id
+```
+
+## STEP 5 — NEXT
+
+```
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC, token-exchange grant test, and 70-conf redirect_uri bypass. No server-side probe remains — all anonymous surfaces returned NO_DELTA this session.
+```
+
+## STEP 6 — LEARNING
+
+```
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 9th+ session; GET/HEAD returning 404 was methodology artefact
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — stable text/plain response; GET/HEAD returning 404 was parameter-sensitive routing
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
+[LEARN] ACCEPTED class OTHER @ api.hornbach.de: SAP API Gateway exists (Gateway server header) with backend on localhost:8080; no documented endpoints at common paths
+[LEARN] ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is in-scope API surface; all /api/* require Mirakl auth
+[LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id enumeration via status-code differential is REMOVED — invalid client_ids return uniform 302→AUTH10007; 404 vs 302 variance is request-shape not client validity signal
+[LEARN] REJECTED class MISCONFIG @ login.hornbach.com: Fastly CNAME takeover confirmed unlikely — active service (Varnish header, 200 response, resolving IP) eliminates takeover vector
+[LEARN] REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 known scoped hosts resolve
+```
+
+## STEP 7 — RISK
+
+```
+[RISK] hornbach: 52/100 — NO_DELTA all surfaces (api root/healthcheck, auth status, Nitro/logon, cidaas); 85-conf introspect/revoke persists 9+ sessions but fully PoC-gated on human APK client_id extraction; NetScaler nitro management surface formally closed (last secondary lead); all escalation on a single human dependency; moderate risk, unchanged program surface.
+```
+[0m
+Now let me run targeted read-only probes against my target surface (`api`) to detect any delta.
+[0m$ [0mfor p in "/" "/healthcheck" "/health" "/api/v1" "/api/v2" "/odata" "/sap/opu/odata" "/sap/public/ping" "/iFlow" "/integration" "/monitoring"; do
+  code=$(curl -sk -o /tmp/oh.txt -w "%{http_code} len=%{size_download}" --max-time 12 "https://api.hornbach.de$p")
+  hdr=$(curl -sk -D- -o /dev/null --max-time 12 "https://api.hornbach.de$p" | grep -iE "^(server|via|x-correlation|content-type)" | tr '\n' ' ')
+  echo "$p -> $code | $hdr | body: $(head -c 120 /tmp/oh.txt | tr '\n' ' ')"
+  sleep 1
+done
+/ -> 404 len=47 | Server: Gateway
+ X-CorrelationID: Id-93fe9e6a36cb739f532e503a 0
+ Content-Type: application/json
+  | body: {"message":{"status":"404","text":"Not Found"}}
+/healthcheck -> 200 len=19 | Via: 1.0 sapigwprd02 (Gateway), 1.0 sapigwprd02 (Gateway)
+ X-CorrelationID: Id-95fe9e6a28f6ff163fc9ec13 0; Id-95fe9e6a29f6f2de3b782131 0
+ Server: Gateway
+ Content-Type: text/xml
+  | body: <status>ok</status>
+/health -> 404 len=47 | Server: Gateway
+ X-CorrelationID: Id-97fe9e6a11cc76cd9d92963c 0
+ Content-Type: application/json
+  | body: {"message":{"status":"404","text":"Not Found"}}
+/api/v1 -> 404 len=47 | Server: Gateway
+ X-CorrelationID: Id-9afe9e6aeaf62bbfa6fbb413 0
+ Content-Type: application/json
+  | body: {"message":{"status":"404","text":"Not Found"}}
+/api/v2 -> 404 len=47 | Server: Gateway
+ X-CorrelationID: Id-9cfe9e6a3ff7dc61dd020763 0
+ Content-Type: application/json
+  | body: {"message":{"status":"404","text":"Not Found"}}
+/odata -> 404 len=47 | Server: Gateway
+ X-CorrelationID: Id-9efe9e6adfcc8d49311c0d81 0
+ Content-Type: application/json
+  | body: {"message":{"status":"404","text":"Not Found"}}
+/sap/opu/odata -> 404 len=47 | Server: Gateway
+ X-CorrelationID: Id-a0fe9e6afdcc07e679216683 0
+ Content-Type: application/json
+  | body: {"message":{"status":"404","text":"Not Found"}}
+/sap/public/ping -> 404 len=47 | Server: Gateway
+ X-CorrelationID: Id-a2fe9e6af4f789b9eec0e59d 0
+ Content-Type: application/json
+  | body: {"message":{"status":"404","text":"Not Found"}}
+/iFlow -> 404 len=47 | Server: Gateway
+ X-CorrelationID: Id-a5fe9e6a2ff8ff304b8ed807 0
+ Content-Type: application/json
+  | body: {"message":{"status":"404","text":"Not Found"}}
+/integration -> 404 len=47 | Server: Gateway
+ X-CorrelationID: Id-a7fe9e6a6ef8f933a3fb1a40 0
+ Content-Type: application/json
+  | body: {"message":{"status":"404","text":"Not Found"}}
+/monitoring -> 404 len=47 | Server: Gateway
+ X-CorrelationID: Id-a9fe9e6afdcdd65b0ae14737 0
+ Content-Type: application/json
+  | body: {"message":{"status":"404","text":"Not Found"}}
+[0m
+api.hornbach.de confirmed unchanged. Now checking the auth token-plane (my top hypothesis) and the flagged authz-srv deprecation signal:
+[0m$ [0mecho "== introspect POST =="; curl -sk -o /tmp/i.txt -w "%{http_code} %{content_type}\n" --max-time 12 -X POST "https://auth.hornbach.com/token-srv/introspect" -H "Content-Type: application/x-www-form-urlencoded" -d "token=hb_analyst_dummy"; head -c 200 /tmp/i.txt; echo
+sleep 1
+echo "== revoke POST =="; curl -sk -o /tmp/r.txt -w "%{http_code} %{content_type}\n" --max-time 12 -X POST "https://auth.hornbach.com/token-srv/revoke" -H "Content-Type: application/x-www-form-urlencoded" -d "token=hb_analyst_dummy"; head -c 200 /tmp/r.txt; echo
+sleep 1
+echo "== status =="; curl -sk -o /tmp/s.txt -w "%{http_code}\n" --max-time 12 "https://auth.hornbach.com/.well-known/status"; head -c 200 /tmp/s.txt; echo
+sleep 1
+echo "== authz-srv/authz (dummy client) =="; curl -sk -D- -o /tmp/a.txt --max-time 12 "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=dummy-invalid&redirect_uri=https://evil.com&scope=openid" | grep -iE "^(HTTP|location|content-type)"; head -c 200 /tmp/a.txt; echo
+== introspect POST ==
+200 application/json
+{"active":false}
+== revoke POST ==
+200 text/plain; charset=utf-8
+OK
+== status ==
+200
+{"updatedAt":"2026-09-07T18:13:15.976385126Z","status":"OK"}
+== authz-srv/authz (dummy client) ==
+HTTP/2 302 
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+Introspect/revoke re-confirmed (10th session), and importantly the authz endpoint is LIVE again (302→AUTH10007), rejecting the 09-06 "deprecation" flag. Let me check the remaining token-plane endpoints for the api-relevant userinfo chain:
+[0m$ [0mecho "== openid-configuration endpoints =="; curl -sk --max-time 12 "https://auth.hornbach.com/.well-known/openid-configuration" -o /tmp/oidc.json; python3 -c "
+import json
+d=json.load(open('/tmp/oidc.json'))
+for k in ['authorization_endpoint','token_endpoint','introspection_endpoint','revocation_endpoint','userinfo_endpoint','registration_endpoint','device_authorization_endpoint','scim_endpoint','token_exchange_endpoint']:
+    print(k,'=',d.get(k))
+print('subject_types',d.get('subject_types_supported'))
+"
+sleep 1
+echo "== userinfo/me anonymous =="; for p in "/users-srv/userinfo" "/token-srv/userinfo" "/users-srv/me" "/userinfo"; do
+  echo "GET $p:"; curl -sk -o /tmp/u.txt -w "  %{http_code} ct=%{content_type} len=%{size_download}\n" --max-time 12 "https://auth.hornbach.com$p"
+  head -c 120 /tmp/u.txt; echo; sleep 1
+done
+== openid-configuration endpoints ==
+authorization_endpoint = https://auth.hornbach.com/authz-srv/authz
+token_endpoint = https://auth.hornbach.com/token-srv/token
+introspection_endpoint = https://auth.hornbach.com/token-srv/introspect
+revocation_endpoint = https://auth.hornbach.com/token-srv/revoke
+userinfo_endpoint = https://auth.hornbach.com/users-srv/userinfo
+registration_endpoint = https://auth.hornbach.com/apps-srv/clients/register
+device_authorization_endpoint = https://auth.hornbach.com/authz-srv/device/authz
+scim_endpoint = https://auth.hornbach.com/user-scim-srv/v2
+token_exchange_endpoint = None
+subject_types ['public']
+== userinfo/me anonymous ==
+GET /users-srv/userinfo:
+  401 ct=application/json len=66
+{"success":false,"status":401,"error":"Unauthorized","code":"401"}
+GET /token-srv/userinfo:
+  404 ct=application/json len=32
+{"error":"router doesn't exist"}
+GET /users-srv/me:
+  404 ct=text/html; charset=utf-8 len=151
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /user
+GET /userinfo:
+  404 ct=text/plain; charset=utf-8 len=20
+Cannot GET /userinfo
+[0m
+All probes complete. Data gathered for analysis.
+
+## STEP 1 — DELTA
+- [CHANGED] auth.hornbach.com/authz-srv/authz: LIVE again — dummy client_id → 302 `/identity/error?error=invalid_client&error_code=AUTH10007` (unauth'd redirect, not router 404); REJECTS the 2026-09-06-16:58 "router-level deprecation" flag (tracking-space flag was transient/shared routing, not permanent)
+- [NEW] auth.hornbach.com/users-srv/userinfo: mounted — anonymous 401 JSON `{"success":false,"status":401,"error":"Unauthorized"}` (needs bearer); contrast token-srv/userinfo → 404 "router doesn't exist"; userinfo plane is the only token-plane consumer gate, bearer-gated
+- [CHANGED] auth.hornbach.com/token-srv/introspect+revoke: RE-CONFIRMED fresh 18:13Z — POST introspect→200 `{"active":false}`, POST revoke→200 `OK` text/plain, both zero client auth (10th independent session; fully stable)
+- [CHANGED] auth.hornbach.com/.well-known/status: 200 `{"status":"OK","updatedAt":"2026-09-07T18:13:15Z"}` — fresh timestamp, stable
+- [CHANGED] api.hornbach.de: NO_DELTA — root/health/api-v1/v2/odata/sap-odata/sap-public-ping/iFlow/integration/monitoring all uniform 404 len=47 (Server: Gateway, X-CorrelationID, Via sapigwprd02); /healthcheck 200 text/xml `<status>ok</status>`; anonymous breadth definitively exhausted
+
+## STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.65,attack_surface:9,business_value:9,tech_exposure:9,gate_ease:10,cloud_surface:8,freshness:6
+- [PRIO] auth.hornbach.com/authz-srv/authz,7.60,attack_surface:9,business_value:9,tech_exposure:8,gate_ease:4,cloud_surface:7,freshness:7
+- [PRIO] api.hornbach.de,7.00,attack_surface:6,business_value:8,tech_exposure:6,gate_ease:10,cloud_surface:7,freshness:4
+
+## STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: fresh 18:13Z POST → 200 `{"active":false}` (introspect) and 200 `OK` (revoke) with zero client auth; RFC 7662/7009 both mandate client auth; stable across 10 independent sessions; issuance correctly gated (400 invalid_client) — flaw isolated to the two management endpoints; userinfo (users-srv/userinfo) is the consuming gate, 401 bearer-gated
+evidence_needed: real access_token + client_id (Smarthome APK `assets/cidaas.xml`) → introspect active token for sub/email/scopes/exp, revoke, re-introspect active=false, then hit userinfo with revoked token
+verify_steps: POST token=<real> to /token-srv/introspect no-auth → read claim set; POST same to /revoke; re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent session revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: fresh 18:13Z confirm LIVE (302→AUTH10007, uniform gate on invalid client); verbose AUTH10007/AUTH10003 differential exists; redirect_uri validation never tested — blocked at client_id gate; cidaas historically uses regex/wildcard allowlists; prior "404 router deprecation" flag rejected (transient)
+evidence_needed: valid client_id → redirect_uri evil + bypass variants (hornbach.de.evil.com, @, /..;/)
+verify_steps: gated on client_id; GET authz-srv/authz?client_id=<real>&redirect_uri=<variant> --max-redirs 0, read Location; 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] Unauthenticated token-exchange/linked-token grant abuse on missing token-exchange route
+class: AUTH
+asset: auth.hornbach.com/token-srv/token
+confidence: 30
+reasoning: discovery advertises RFC 8693 token-exchange + password + client_credentials grants but `token_exchange_endpoint` absent from fresh 18:13Z metadata dump; token endpoint verified client-gated (400 invalid_client on GET); no anonymous route to exchange — surface discrepancy only, no anonymous exploit path observed
+evidence_needed: client_id+secret (APK), then POST grant_type=token_exchange with arbitrary subject_token to mint linked session
+verify_steps: (DONE) metadata has no token_exchange_endpoint key; GET token with grant_type → 400. No anonymous differential remains
+impact: token-minting pivot IF client creds leaked — unproven; LOW
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+- [PARKED] token-exchange/linked-token grant: confidence 30 < 40 — no endpoint advertised, token plane client-gated, no anonymous differential
+- [FINAL] 1. Unauthenticated token introspection + revocation (confidence 85, AUTH_HELPED, MEDIUM-HIGH) — systemic RFC 7662/7009 violation, 10th session stable, isolated to management plane
+- [FINAL] 2. OAuth redirect_uri validation bypass (confidence 70, AUTH_HELPED, HIGH) — endpoint confirmed live again, still gated on client_id
+
+## STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC (real-token metadata exfil + silent revocation) and the 70-conf redirect_uri bypass. No server-side probe remains — api.hornbach.de anonymous breadth exhausted (10 paths NO_DELTA), token-plane flaw restated 10th session.
+
+## STEP 6 — LEARNING
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 10th session 18:13Z; GET/HEAD 404 was methodology artefact; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — 10th session 18:13Z; stable text/plain; parameter-sensitive 404 on GET/HEAD
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:58 deprecation/404 flag as transient shared-routing noise
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist — userinfo is single consuming gate on token plane
+[LEARN] ACCEPTED class OTHER @ api.hornbach.de: 10 paths today (root, health, api/v1, api/v2, odata, sap/opu/odata, sap/public/ping, iFlow, integration, monitoring) all uniform 404 len=47; /healthcheck 200 xml — anonymous breadth unchanged, no new route
+
+## STEP 7 — RISK
+[RISK] hornbach: 52/100 — NO_DELTA on api.hornbach.de (10 paths); authz-srv/authz confirmed live again (302→AUTH10007) closing the deprecation thread; 85-conf introspect/revoke persists 10th session but fully PoC-gated on human APK client_id extraction; userinfo confirmed as the gated consumer (401); all escalation on a single human dependency; moderate risk, unchanged program surface.
