@@ -267,3 +267,12 @@ www.hornbach.com
 - NEW auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (2026-09-06 06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot flag
 - CHANGED api.hornbach.de: 13+ common API paths exhausted (graphql, openapi, swagger, actuator, sap/*) — all uniform 404 (47 bytes); anonymous surface breadth definitively exhausted
 - CHANGED auth.hornbach.de/nitro/v1/config: 302 → /logon/LogonPoint/tmindex.html — NetScaler management API confirmed NOT exposed unauthenticated
+
+## 2026-09-07 21:38:18 UTC
+- NEW auth.hornbach.com/token-srv/introspect: POST method confirmed as only working method (GET/HEAD return 404); 9+ independent sessions confirm POST → 200 `{"active":false}` unauthenticated — methodology 
+- NEW auth.hornbach.com/token-srv/revoke: POST method confirmed as only working method (GET/HEAD return 404); 9+ sessions confirm POST → 200 `OK` unauthenticated (text/plain) — methodology artifact identifi
+- CHANGED auth.hornbach.com/authz-srv/authz: router-level deprecation signal (404 at 2026-09-06 16:58Z) but OIDC discovery still advertises endpoint; status uncertain — may be tenant-specific routing; RE-CONFIR
+- NEW auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (2026-09-06 06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot flag
+- CHANGED api.hornbach.de: 13+ common API paths exhausted (graphql, openapi, swagger, actuator, sap/*) — all uniform 404 (47 bytes); anonymous surface breadth definitively exhausted
+- CHANGED auth.hornbach.de/nitro/v1/config: 302 → /logon/LogonPoint/tmindex.html — NetScaler management API confirmed NOT exposed unauthenticated
+- NEW auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist — userinfo is single consuming gate on token plane

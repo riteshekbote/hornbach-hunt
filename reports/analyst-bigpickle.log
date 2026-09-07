@@ -11543,3 +11543,300 @@ testability: AUTH_HELPED
 
 ## STEP 7 — RISK
 [RISK] hornbach: 52/100 — NO_DELTA on api.hornbach.de (10 paths); authz-srv/authz confirmed live again (302→AUTH10007) closing the deprecation thread; 85-conf introspect/revoke persists 10th session but fully PoC-gated on human APK client_id extraction; userinfo confirmed as the gated consumer (401); all escalation on a single human dependency; moderate risk, unchanged program surface.
+===== ANALYST bigpickle 2026-09-07 21:38:18 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && echo "---" && ls -la *.md *.yml 2>/dev/null; ls -R . 2>/dev/null | head -80
+total 244
+drwxr-xr-x 12 runner runner  4096 Sep  7 21:35 .
+drwxr-xr-x  3 runner runner  4096 Sep  7 21:35 ..
+drwxr-xr-x  7 runner runner  4096 Sep  7 21:35 .git
+drwxr-xr-x  3 runner runner  4096 Sep  7 21:35 .github
+-rw-r--r--  1 runner runner  1901 Sep  7 21:35 README.md
+-rw-r--r--  1 runner runner    32 Sep  7 21:35 analyst-out.txt
+-rw-r--r--  1 runner runner 75483 Sep  7 21:35 analyst-prompt.txt
+-rw-r--r--  1 runner runner 71555 Sep  7 21:35 ctx.txt
+drwxr-xr-x  2 runner runner  4096 Sep  7 21:35 inventory
+drwxr-xr-x  2 runner runner  4096 Sep  7 21:35 knowledge
+drwxr-xr-x  2 runner runner  4096 Sep  7 21:35 leads
+-rw-r--r--  1 runner runner  8610 Sep  7 21:35 probe-results.md
+drwxr-xr-x  2 runner runner  4096 Sep  7 21:35 recon-notes
+drwxr-xr-x  2 runner runner  4096 Sep  7 21:35 reports
+drwxr-xr-x  2 runner runner  4096 Sep  7 21:35 reposcan-raw
+-rw-r--r--  1 runner runner  3341 Sep  7 21:35 scope.yml
+drwxr-xr-x  2 runner runner  4096 Sep  7 21:35 scripts
+-rw-r--r--  1 runner runner    33 Sep  7 21:35 state_bigpickle.json
+-rw-r--r--  1 runner runner    33 Sep  7 21:35 state_laguna.json
+-rw-r--r--  1 runner runner    33 Sep  7 21:35 state_ling3.json
+-rw-r--r--  1 runner runner    33 Sep  7 21:35 state_longcat.json
+-rw-r--r--  1 runner runner    33 Sep  7 21:35 state_mimo.json
+-rw-r--r--  1 runner runner    33 Sep  7 21:35 state_nemotron3.json
+drwxr-xr-x  2 runner runner  4096 Sep  7 21:35 triage
+---
+-rw-r--r-- 1 runner runner 1901 Sep  7 21:35 README.md
+-rw-r--r-- 1 runner runner 8610 Sep  7 21:35 probe-results.md
+-rw-r--r-- 1 runner runner 3341 Sep  7 21:35 scope.yml
+.:
+README.md
+analyst-out.txt
+analyst-prompt.txt
+ctx.txt
+inventory
+knowledge
+leads
+probe-results.md
+recon-notes
+reports
+reposcan-raw
+scope.yml
+scripts
+state_bigpickle.json
+state_laguna.json
+state_ling3.json
+state_longcat.json
+state_mimo.json
+state_nemotron3.json
+triage
+
+./inventory:
+hornbach.md
+
+./knowledge:
+index.md
+
+./leads:
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-mimo.md
+lead-nemotron3.md
+reposcan-hornbach.md
+
+./recon-notes:
+DEDICATED-DEEP.md
+
+./reports:
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+hypotheses-nemotron3.txt
+hypotheses.md
+valid-bugs.md
+
+./reposcan-raw:
+summary.txt
+
+./scripts:
+sync-issues.py
+
+./triage:
+run-2026-09-02-21-36.md
+run-2026-09-02-23-32.md
+run-2026-09-03-01-25.md
+run-2026-09-03-06-28.md
+run-2026-09-03-11-41.md
+run-2026-09-03-15-39.md
+run-2026-09-03-18-54.md
+run-2026-09-03-21-33.md
+run-2026-09-04-01-20.md
+run-2026-09-04-06-02.md
+run-2026-09-04-11-25.md
+run-2026-09-04-15-05.md
+run-2026-09-04-18-28.md
+run-2026-09-04-21-01.md
+run-2026-09-04-23-04.md
+run-2026-09-05-01-01.md
+run-2026-09-05-05-48.md
+run-2026-09-05-09-50.md
+run-2026-09-05-13-12.md
+[0m
+[0m→ [0mRead scope.yml
+[0m→ [0mRead probe-results.md
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m
+[0m$ [0mcd /home/runner/work/hornbach-hunt/hornbach-hunt && git log --oneline -15 && echo "---STATUS---" && git status --short
+690482f reposcan 2026-09-07-20-59
+---STATUS---
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+[0m
+[0m→ [0mRead leads/lead-bigpickle.md[90m [offset=366][0m
+[0m
+[0m$ [0mcd /home/runner/work/hornbach-hunt/hornbach-hunt && cat reposcan-raw/summary.txt | head -60 && echo "=== repscan lead ===" && head -80 leads/reposcan-hornbach.md && echo "=== hypotheses-bigpickle ===" && tail -30 reports/hypotheses-bigpickle.txt
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+=== repscan lead ===
+## REPOSCAN 2026-09-03 15:36:48 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-03 18:52:17 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-03 21:33:04 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-03 23:30:46 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 01:21:37 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 06:01:45 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 11:23:10 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 15:05:43 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 18:27:42 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 21:00:34 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 23:04:10 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 01:00:29 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 05:32:05 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 09:18:22 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 12:47:42 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 15:44:34 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 17:51:14 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 19:48:07 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 21:50:33 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 23:29:45 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 01:18:37 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 06:02:57 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 11:02:07 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 14:13:01 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 17:12:12 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 19:15:20 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 21:24:06 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 23:06:52 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-07 01:04:23 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-07 06:09:25 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-07 12:40:01 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-07 17:54:58 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-07 20:59:09 UTC
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+=== hypotheses-bigpickle ===
+reasoning: fresh 18:13Z POST → 200 `{"active":false}` (introspect) and 200 `OK` (revoke) with zero client auth; RFC 7662/7009 both mandate client auth; stable across 10 independent sessions; issuance correctly gated (400 invalid_client) — flaw isolated to the two management endpoints; userinfo (users-srv/userinfo) is the consuming gate, 401 bearer-gated
+evidence_needed: real access_token + client_id (Smarthome APK `assets/cidaas.xml`) → introspect active token for sub/email/scopes/exp, revoke, re-introspect active=false, then hit userinfo with revoked token
+verify_steps: POST token=<real> to /token-srv/introspect no-auth → read claim set; POST same to /revoke; re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent session revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: fresh 18:13Z confirm LIVE (302→AUTH10007, uniform gate on invalid client); verbose AUTH10007/AUTH10003 differential exists; redirect_uri validation never tested — blocked at client_id gate; cidaas historically uses regex/wildcard allowlists; prior "404 router deprecation" flag rejected (transient)
+evidence_needed: valid client_id → redirect_uri evil + bypass variants (hornbach.de.evil.com, @, /..;/)
+verify_steps: gated on client_id; GET authz-srv/authz?client_id=<real>&redirect_uri=<variant> --max-redirs 0, read Location; 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] Unauthenticated token-exchange/linked-token grant abuse on missing token-exchange route
+class: AUTH
+asset: auth.hornbach.com/token-srv/token
+confidence: 30
+reasoning: discovery advertises RFC 8693 token-exchange + password + client_credentials grants but `token_exchange_endpoint` absent from fresh 18:13Z metadata dump; token endpoint verified client-gated (400 invalid_client on GET); no anonymous route to exchange — surface discrepancy only, no anonymous exploit path observed
+evidence_needed: client_id+secret (APK), then POST grant_type=token_exchange with arbitrary subject_token to mint linked session
+verify_steps: (DONE) metadata has no token_exchange_endpoint key; GET token with grant_type → 400. No anonymous differential remains
+impact: token-minting pivot IF client creds leaked — unproven; LOW
+testability: AUTH_HELPED
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC (real-token metadata exfil + silent revocation) and the 70-conf redirect_uri bypass. No server-side probe remains — api.hornbach.de anonymous breadth exhausted (10 paths NO_DELTA), token-plane flaw restated 10th session.
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 10th session 18:13Z; GET/HEAD 404 was methodology artefact; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — 10th session 18:13Z; stable text/plain; parameter-sensitive 404 on GET/HEAD
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:58 deprecation/404 flag as transient shared-routing noise
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist — userinfo is single consuming gate on token plane
+[LEARN] ACCEPTED class OTHER @ api.hornbach.de: 10 paths today (root, health, api/v1, api/v2, odata, sap/opu/odata, sap/public/ping, iFlow, integration, monitoring) all uniform 404 len=47; /healthcheck 200 xml — anonymous breadth unchanged, no new route
+[RISK] hornbach: 52/100 — NO_DELTA on api.hornbach.de (10 paths); authz-srv/authz confirmed live again (302→AUTH10007) closing the deprecation thread; 85-conf introspect/revoke persists 10th session but fully PoC-gated on human APK client_id extraction; userinfo confirmed as the gated consumer (401); all escalation on a single human dependency; moderate risk, unchanged program surface.
+[0m
+[0m$ [0mcd /home/runner/work/hornbach-hunt/hornbach-hunt && grep -l "www.hornbach.de" leads/*.md reports/*.txt 2>/dev/null; echo "=== storefront/API mentions in other leads ==="; grep -o "www.hornbach.de[a-zA-Z0-9/_.-]*" leads/lead-*.md | sort -u | head -30; echo "=== any shop/ecommerce/storefront talk ==="; grep -ri "ecommerce\|storefront\|shop\b\|kasse\|checkout" leads/lead-*.md | head -10
+leads/lead-bigpickle.md
+leads/lead-nemotron3.md
+reports/hypotheses-nemotron3.txt
+=== storefront/API mentions in other leads ===
+leads/lead-bigpickle.md:www.hornbach.de
+leads/lead-bigpickle.md:www.hornbach.de/customer/login
+leads/lead-nemotron3.md:www.hornbach.de
+leads/lead-nemotron3.md:www.hornbach.de.
+leads/lead-nemotron3.md:www.hornbach.de/customer
+leads/lead-nemotron3.md:www.hornbach.de/customer.
+=== any shop/ecommerce/storefront talk ===
+leads/lead-bigpickle.md:evidence_needed: Mirakl API key (operator or seller) → cross-shop BOLA on orders/listings/payments across shop_id; anonymous routes confirmed non-existent
+leads/lead-bigpickle.md:evidence_needed: Mirakl API key (operator or seller) → cross-shop BOLA on orders/listings/payments across shop_id
+leads/lead-bigpickle.md:evidence_needed: Mirakl API key (operator or seller) → cross-shop BOLA on orders/listings/payments across shop_id; anonymous routes confirmed non-existent
+leads/lead-bigpickle.md:evidence_needed: Mirakl API key (operator or seller) → cross-shop BOLA on orders/listings/payments across shop_id
+leads/lead-bigpickle.md:evidence_needed: Mirakl API key (operator or seller) → cross-shop BOLA on orders/listings/payments across shop_id
+leads/lead-bigpickle.md:reasoning: The Mirakl backend at hornbach-mp.mirakl.net is a dedicated HORNBACH marketplace; prior sessions mapped 13 `/api/*` routes, all 401 anonymously, `/api/version` → 3.1301. Mirakl design uses account-scoped APIs keyed per tenant (`shop_id`), so any leaked L0 API key yields cross-shop BOLA. No valid-ish-key-format present.
+leads/lead-bigpickle.md:evidence_needed: valid seller/operator Mirakl API key → cross-shop `shop_id` iteration on `/api/orders` / `/api/accounts`.
+leads/lead-bigpickle.md:reasoning: The Mirakl backend at hornbach-mp.mirakl.net is a dedicated HORNBACH marketplace; prior sessions mapped 13 `/api/*` routes, all 401 anonymously, `/api/version` → 3.1301. Mirakl design uses account-scoped APIs keyed per tenant (`shop_id`), so any leaked L0 API key yields cross-shop BOLA. No valid-ish-key-format present.
+leads/lead-bigpickle.md:evidence_needed: valid seller/operator Mirakl API key → cross-shop `shop_id` iteration on `/api/orders` / `/api/accounts`.
+[0m
+Storefront surface (`www.hornbach.de`) is the one in-scope asset barely touched all week (only the `/customer` bot-wall note exists). My target is `api` — the storefront web-API is the last large anonymous surface. Running sparse read-only probes.
+[0m$ [0mcd /tmp/opencode && curl -s -o /dev/null -m 20 -w "ROOT_www_de status=%{http_code} len=%{size_download} server=%{header_json}\n" https://www.hornbach.de/ ; sleep 1; curl -s -m 20 -i https://www.hornbach.de/ 2>&1 | head -c 900; echo
+ROOT_www_de status=200 len=3038 server={"set-cookie":["_fs_ch_st_FSBmUei20MqUiJb9=AZgeFmAMseAMNJKwL6HKNyoQhnZmb8VXcR8TgZi7no1-1SCTMib_2iKk-zybYuccUcdptX6VHMaA3T0RfOrTrNC-0nH_vOLeFXQhXeM6tyZm3bMfLTfT619lg5rt0xdh7UbZ5zCFEXL9VHWi9JUsncfUvB85gWeWmcTumGocIuwd34jXiVocJ6qSe2l_iDtqgot5d3lSt1c_pxzv4gKwgCmifxXloVHSlUPz-mVJJnDqi3PCdd85LdWyxoGVogdSzEMTXtpqzYrywKSoyxSG36WXNLqq_Omc60Kh0LZTtdIGXwn7vDi04uW7vudbtQpXGHVUQB2CU4N22MtN8T4QosNLjsAOq2U-gpBd9UcpyAC5MvlY-wtAUvSyQL4f0qQ7Zfb1IJCC0R5bhtTwpJc_K6cDnIxYdyFmUw==; Max-Age=10; HttpOnly; Path=/"],
+"content-type":["text/html; charset=utf-8"],
+"cache-control":["private, no-store"],
+"accept-ranges":["bytes"],
+"x-b3-traceid":["7f51bc6f3e781d5b10bfe2345ec59197"],
+"date":["Mon, 07 Sep 2026 21:36:52 GMT"],
+"alt-svc":["h3=\":443\";ma=86400,h3-29=\":443\";ma=86400,h3-27=\":443\";ma=86400"],
+"content-length":["3038"]
+}
+HTTP/2 200 
+set-cookie: _fs_ch_st_FSBmUei20MqUiJb9=AQ41IQIXPMNi4D3BKR-xN-MjUPrMlcWJAd1Cc_ms4d1rNjlL4FxifQK0lXNv71zfn-FTUTWPcwCSU2Pw2ze6QiD97icRe-bdb7cMnKv1-DFxLmhXodoFMpGe8IMj0rnBZn-1JusaG5juLKV0EfRlkA2TkxMlyKuC2OUKqZk_-E9WUqwN0kLjUDIM3gxE4ZQkSceM60UxZrl7IhmVCXks2c0YvtEzMO5NpjZPkQi-84dDxOY7WPTji_k01nC0GO96eJT58lmJfA4AzoiXGWjPeV_zHnTwm7e0I46SdDoAwN9jgPOTyFlDXNeb_xmOJpoX-0Blgqrw3YLs1Z32fWvxXidOavIgqP8_61yAyOCPUY1ssMKT6gz97jKJ-GDKQdvBUnW3tNbAXEOFp-NDfY0pUJd9kqyjBlh0ew==; Max-Age=10; HttpOnly; Path=/
+content-type: text/html; charset=utf-8
+cache-control: private, no-store
+accept-ranges: bytes
+x-b3-traceid: adfb057d530367b17d6e66dcf1869c11
+date: Mon, 07 Sep 2026 21:36:53 GMT
+alt-svc: h3=":443";ma=86400,h3-29=":443";ma=86400,h3-27=":443";ma=86400
+content-length: 3038
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-
+[0m
+Root of `www.hornbach.de` returns the same 3038-byte FingerprintJS bot-challenge stub as the `.com` hosts — with an `x-b3-traceid` (Spring Boot/Sleuth) backend behind it. Checking whether the challenge covers all paths/all country storefront hosts (in-scope Group domains).
+[0m$ [0mcd /tmp/opencode && for u in "https://www.hornbach.de/api" "https://www.hornbach.de/search/suggest?q=holz" ; do curl -s -o /tmp/rb.txt -m 20 -w "URL=$u status=%{http_code} len=%{size_download}\n" "$u"; sleep 1.2; done; curl -s -o /tmp/at.txt -m 20 -w "URL=www.hornbach.at/ status=%{http_code} len=%{size_download} type=%{content_type}\n" https://www.hornbach.at/ ; sleep 1.2; curl -s -o /tmp/comsub.txt -m 20 -w "URL=shop.hornbach.de status=%{http_code} len=%{size_download}\n" https://shop.hornbach.de/ ; echo "--- .at body check ---"; head -c 200 /tmp/at.txt
+URL=https://www.hornbach.de/api status=200 len=3038
+URL=https://www.hornbach.de/search/suggest?q=holz status=200 len=3038
+URL=www.hornbach.at/ status=200 len=3038 type=text/html; charset=utf-8
+URL=shop.hornbach.de status=000 len=0
+--- .at body check ---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/opencode/*, /tmp/*); auto-rejecting
+[0m✗ [0mcd /tmp/opencode && curl -s -o /tmp/mp.txt -m 20 -w "MIRAKL_APEX status=%{http_code} len=%{size_download} type=%{content_type} server=%{header_json}\n" https://hornbach-mp.mirakl.net/ ; sleep 1; head -c 500 /tmp/mp.txt; echo; echo "---"; curl -s -o /tmp/mp2.txt -m 20 -w "MIRAKL/version status=%{http_code} len=%{size_download}\n" https://hornbach-mp.mirakl.net/api/version ; cat /tmp/mp2.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+Uniform FingerprintJS challenge confirmed across the whole retail estate (`.de`, `.at`, `.com` — all 3038-byte stub). One last unused anonymous surface: the Mirakl MP apex itself was never probed (only `/api/*`).

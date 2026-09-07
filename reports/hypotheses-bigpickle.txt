@@ -1,21 +1,4 @@
-## 2026-09-07 18:14:04 UTC [target] (model bigpickle)
-[PARKED] Citrix NetScaler AAA Gateway exposed management surface: confidence 30 < 40 — /nitro/v1/config 302→logon (management API closed); no firmware leak; no CVE mapping supportable
-[FINAL] 1. Unauthenticated token introspection + revocation (confidence 85, AUTH_HELPED, MEDIUM-HIGH) — systemic RFC 7662/7009 violation, 9+ sessions stable, isolated to management plane
-[FINAL] 2. OAuth redirect_uri validation bypass (confidence 70, AUTH_HELPED, HIGH) — gated on client_id
-[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks the 85-conf introspect/revoke PoC, token-exchange grant test, and 70-conf redirect_uri bypass. No server-side probe remains — all anonymous surfaces returned NO_DELTA this session.
-[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 9th+ session; GET/HEAD returning 404 was methodology artefact
-[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — stable text/plain response; GET/HEAD returning 404 was parameter-sensitive routing
-[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
-[LEARN] ACCEPTED class OTHER @ api.hornbach.de: SAP API Gateway exists (Gateway server header) with backend on localhost:8080; no documented endpoints at common paths
-[LEARN] ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is in-scope API surface; all /api/* require Mirakl auth
-[LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id enumeration via status-code differential is REMOVED — invalid client_ids return uniform 302→AUTH10007; 404 vs 302 variance is request-shape not client validity signal
-[LEARN] REJECTED class MISCONFIG @ login.hornbach.com: Fastly CNAME takeover confirmed unlikely — active service (Varnish header, 200 response, resolving IP) eliminates takeover vector
-[LEARN] REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 known scoped hosts resolve
-[RISK] hornbach: 52/100 — NO_DELTA all surfaces (api root/healthcheck, auth status, Nitro/logon, cidaas); 85-conf introspect/revoke persists 9+ sessions but fully PoC-gated on human APK client_id extraction; NetScaler nitro management surface formally closed (last secondary lead); all escalation on a single human dependency; moderate risk, unchanged program surface.
-[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
-class: AUTH
-asset: auth.hornbach.com/token-srv/{introspect,revoke}
-confidence: 85
+## 2026-09-07 21:38:04 UTC [target] (model bigpickle)
 reasoning: fresh 18:13Z POST → 200 `{"active":false}` (introspect) and 200 `OK` (revoke) with zero client auth; RFC 7662/7009 both mandate client auth; stable across 10 independent sessions; issuance correctly gated (400 invalid_client) — flaw isolated to the two management endpoints; userinfo (users-srv/userinfo) is the consuming gate, 401 bearer-gated
 evidence_needed: real access_token + client_id (Smarthome APK `assets/cidaas.xml`) → introspect active token for sub/email/scopes/exp, revoke, re-introspect active=false, then hit userinfo with revoked token
 verify_steps: POST token=<real> to /token-srv/introspect no-auth → read claim set; POST same to /revoke; re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
