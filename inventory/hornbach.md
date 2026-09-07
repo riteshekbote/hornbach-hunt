@@ -247,3 +247,5 @@ www.hornbach.com
 - NEW auth.hornbach.com: discovery advertises `token-exchange`(RFC 8693), `password`, `client_credentials` grants + `subject_types_supported=["public"]` — sub non-pairwise across clients
 - CHANGED api.hornbach.de: 8 additional paths tested (graphql, api/graphql, v1/graphql, openapi.json, swagger.json, api-docs, sap/apigateway, sap/bc/adt/discovery, sap/public/ping) — all 404 uniform (47 bytes);
 - NEW auth.hornbach.de/nitro/v1/config: 302 → /logon/LogonPoint/tmindex.html — Citrix NetScaler mgmt API NOT exposed unauthenticated (redirect gate closes nitro surface)
+
+## 2026-09-07 01:21:14 UTC
