@@ -1687,3 +1687,32 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist — userinfo is single consuming gate on token plane
 [LEARN] ACCEPTED class OTHER @ api.hornbach.de: 10 paths today (root, health, api/v1, api/v2, odata, sap/opu/odata, sap/public/ping, iFlow, integration, monitoring) all uniform 404 len=47; /healthcheck 200 xml — anonymous breadth unchanged, no new route
 [RISK] hornbach: 52/100 — NO_DELTA on api.hornbach.de (10 paths); authz-srv/authz confirmed live again (302→AUTH10007) closing the deprecation thread; 85-conf introspect/revoke persists 10th session but fully PoC-gated on human APK client_id extraction; userinfo confirmed as the gated consumer (401); all escalation on a single human dependency; moderate risk, unchanged program surface.
+## 2026-09-07 23:48:33 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + claim-set disclosure
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: 10th independent session 18:13Z: POST introspect → 200 `{"active":false}`, POST revoke → 200 `OK`, zero client auth; RFC 7662/7009 require it; token issuance correctly gated (400 invalid_client); only real-token PoC missing
+evidence_needed: valid access_token + client_id from de.hornbach.app.smarthome `assets/cidaas.xml`
+verify_steps: POST token=<real> introspect no-auth → claim set; POST <real> revoke; re-introspect active=false; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE 18:13Z (302→AUTH10007 uniform gate); redirect_uri validation never tested — blocked at client_id gate; cidaas historically regex allowlists; `<found>` placeholder confirms prior valid client_id existed but is redacted from context
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/)
+verify_steps: --max-redirs 0 GET authz-srv/authz?client_id=<real>&redirect_uri=<variant> → 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] Unauthenticated token-exchange/linked-token grant abuse
+class: AUTH
+asset: auth.hornbach.com/token-srv/token
+confidence: 30
+reasoning: discovery advertises RFC 8693/password/client_credentials grants but no token_exchange_endpoint key; token endpoint client-gated (400 invalid_client); no anonymous differential burned (11th session would be redundant)
+evidence_needed: client_id+secret (APK) then POST grant_type=token_exchange
+verify_steps: metadata has no exchange endpoint; GET token → 400; no anonymous path exists
+impact: token-minting pivot IF creds leak — LOW
+testability: AUTH_HELPED
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` (APKPure v3.9.0 or AppBrain v2.9.2, `de.hornbach.app.smarthome`), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Passive websearch for leaked cidaas client_id came up empty (github.com/hornbach = RN libs only), so APK is the sole unblocker for both surviving hypotheses (85 introspect/revoke, 70 redirect_uri). No server-side probe remains — api.hornbach.de breadth exhausted, token-plane flaw restated 10th session.

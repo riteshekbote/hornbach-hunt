@@ -276,3 +276,9 @@ www.hornbach.com
 - CHANGED api.hornbach.de: 13+ common API paths exhausted (graphql, openapi, swagger, actuator, sap/*) — all uniform 404 (47 bytes); anonymous surface breadth definitively exhausted
 - CHANGED auth.hornbach.de/nitro/v1/config: 302 → /logon/LogonPoint/tmindex.html — NetScaler management API confirmed NOT exposed unauthenticated
 - NEW auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist — userinfo is single consuming gate on token plane
+
+## 2026-09-07 23:49:07 UTC
+- NEW auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist — userinfo is single consuming gate on token plane (2026-09-07 21:38)
+- CHANGED auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z 2026-09-07 — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:58 deprecation/404 flag as transient shared-routing 
+- CHANGED auth.hornbach.com/token-srv/introspect: POST method confirmed as only working method (GET/HEAD return 404); 10th session 18:13Z confirms POST → 200 `{"active":false}` unauthenticated — methodology art
+- CHANGED auth.hornbach.com/token-srv/revoke: POST method confirmed as only working method (GET/HEAD return 404); 10th session 18:13Z confirms POST → 200 `OK` unauthenticated (text/plain) — methodology artifact
