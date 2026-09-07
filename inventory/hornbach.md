@@ -249,3 +249,5 @@ www.hornbach.com
 - NEW auth.hornbach.de/nitro/v1/config: 302 → /logon/LogonPoint/tmindex.html — Citrix NetScaler mgmt API NOT exposed unauthenticated (redirect gate closes nitro surface)
 
 ## 2026-09-07 01:21:14 UTC
+
+## 2026-09-07 06:14:58 UTC
