@@ -1,25 +1,28 @@
-## 2026-09-08 20:17:21 UTC [target] (model bigpickle)
+## 2026-09-08 22:50:46 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + claim-set disclosure
 class: AUTH
 asset: auth.hornbach.com/token-srv/{introspect,revoke}
 confidence: 85
-reasoning: POST introspect returns 200 {"active":false} unauthenticated; POST revoke returns 200 OK unauthenticated; both RFC-mandated endpoints missing client auth; 11+ independent sessions confirm stability; token issuance correctly gated (400 invalid_client)
-evidence_needed: valid access_token + client_id from de.hornbach.app.smarthome assets/cidaas.xml → introspect claim set, revoke, re-introspect active=false, userinfo with revoked token → 401
-verify_steps: POST token=<real> introspect no-auth → claim set; POST <real> revoke; re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
+reasoning: POST introspect → 200 {"active":false} unauthenticated; POST revoke → 200 "OK"; RFC 7662/7009 client-auth bypass; 11 independent sessions confirm stability (latest 2026-09-08 13:27Z); token issuance remains client-gated (400 invalid_client) so flaw is isolated to introspect/revoke.
+evidence_needed: valid access_token + client_id from de.hornbach.app.smarthome assets/cidaas.xml → introspect real claim set, revoke, re-introspect active=false, userinfo with revoked bearer → 401
+verify_steps: POST token=<real> introspect no-auth → claim set; POST token=<real> revoke; re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
 impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
 testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
 class: OATH
 asset: auth.hornbach.com/authz-srv/authz
 confidence: 70
-reasoning: endpoint LIVE (302→AUTH10007 uniform gate); redirect_uri validation never tested due to client_id gate; cidaas historically regex allowlists; valid client_id exists but is redacted in KB
+reasoning: endpoint LIVE (302→AUTH10007 uniform gate); redirect_uri validation never testable due to client_id gate; cidaas historically regex allowlists; valid client_id exists but redacted in KB
 evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/)
 verify_steps: --max-redirs 0 GET authz-srv/authz?client_id=<real>&redirect_uri=<variant> → 302-to-evil = code theft
 impact: authorization-code theft → ATO — HIGH
 testability: AUTH_HELPED
-class: AUTH
-asset: auth.hornbach.com/token-srv/token
-confidence: 30
-reasoning: discovery advertises RFC 8693/password/client_credentials grants but token endpoint verified client-gated (400 invalid_client); no anonymous route exists
-evidence_needed: client_id+secret (APK) then POST grant_type=token_exchange
-verify_steps: metadata present; GET/POST token → 400; device/authz → 400; no anonymous differential
-impact: token-minting pivot IF creds leak — LOW
-testability: AUTH_HELPED
+[HYP] SMART HOME web/dev cluster exposes a weakly-gated anonymous API route
+class: OTHER
+asset: smarthomebyhornbach.com (www + prod/dev + api-client/api-phone)
+confidence: 35
+reasoning: new live cluster; www SPA 200; prod+dev REST base 401 oauth-gated identically (request_allowed); dev oauth service mounted (oauth-2 header); oauth client id extracted from SPA (c0b6...) returns 404 on redirect path; web auth is ROC oauth2-cookie-1, not cidaas; docs hosts 404
+evidence_needed: any anonymous 200/302 differential route on dev vs prod, or a leaked session/API key from docs/glient metadata (factory.roc-connect.com is third-party, out of scope)
+verify_steps: GET api-client.dev.smarthomebyhornbach.com/api/public/hornbach/glient/ → done, 401 (same as prod); GET docs-dev.smarthomebyhornbach.com/glient/metadata → 404; compare known app restApiUrl routes on prod vs dev for response differentials only
+impact: IF dev API reached anonymously → customer device-command/account surface (smart-home control) — HIGH but currently unproved; anonymous breadth exhausted at 404/401
+testability: PASSIVE

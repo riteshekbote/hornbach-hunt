@@ -146,3 +146,4 @@
 - 2026-09-08 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 13:27Z 11th session; systemic and stable
 - 2026-09-08 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — 11th session; stable text/plain
 - 2026-09-08 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 13:27Z — 302→AUTH10007 invalid_client on dummy client_id; uniform gate, client_id enum REMOVED
+- 2026-09-08 ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET still 500 {"success":false,"status":500} + Access-Control-Allow-Origin:*; POST → 404 (GET-only route)
