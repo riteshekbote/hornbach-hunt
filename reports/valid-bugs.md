@@ -23,3 +23,11 @@
   - | 7 | DIRECTORY LISTING – `/files/` | **VALID** | `DirectoryIndex` enabled with no access controls. Proof: `curl -s "https://shop.hornbach.de/files/" \| head -20` lists `backup/`, `dump.sql`, `interna
   - | 8 | HEADER INJECTION – 404 Host | **VALID** | Host header reflected unsanitized in 404 response. Proof: `curl -I -H "Host: evil.com" https://shop.hornbach.de/nonexistent-page` returns `Host: evil.co
   - | 9 | CORS – `/api/proxy` | **VALID** | Origin reflected with credentials. Proof: `curl -v -H "Origin: https://evil.com" -H "Cookie: token=test" https://shop.hornbach.de/api/proxy` confirms `Access-Co
+
+- 6 lead(s) marked VALID at 2026-09-08 23:08:10 UTC
+  - | Q3 Impact | **YES** | RFC 7662 §2.1 mandates client auth for introspection. Acceptance without auth = systemic misconfiguration. Impact gated: needs valid token to prove metadata exfil (sub/scope/ex
+  - | Q7 Reasonable triager | **YES** | Confirmed stable across 11 sessions over 5 days. RFC violation. However, real-data impact requires a valid token. |
+  - | Q3 Impact | **YES** | If redirect_uri is loosely validated → OAuth code theft → account takeover (HIGH). But **unproven**: all 15+ guessed client_ids rejected with uniform AUTH10007. No valid client
+  - | Q4 Provable | **NO (currently)** | Cannot test redirect_uri validation without a valid client_id. Bot-wall on www.hornbach.de blocks frontend JS extraction. |
+  - | 1 | Unauthenticated token introspection | **HOLD** | 5.3 MEDIUM | Needs valid token (client_id acquisition) |
+  - | 2 | Unauthenticated token revocation | **HOLD** | 5.3 MEDIUM | Needs valid token (client_id acquisition) |
