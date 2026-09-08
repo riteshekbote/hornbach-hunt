@@ -16,3 +16,10 @@
 
 - 1 lead(s) marked VALID at 2026-09-06 12:54:27 UTC
   - I'll then run each lead through the 7-Question Gate with verdict, reason, and (for VALID) minimal proof steps, impact, CVSS, and reporting channel.
+
+- 5 lead(s) marked VALID at 2026-09-08 09:46:26 UTC
+  - | 2 | CORS MISCONFIG – `/api/files` | **VALID** | Null origin reflected with credentials. Proof: `curl -v -H "Origin: null" -H "Cookie: session=test" https://shop.hornbach.de/api/files` confirms `Acce
+  - | 3 | OPEN REDIRECT – `/redirect-to` | **VALID** | No origin validation. Proof: `curl -I "https://shop.hornbach.de/redirect-to?url=https://evil.com"` returns 302 to attacker URL. Impact: phishing cred
+  - | 7 | DIRECTORY LISTING – `/files/` | **VALID** | `DirectoryIndex` enabled with no access controls. Proof: `curl -s "https://shop.hornbach.de/files/" \| head -20` lists `backup/`, `dump.sql`, `interna
+  - | 8 | HEADER INJECTION – 404 Host | **VALID** | Host header reflected unsanitized in 404 response. Proof: `curl -I -H "Host: evil.com" https://shop.hornbach.de/nonexistent-page` returns `Host: evil.co
+  - | 9 | CORS – `/api/proxy` | **VALID** | Origin reflected with credentials. Proof: `curl -v -H "Origin: https://evil.com" -H "Cookie: token=test" https://shop.hornbach.de/api/proxy` confirms `Access-Co
