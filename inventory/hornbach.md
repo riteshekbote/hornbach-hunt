@@ -312,3 +312,5 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/token-srv/token: GET with grant_type → 400 `invalid_client` — token plane client-gated, isolating unauthenticated flaw to introspect/revoke only
 - CHANGED auth.hornbach.com: discovery advertises `token-exchange` (RFC 8693), `password`, `client_credentials` grants + `subject_types_supported=["public"]` — sub non-pairwise across clients
 - CHANGED auth.hornbach.de/nitro/v1/config: 302→/logon/LogonPoint/tmindex.html — NetScaler management API NOT exposed unauthenticated
+
+## 2026-09-08 17:33:24 UTC
