@@ -1808,3 +1808,55 @@ testability: AUTH_HELPED
 [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules (OPTIONS/TRACE excluded from scope)
 [LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
 [RISK] hornbach: 52/100 — NO_SURFACE_CHANGE from last assessment; all escalation hinges on single HUMAN dependency (APK extraction); 85-conf introspect/revoke finding fully PoC-gated; redirect_uri bypass blocked at client_id gate; api.hornbach.de anonymous breadth definitively exhausted; moderate risk unchanged, program surface stable.
+## 2026-09-08 13:29:42 UTC [target] (model bigpickle)
+[PRIO] auth.hornbach.com/token-srv/introspect,85,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=7,freshness=8
+[PRIO] auth.hornbach.com/token-srv/revoke,82,attack_surface=9,business_value=9,tech_exposure=8,gate_ease=10,cloud_surface=7,freshness=8
+[PRIO] auth.hornbach.com/authz-srv/authz,70,attack_surface=8,business_value=10,tech_exposure=9,gate_ease=3,cloud_surface=7,freshness=7
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + claim-set disclosure
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+[PARKED] token-exchange grant abuse: 30 < 40
+[FINAL] both survivors.
+[NEXT] HUMAN: APK extraction (sole unblocker).
+[PRIO] auth.hornbach.com/token-srv/introspect,85,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=7,freshness=8
+[PRIO] auth.hornbach.com/token-srv/revoke,82,attack_surface=9,business_value=9,tech_exposure=8,gate_ease=10,cloud_surface=7,freshness=8
+[PRIO] auth.hornbach.com/authz-srv/authz,70,attack_surface=8,business_value=10,tech_exposure=9,gate_ease=3,cloud_surface=7,freshness=7
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + claim-set disclosure
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: fresh 13:27Z POST introspect → 200 `{"active":false}`, revoke → 200 `OK`, zero client auth; RFC 7662/7009 mandate it; issuance correctly gated (400 invalid_client on token); flaw isolated to two management endpoints; userinfo 401 bearer-gated consumer
+evidence_needed: valid access_token + client_id from de.hornbach.app.smarthome `assets/cidaas.xml` → introspect claim set, revoke, re-introspect active=false, userinfo with revoked token → 401
+verify_steps: POST token=<real> introspect no-auth → claim set; POST <real> revoke; re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE 13:27Z (302→AUTH10007 uniform gate); redirect_uri validation never tested — blocked at client_id gate; cidaas historically regex allowlists; `<found>` placeholder confirms a prior valid client_id existed but is redacted
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/)
+verify_steps: --max-redirs 0 GET authz-srv/authz?client_id=<real>&redirect_uri=<variant> → 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] Unauthenticated token-exchange/linked-token grant abuse
+class: AUTH
+asset: auth.hornbach.com/token-srv/token
+confidence: 30
+reasoning: discovery advertises RFC 8693/password/client_credentials/device_code grants but token endpoint verified client-gated (400 invalid_client); no anonymous route exists; device/authz 400 invalid_request without valid client_id
+evidence_needed: client_id+secret (APK) then POST grant_type=token_exchange
+verify_steps: metadata present; GET/POST token → 400; device/authz → 400; no anonymous differential
+impact: token-minting pivot IF creds leak — LOW
+testability: AUTH_HELPED
+[PARKED] Unauthenticated token-exchange/linked-token grant abuse: confidence 30 < 40; no anonymous differential; purely theoretical pivot IF client creds leaked; token + device endpoints correctly gated
+[FINAL] Unauthenticated token introspection + revocation enables silent session kill + claim-set disclosure: 85 confidence, 10+ sessions confirmed, real-token PoC gated on APK extraction
+[FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch: 70 confidence, endpoint live (302→AUTH10007), gated on client_id
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKPure v3.9.0 or AppBrain v2.9.2, package `de.hornbach.app.smarthome`), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. This remains the SOLE unblocker for both surviving hypotheses (85 introspect/revoke, 70 redirect_uri). Confirmed this session that Mirakl does NOT leak it (federates to login.mirakl.net via client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq). No server-side probe remains — all anonymous surfaces NO_DELTA this session.
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 13:27Z 11th session; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — 11th session; stable text/plain
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 13:27Z — 302→AUTH10007 invalid_client on dummy client_id; uniform gate, client_id enumeration still REMOVED
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET still 500 `{"success":false,"status":500}` + Access-Control-Allow-Origin:*; POST → 404 (GET-only route)
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: requires access_token_hint/id_token_hint (302→AATON1018), client/token-gated — no anonymous logout CSRF vector
+[LEARN] ACCEPTED class OTHER @ hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source for auth.hornbach.com tenant
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
+[RISK] hornbach: 52/100 — NO_SURFACE_CHANGE this session (all anonymous surfaces re-verified NO_DELTA; Mirakl confirmed to federate to separate platform IdP, not a client_id source). 85-conf introspect/revoke remains fully PoC-gated on the single HUMAN dependency (APK `assets/cidaas.xml` extraction); 70-conf redirect_uri bypass blocked at client_id gate; api.hornbach.de anonymous breadth definitively exhausted; moderate risk unchanged, program surface stable.

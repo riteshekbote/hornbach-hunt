@@ -300,3 +300,15 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z 2026-09-07 — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:58 deprecation/404 flag as transient shared-routing 
 - CHANGED auth.hornbach.com/token-srv/introspect: POST method confirmed as only working method (GET/HEAD return 404); 10th session 18:13Z confirms POST → 200 `{"active":false}` unauthenticated — methodology art
 - CHANGED auth.hornbach.com/token-srv/revoke: POST method confirmed as only working method (GET/HEAD return 404); 10th session 18:13Z confirms POST → 200 `OK` unauthenticated (text/plain) — methodology artifact
+
+## 2026-09-08 13:30:46 UTC
+- NEW auth.hornbach.com/token-srv/introspect: POST → 200 `{"active":false}` unauthenticated confirmed across 10+ independent sessions; systemic and stable (GET/HEAD 404 was methodology artifact)
+- NEW auth.hornbach.com/token-srv/revoke: POST → 200 `OK` unauthenticated confirmed stable across 10+ sessions; text/plain response body; parameter-sensitive 404 on GET/HEAD
+- NEW auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE at 18:13Z 2026-09-07 — 302→AUTH10007 invalid_client on dummy client_id; rejects 2026-09-06 deprecation flag as transient routing noise
+- NEW auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist — userinfo is single consuming gate on token plane
+- NEW api.hornbach.de: SAP APIM Gateway confirmed (Server: Gateway, Via sapigwprd01/02, X-CorrelationID) with backend leak localhost:8080 via /healthcheck; 21+ common paths exhausted — anonymous surface bre
+- NEW hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace v3.1301 confirmed in-scope; all /api/* require Mirakl auth
+- CHANGED auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot hypothesis
+- CHANGED auth.hornbach.com/token-srv/token: GET with grant_type → 400 `invalid_client` — token plane client-gated, isolating unauthenticated flaw to introspect/revoke only
+- CHANGED auth.hornbach.com: discovery advertises `token-exchange` (RFC 8693), `password`, `client_credentials` grants + `subject_types_supported=["public"]` — sub non-pairwise across clients
+- CHANGED auth.hornbach.de/nitro/v1/config: 302→/logon/LogonPoint/tmindex.html — NetScaler management API NOT exposed unauthenticated

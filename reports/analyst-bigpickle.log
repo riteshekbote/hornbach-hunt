@@ -12025,3 +12025,547 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] hornbach: 52/100 — NO_SURFACE_CHANGE from last assessment; all escalation hinges on single HUMAN dependency (APK extraction); 85-conf introspect/revoke finding fully PoC-gated; redirect_uri bypass blocked at client_id gate; api.hornbach.de anonymous breadth definitively exhausted; moderate risk unchanged, program surface stable.
+===== ANALYST bigpickle 2026-09-08 13:30:46 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt/
+total 260
+drwxr-xr-x 12 runner runner  4096 Sep  8 13:25 .
+drwxr-xr-x  3 runner runner  4096 Sep  8 13:24 ..
+drwxr-xr-x  7 runner runner  4096 Sep  8 13:25 .git
+drwxr-xr-x  3 runner runner  4096 Sep  8 13:24 .github
+-rw-r--r--  1 runner runner  1901 Sep  8 13:24 README.md
+-rw-r--r--  1 runner runner    32 Sep  8 13:25 analyst-out.txt
+-rw-r--r--  1 runner runner 83580 Sep  8 13:25 analyst-prompt.txt
+-rw-r--r--  1 runner runner 79652 Sep  8 13:25 ctx.txt
+drwxr-xr-x  2 runner runner  4096 Sep  8 13:24 inventory
+drwxr-xr-x  2 runner runner  4096 Sep  8 13:24 knowledge
+drwxr-xr-x  2 runner runner  4096 Sep  8 13:24 leads
+-rw-r--r--  1 runner runner  9872 Sep  8 13:24 probe-results.md
+drwxr-xr-x  2 runner runner  4096 Sep  8 13:24 recon-notes
+drwxr-xr-x  2 runner runner  4096 Sep  8 13:24 reports
+drwxr-xr-x  2 runner runner  4096 Sep  8 13:24 reposcan-raw
+-rw-r--r--  1 runner runner  3341 Sep  8 13:24 scope.yml
+drwxr-xr-x  2 runner runner  4096 Sep  8 13:24 scripts
+-rw-r--r--  1 runner runner    33 Sep  8 13:24 state_bigpickle.json
+-rw-r--r--  1 runner runner    33 Sep  8 13:24 state_laguna.json
+-rw-r--r--  1 runner runner    33 Sep  8 13:24 state_ling3.json
+-rw-r--r--  1 runner runner    33 Sep  8 13:24 state_longcat.json
+-rw-r--r--  1 runner runner    33 Sep  8 13:24 state_mimo.json
+-rw-r--r--  1 runner runner    33 Sep  8 13:24 state_nemotron3.json
+drwxr-xr-x  2 runner runner  4096 Sep  8 13:24 triage
+[0m
+[0m→ [0mRead state_bigpickle.json
+[0m→ [0mRead probe-results.md
+[0m→ [0mRead scope.yml
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt/leads/ /home/runner/work/hornbach-hunt/hornbach-hunt/knowledge/ /home/runner/work/hornbach-hunt/hornbach-hunt/inventory/ /home/runner/work/hornbach-hunt/hornbach-hunt/triage/
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/:
+total 44
+drwxr-xr-x  2 runner runner  4096 Sep  8 13:24 .
+drwxr-xr-x 12 runner runner  4096 Sep  8 13:25 ..
+-rw-r--r--  1 runner runner 35486 Sep  8 13:24 hornbach.md
+
+/home/runner/work/hornbach-hunt/hornbach-hunt/knowledge/:
+total 36
+drwxr-xr-x  2 runner runner  4096 Sep  8 13:24 .
+drwxr-xr-x 12 runner runner  4096 Sep  8 13:25 ..
+-rw-r--r--  1 runner runner 28589 Sep  8 13:24 index.md
+
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/:
+total 576
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:24 .
+drwxr-xr-x 12 runner runner   4096 Sep  8 13:25 ..
+-rw-r--r--  1 runner runner 265989 Sep  8 13:24 lead-bigpickle.md
+-rw-r--r--  1 runner runner   1785 Sep  8 13:24 lead-laguna.md
+-rw-r--r--  1 runner runner   1750 Sep  8 13:24 lead-ling3.md
+-rw-r--r--  1 runner runner   1820 Sep  8 13:24 lead-longcat.md
+-rw-r--r--  1 runner runner     18 Sep  8 13:24 lead-mimo.md
+-rw-r--r--  1 runner runner 288693 Sep  8 13:24 lead-nemotron3.md
+-rw-r--r--  1 runner runner   4309 Sep  8 13:24 reposcan-hornbach.md
+
+/home/runner/work/hornbach-hunt/hornbach-hunt/triage/:
+total 184
+drwxr-xr-x  2 runner runner  4096 Sep  8 13:24 .
+drwxr-xr-x 12 runner runner  4096 Sep  8 13:25 ..
+-rw-r--r--  1 runner runner     0 Sep  8 13:24 .gitkeep
+-rw-r--r--  1 runner runner   787 Sep  8 13:24 run-2026-09-02-21-36.md
+-rw-r--r--  1 runner runner   204 Sep  8 13:24 run-2026-09-02-23-32.md
+-rw-r--r--  1 runner runner   158 Sep  8 13:24 run-2026-09-03-01-25.md
+-rw-r--r--  1 runner runner   143 Sep  8 13:24 run-2026-09-03-06-28.md
+-rw-r--r--  1 runner runner   198 Sep  8 13:24 run-2026-09-03-11-41.md
+-rw-r--r--  1 runner runner   318 Sep  8 13:24 run-2026-09-03-15-39.md
+-rw-r--r--  1 runner runner  4193 Sep  8 13:24 run-2026-09-03-18-54.md
+-rw-r--r--  1 runner runner   149 Sep  8 13:24 run-2026-09-03-21-33.md
+-rw-r--r--  1 runner runner   240 Sep  8 13:24 run-2026-09-04-01-20.md
+-rw-r--r--  1 runner runner   906 Sep  8 13:24 run-2026-09-04-06-02.md
+-rw-r--r--  1 runner runner 14505 Sep  8 13:24 run-2026-09-04-11-25.md
+-rw-r--r--  1 runner runner   143 Sep  8 13:24 run-2026-09-04-15-05.md
+-rw-r--r--  1 runner runner   204 Sep  8 13:24 run-2026-09-04-18-28.md
+-rw-r--r--  1 runner runner   249 Sep  8 13:24 run-2026-09-04-21-01.md
+-rw-r--r--  1 runner runner   319 Sep  8 13:24 run-2026-09-04-23-04.md
+-rw-r--r--  1 runner runner   180 Sep  8 13:24 run-2026-09-05-01-01.md
+-rw-r--r--  1 runner runner   226 Sep  8 13:24 run-2026-09-05-05-48.md
+-rw-r--r--  1 runner runner   241 Sep  8 13:24 run-2026-09-05-09-50.md
+-rw-r--r--  1 runner runner   219 Sep  8 13:24 run-2026-09-05-13-12.md
+-rw-r--r--  1 runner runner   161 Sep  8 13:24 run-2026-09-05-16-06.md
+-rw-r--r--  1 runner runner   152 Sep  8 13:24 run-2026-09-05-18-21.md
+-rw-r--r--  1 runner runner   220 Sep  8 13:24 run-2026-09-05-20-41.md
+-rw-r--r--  1 runner runner   270 Sep  8 13:24 run-2026-09-05-22-35.md
+-rw-r--r--  1 runner runner   197 Sep  8 13:24 run-2026-09-06-00-11.md
+-rw-r--r--  1 runner runner   159 Sep  8 13:24 run-2026-09-06-04-44.md
+-rw-r--r--  1 runner runner   279 Sep  8 13:24 run-2026-09-06-09-07.md
+-rw-r--r--  1 runner runner   424 Sep  8 13:24 run-2026-09-06-12-54.md
+-rw-r--r--  1 runner runner   278 Sep  8 13:24 run-2026-09-06-15-56.md
+-rw-r--r--  1 runner runner   220 Sep  8 13:24 run-2026-09-06-18-00.md
+-rw-r--r--  1 runner runner   151 Sep  8 13:24 run-2026-09-06-20-27.md
+-rw-r--r--  1 runner runner   199 Sep  8 13:24 run-2026-09-06-22-18.md
+-rw-r--r--  1 runner runner   215 Sep  8 13:24 run-2026-09-07-00-03.md
+-rw-r--r--  1 runner runner   205 Sep  8 13:24 run-2026-09-07-04-48.md
+-rw-r--r--  1 runner runner   141 Sep  8 13:24 run-2026-09-07-09-53.md
+-rw-r--r--  1 runner runner   177 Sep  8 13:24 run-2026-09-07-15-27.md
+-rw-r--r--  1 runner runner   254 Sep  8 13:24 run-2026-09-07-19-22.md
+-rw-r--r--  1 runner runner   158 Sep  8 13:24 run-2026-09-07-22-15.md
+-rw-r--r--  1 runner runner   186 Sep  8 13:24 run-2026-09-08-00-27.md
+-rw-r--r--  1 runner runner   172 Sep  8 13:24 run-2026-09-08-05-09.md
+-rw-r--r--  1 runner runner  3036 Sep  8 13:24 run-2026-09-08-09-46.md
+[0m
+[0m→ [0mRead ctx.txt[90m [limit=100][0m
+[0m→ [0mRead leads/lead-bigpickle.md[90m [offset=1, limit=200][0m
+[0m→ [0mRead leads/lead-bigpickle.md[90m [offset=1600, limit=210][0m
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' -X POST https://auth.hornbach.com/token-srv/introspect -d 'token=test123' 2>/dev/null
+200|16
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' -X POST https://auth.hornbach.com/token-srv/revoke -d 'token=test123' 2>/dev/null
+200|2
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}|%{redirect_url}' --max-redirs 0 'https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=public&redirect_uri=https://evil.com&scope=openid' 2>/dev/null
+302|0|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/users-srv/userinfo' 2>/dev/null
+401|66
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://api.hornbach.de/' 2>/dev/null
+404|47
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/.well-known/openid-configuration' 2>/dev/null
+200|3189
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/login-srv/social/token' 2>/dev/null
+500|41
+[0m
+[0m$ [0mcurl -s 'https://auth.hornbach.com/.well-known/status' 2>/dev/null
+{"updatedAt":"2026-09-08T13:26:43.74954242Z","status":"OK"}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://api.hornbach.de/healthcheck' 2>/dev/null
+200|19
+[0m
+[0m$ [0mcurl -s -D- 'https://auth.hornbach.com/token-srv/introspect' -X POST -d 'token=test123' 2>/dev/null | head -30
+HTTP/2 200 
+date: Tue, 08 Sep 2026 13:26:44 GMT
+content-type: application/json
+content-length: 16
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 432c8303-33c6-4bac-ac7e-da9ac997e832
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=prA2E1_yD69MPRMmgC7w.CSnzSNvC34fWbwzqHHk8VI-1788874004.8007727-1.0.1.1-7y2aC1UXMsaIkB8huzE94uPTbM20MhKUi9E75AvZV5zlTnLpcEkRK4U.JkOZ_gClgtFXFgiVRMHEyhTY27TjOGmLrMr7VOZFYZAlQVbPU_2aWt1RysRCVNnRnDXYU_.q; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Tue, 08 Sep 2026 13:56:44 GMT
+server: cloudflare
+cf-ray: a37e4961fc44d681-HAM
+alt-svc: h3=":443"; ma=86400
+
+{"active":false}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/apps-srv/clients' 2>/dev/null
+401|66
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/user-scim-srv/v2' 2>/dev/null
+404|28
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/token-srv/token' 2>/dev/null
+400|104
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/authz-srv/device/authz' 2>/dev/null
+400|216
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/apps-srv/clients/register' -X POST -H 'Content-Type: application/json' -d '{"client_name":"test"}' 2>/dev/null
+404|9
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/authz-srv/authz' --max-redirs 0 2>/dev/null
+302|0
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/identity/.well-known/openid-configuration' 2>/dev/null
+200|2313
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://hornbach-mp.mirakl.net/' 2>/dev/null
+302|0
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://hornbach-mp.mirakl.net/api/' 2>/dev/null
+401|39
+[0m
+[0m$ [0mcurl -s 'https://auth.hornbach.com/identity/.well-known/openid-configuration' 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "not json"
+not json
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://hornbach-mp.mirakl.net/api/orders' 2>/dev/null && echo "---" && curl -s 'https://hornbach-mp.mirakl.net/api/orders' 2>/dev/null | head -c 200
+401|39---
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://hornbach-mp.mirakl.net/api/products' 2>/dev/null && echo "---" && curl -s 'https://hornbach-mp.mirakl.net/api/products' 2>/dev/null | head -c 200
+401|39---
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0mcurl -s -D- 'https://auth.hornbach.com/identity/.well-known/openid-configuration' 2>/dev/null | head -20
+HTTP/2 200 
+date: Tue, 08 Sep 2026 13:27:36 GMT
+content-type: text/html; charset=utf-8
+set-cookie: __cf_bm=I3.lgISmeYNQeCV6uqH_rxbrbxrefrQQbOqxKk6r9kU-1788874056.799034-1.0.1.1-flFC3dK8kdljhvGPAcNSVKfjJfDV0qS74nwlLAOwHk0utiV8cUvhJ39o64WxVHcbGvqJX4647C5bo9vEOPv7ZgRSycoO8KVh4NLbdIT1Wion4fDUXVVCNa40AOMkqLoN; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Tue, 08 Sep 2026 13:57:36 GMT
+content-security-policy: default-src 'self'; style-src 'self' https://cdn.cidaas.de https://dev-cdn.cidaas.de 'unsafe-inline'; img-src 'self' data: https://cdn.cidaas.de https://dev-cdn.cidaas.de https://* image/svg+xml;  font-src 'self' data: https://cdn.cidaas.de https://dev-cdn.cidaas.de; script-src 'strict-dynamic' 'self' https://cdn.cidaas.de https://dev-cdn.cidaas.de 'nonce-/4FTieJhjOIqfX/xTL/cxg==' 'unsafe-inline'; frame-src https://*; connect-src 'self' https://telemetry.widas.de 'self' https://cdn.cidaas.de https://dev-cdn.cidaas.de;  media-src https://*; object-src 'none'; base-uri 'self';
+permissions-policy: geolocation=()
+referrer-policy: no-referrer-when-downgrade
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+x-powered-by: cidaas
+x-ref-number: 37a0d3a9-8380-4a47-a945-c273f28df621
+x-xss-protection: 1; mode=block
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a37e4aa6fb081a62-HAM
+alt-svc: h3=":443"; ma=86400
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://hornbach-mp.mirakl.net/api/configurations' 2>/dev/null && echo "---" && curl -s 'https://hornbach-mp.mirakl.net/api/configurations' 2>/dev/null | head -c 300
+401|39---
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://hornbach-mp.mirakl.net/api/announcements' 2>/dev/null && echo "---" && curl -s 'https://hornbach-mp.mirakl.net/api/announcements' 2>/dev/null | head -c 300
+401|39---
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://api.hornbach.de/odata' 2>/dev/null && echo "---" && curl -s 'https://api.hornbach.de/odata' 2>/dev/null | head -c 200
+404|47---
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0mcurl -s -D- 'https://auth.hornbach.com/token-srv/token' -X POST -d 'grant_type=password&username=test@test.com&password=test&scope=openid' 2>/dev/null
+HTTP/2 400 
+date: Tue, 08 Sep 2026 13:27:56 GMT
+content-type: application/json
+content-length: 104
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: 0df53df5-8a09-4797-b807-cb103326cc4c
+set-cookie: __cf_bm=b0sGC2p.BiS6lPDL0Ywu2yiCmz_xDCHTXiGo3.Lvogo-1788874076.7667744-1.0.1.1-dQih8GEXpSo7YvQFiUdLhrjDGIvwEEiSV5RD.EIAT3plXXDz8s.6NrFcruqppwuN03S5.5bz6RdFof.FUk.yr7QtudhXWIUbNc3HxlIw0cLTP_YqyTJ1mf5DHiK1ua8P; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Tue, 08 Sep 2026 13:57:56 GMT
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a37e4b23c8b6a9b8-CDG
+alt-svc: h3=":443"; ma=86400
+
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+[0m
+[0m$ [0mcurl -s -D- 'https://auth.hornbach.com/authz-srv/device/authz' -X POST -H 'Content-Type: application/json' -d '{"client_id":"test","scope":"openid"}' 2>/dev/null
+HTTP/2 400 
+date: Tue, 08 Sep 2026 13:27:57 GMT
+content-type: application/json
+content-length: 216
+strict-transport-security: max-age=15724800; includeSubDomains
+x-ref-number: 7f527188-9697-48f3-9655-fd553c2f266b
+set-cookie: __cf_bm=TT_MykdrvtTj5JheevLKiBVOYE7dyL0kog7Q0LS1d94-1788874077.206811-1.0.1.1-UYF6bK8ckp_G9i8ewHDdz4CUY1y4SpgiH_0hCZ7W9Qn2ky9FNub4mGpZ8cuDEElEW0s_lEwuMB28zZbximohufPf0aNFWiY0B7O4NvC7A98YPIqI0X90RN2AeoTzYhPS; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Tue, 08 Sep 2026 13:57:57 GMT
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a37e4b268ccd7531-CDG
+alt-svc: h3=":443"; ma=86400
+
+{"error":"invalid_request","error_code":"AUTH10003","error_description":"invalid_request: error parsing request parameters","error_hint":"please check the query/form parameters you are passing are in correct format"}
+[0m
+[0m$ [0mcurl -s -D- 'https://auth.hornbach.com/login-srv/social/token' -X POST -H 'Content-Type: application/json' -d '{"provider":"google","token":"fake"}' 2>/dev/null
+HTTP/2 404 
+date: Tue, 08 Sep 2026 13:27:57 GMT
+content-type: text/html; charset=utf-8
+access-control-allow-origin: *
+set-cookie: __cf_bm=p_jAi67jGvRTvXF4j6dGotFjz7S9.4L7lQ_l9NuqiCU-1788874077.6117911-1.0.1.1-6wNiBNPrnY1QQ6hVT90eIOZ.Ef3XQWamKfDOWKVyJrTqX_wc5MgbIi0bgCm0DYtGpp718R8JYi4R_LGago0BwoGPb5mBgZjswpEpUJtIWGYptQhLIgkJi1ojQAtntxXs; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Tue, 08 Sep 2026 13:57:57 GMT
+content-security-policy: default-src 'none'
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-ref-number: a6b04102-84b6-4728-a163-8a0f363fda9b
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a37e4b29186cd681-HAM
+alt-svc: h3=":443"; ma=86400
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot POST /login-srv/social/token</pre>
+</body>
+</html>
+[0m
+[0m$ [0mcurl -s -D- 'https://auth.hornbach.com/user-scim-srv/v2' -X POST -H 'Content-Type: application/json' -d '{"schemas":["urn:ietf:params:scim:api:messages:2.0:SearchRequest"]}' 2>/dev/null
+HTTP/2 404 
+date: Tue, 08 Sep 2026 13:27:58 GMT
+content-type: text/plain; charset=utf-8
+set-cookie: __cf_bm=OJXguLMXYfMJ45b9f_D4T318694D8k3cloZ0u6l6Om0-1788874078.4783847-1.0.1.1-Q5BjWL7Zd3p2A3qdtF5g4L7DbnCYvsVb.EujYpMZSwUIKu98uH.kOi4arbRw_kjzLRzWOMrD5_iML05ZmX93avnwMUlNp4Ib._yejJ1TdcSjbQRVUdGIF07n2G3d7Hsn; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Tue, 08 Sep 2026 13:57:58 GMT
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-ref-number: 834bb23d-7590-4820-8115-ed33a7d48b0a
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a37e4b2e79b42a39-HAM
+alt-svc: h3=":443"; ma=86400
+
+Cannot POST /user-scim-srv/v2
+[0m
+[0m$ [0mcurl -s 'https://auth.hornbach.com/.well-known/openid-configuration' 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); [print(k,'=',v) for k,v in d.items() if k in ('issuer','authorization_endpoint','token_endpoint','introspection_endpoint','revocation_endpoint','registration_endpoint','userinfo_endpoint','device_authorization_endpoint','scim_endpoint','token_exchange_endpoint','grant_types_supported','token_endpoint_auth_methods_supported','code_challenge_methods_supported',) ]" 2>/dev/null
+issuer = https://auth.hornbach.com
+authorization_endpoint = https://auth.hornbach.com/authz-srv/authz
+token_endpoint = https://auth.hornbach.com/token-srv/token
+userinfo_endpoint = https://auth.hornbach.com/users-srv/userinfo
+token_endpoint_auth_methods_supported = ['client_secret_basic', 'client_secret_post', 'client_secret_jwt', 'private_key_jwt']
+registration_endpoint = https://auth.hornbach.com/apps-srv/clients/register
+introspection_endpoint = https://auth.hornbach.com/token-srv/introspect
+revocation_endpoint = https://auth.hornbach.com/token-srv/revoke
+grant_types_supported = ['implicit', 'authorization_code', 'refresh_token', 'password', 'client_credentials', 'urn:ietf:params:oauth:grant-type:token-exchange', 'urn:ietf:params:oauth:grant-type:device_code']
+code_challenge_methods_supported = ['plain', 'S256']
+device_authorization_endpoint = https://auth.hornbach.com/authz-srv/device/authz
+scim_endpoint = https://auth.hornbach.com/user-scim-srv/v2
+[0m
+Interesting — the `login-srv/social/token` now returns 404 on POST (was 500 on GET). And SCIM POST returns 404 (not 200). All consistent with the router rejecting mutating paths on non-registered routes. Let me check a few more distinctive surface angles.
+
+Let me look at the OIDC metadata fully to see the endpoint list and any new surfaces worth breadth-checking.
+[0m$ [0mcurl -s 'https://auth.hornbach.com/.well-known/openid-configuration' 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); [print(k,'=',v) for k,v in d.items()]" 2>/dev/null
+issuer = https://auth.hornbach.com
+authorization_endpoint = https://auth.hornbach.com/authz-srv/authz
+token_endpoint = https://auth.hornbach.com/token-srv/token
+userinfo_endpoint = https://auth.hornbach.com/users-srv/userinfo
+https://discovery.netid.de/properties/status_endpoint = https://auth.hornbach.com/.well-known/status
+jwks_uri = https://auth.hornbach.com/.well-known/jwks.json
+scopes_supported = ['openid', 'profile', 'email', 'phone', 'address', 'offline_access', 'identities', 'roles', 'groups']
+response_types_supported = ['code', 'token', 'id_token', 'code token', 'code id_token', 'token id_token', 'code token id_token']
+response_modes_supported = ['query', 'fragment', 'form_post']
+subject_types_supported = ['public']
+id_token_signing_alg_values_supported = ['HS256', 'RS256']
+token_endpoint_auth_methods_supported = ['client_secret_basic', 'client_secret_post', 'client_secret_jwt', 'private_key_jwt']
+claims_supported = ['aud', 'auth_time', 'created_at', 'email', 'email_verified', 'exp', 'family_name', 'given_name', 'iat', 'identities', 'iss', 'mobile_number', 'name', 'nickname', 'phone_number', 'picture', 'sub']
+token_endpoint_auth_signing_alg_values_supported = ['HS256', 'RS256']
+check_session_iframe = https://auth.hornbach.com/session/check_session
+end_session_endpoint = https://auth.hornbach.com/session/end_session
+social_provider_token_resolver_endpoint = https://auth.hornbach.com/login-srv/social/token
+registration_endpoint = https://auth.hornbach.com/apps-srv/clients/register
+userinfo_signing_alg_values_supported = ['HS256', 'RS256']
+userinfo_encryption_alg_values_supported = ['RS256']
+userinfo_encryption_enc_values_supported = ['A128CBC-HS256']
+id_token_encryption_alg_values_supported = ['RS256']
+id_token_encryption_enc_values_supported = ['A128CBC-HS256']
+display_values_supported = ['page', 'popup']
+claim_types_supported = ['normal']
+service_documentation = https://docs.cidaas.de/
+ui_locales_supported = ['en-US', 'de-DE']
+introspection_endpoint = https://auth.hornbach.com/token-srv/introspect
+introspection_async_update_endpoint = https://auth.hornbach.com/token-srv/introspect/async/tokenusage
+revocation_endpoint = https://auth.hornbach.com/token-srv/revoke
+introspection_endpoint_auth_methods_supported = ['client_secret_basic', 'client_secret_post', 'client_secret_jwt', 'private_key_jwt']
+introspection_endpoint_auth_signing_alg_values_supported = ['HS256', 'RS256']
+revocation_endpoint_auth_methods_supported = ['client_secret_basic', 'client_secret_post', 'client_secret_jwt', 'private_key_jwt']
+revocation_endpoint_auth_signing_alg_values_supported = ['HS256', 'RS256']
+claims_locales_supported = ['en-US']
+op_policy_uri = https://www.cidaas.com/privacy-policy/
+op_tos_uri = https://www.cidaas.com/terms-of-use/
+grant_types_supported = ['implicit', 'authorization_code', 'refresh_token', 'password', 'client_credentials', 'urn:ietf:params:oauth:grant-type:token-exchange', 'urn:ietf:params:oauth:grant-type:device_code']
+code_challenge_methods_supported = ['plain', 'S256']
+device_authorization_endpoint = https://auth.hornbach.com/authz-srv/device/authz
+backchannel_logout_supported = True
+scim_endpoint = https://auth.hornbach.com/user-scim-srv/v2
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}|%{redirect_url}' --max-redirs 0 'https://auth.hornbach.com/session/check_session' 2>/dev/null
+200|27021|
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}|%{redirect_url}' --max-redirs 0 'https://auth.hornbach.com/session/end_session' 2>/dev/null
+302|0|https://www.hornbach.de/auth/pages/web/error?error=invalid_request&error_code=AATON1018&error_description=access_token_hint+or+id_token_hint+is+required
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/token-srv/introspect/async/tokenusage' -X POST -d 'token=test' 2>/dev/null
+404|32
+[0m
+Notable new surfaces in metadata that weren't explicitly tested: `session/check_session`, `session/end_session`, and the `introspection_async_update_endpoint`. None of these change the anonymous attack surface materially (all client-gated), but let me quickly verify the check_session / end_session surfaces and whether the introspection async endpoint responds differently — these are the only routes not previously addressed in the KB.
+
+Let me check end_session and check_session which are interesting — logout CSRF/login CSRF angles, plus the async introspection endpoint.
+[0m$ [0mcurl -s 'https://auth.hornbach.com/token-srv/introspect/async/tokenusage' -X POST -d 'token=test' 2>/dev/null | head -c 400
+{"error":"router doesn't exist"}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://hornbach-mp.mirakl.net/api/mcc/shops' 2>/dev/null && echo "---" && curl -s 'https://hornbach-mp.mirakl.net/api/mcc/shops' 2>/dev/null | head -c 200
+401|39---
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://hornbach-mp.mirakl.net/api/shops' 2>/dev/null && echo "---" && curl -s 'https://hornbach-mp.mirakl.net/api/shops' 2>/dev/null | head -c 200
+401|39---
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://hornbach-mp.mirakl.net/api/offers' 2>/dev/null && echo "---" && curl -s 'https://hornbach-mp.mirakl.net/api/offers' 2>/dev/null | head -c 200
+401|39---
+{"message":"Unauthorized","status":401}
+[0m
+check_session returns 200 with a 27KB body — that's the OP iframe for silent SSO, not an issue by itself. end_session redirects with an error requiring token hint (client-gated, no anonymous bypass). The async introspection endpoint returns "router doesn't exist".
+
+These are all genuinely client-gated or dead routes. No new anonymous vuln surfaced. All the surviving hypotheses remain blocked on the same single dependency (client_id from APK).
+
+Let me check the `hornbach-mp.mirakl.net` marketplace more — the Mirakl surface is a distinct in-scope asset that the KB flags as an in-scope API surface. Mirakl has known anonymous endpoints like `/api/mcc/...` and marketplace config. But per KB all `/api/*` require Mirakl auth. Let me verify there's genuinely nothing anonymous, and check for common Mirakl public endpoints.
+[0m$ [0mcurl -s -D- 'https://hornbach-mp.mirakl.net/' 2>/dev/null | head -20
+HTTP/2 302 
+date: Tue, 08 Sep 2026 13:28:45 GMT
+content-length: 0
+location: https://hornbach-mp.mirakl.net/login/oauth2/mirakl-sso?prompt=none
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+content-language: en-GB
+content-security-policy: upgrade-insecure-requests
+expires: 0
+permissions-policy: accelerometer=(), ambient-light-sensor=(), battery=(), camera=(), geolocation=(), gyroscope=(), microphone=(), midi=(), usb=(), vibrate=(), vr=(), wake-lock=(), xr-spatial-tracking=()
+pragma: no-cache
+referrer-policy: strict-origin-when-cross-origin
+set-cookie: XSRF-TOKEN=1b0ce90d-5f6e-4966-ae43-940d3cbe5e2b; Path=/; Secure
+strict-transport-security: max-age=31536000 ; includeSubDomains
+x-content-type-options: nosniff
+x-correlation-id: b5a4c87e-7721-4a12-815c-615c39d389c1
+x-frame-options: SAMEORIGIN
+x-robots-tag: noindex
+x-xss-protection: 1; mode=block
+via: 1.1 google
+cf-cache-status: DYNAMIC
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}|%{redirect_url}' --max-redirs 0 'https://hornbach-mp.mirakl.net/login/oauth2/mirakl-sso?prompt=none' 2>/dev/null
+302|0|https://login.mirakl.net/authorize?response_type=code&client_id=UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq&scope=openid%20email&state=https://hornbach-mp.mirakl.net/login/oauth2/code/connect?prompt%3Dnone%7Cnone&redirect_uri=https://redirect.mirakl.net&nonce=9xBVJ15q0SpqXDmitIPXkNItwdVDf3zSrpX8zlHEKSw&code_challenge=kjKy3CTyTjkEg8Xyim4X6iHVSVebwqOJka0E_xdtCtk&code_challenge_method=S256&audience=platform&ext-client-logo-url=https://hornbach-mp.mirakl.net/media/operator-interface-logo&origin=hornbach-mp.mirakl.net&prompt=none
+[0m
+The Mirakl `/login/oauth2/mirakl-sso?prompt=none` redirect on the root is notable — it uses OAuth2 SSO. Let me check the SSO login flow and operator login page for any OIDC client_id exposure (which could give a valid client_id for the cidaas tenant — Mirakl marketplace often federates to the same IdP). This could be an alternative client_id source to the APK.
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{redirect_url}' --max-redirs 0 'https://hornbach-mp.mirakl.net/login' 2>/dev/null
+200|
+[0m
+[0m$ [0mcurl -s 'https://hornbach-mp.mirakl.net/' -o /dev/null -w 'root follow: %{http_code}\n' -L --max-redirs 2 2>/dev/null
+root follow: 302
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}|%{redirect_url}' --max-redirs 0 'https://hornbach-mp.mirakl.net/login' 2>/dev/null
+200|15027|
+[0m
+Interesting — the Mirakl marketplace SSO is to `login.mirakl.net` (Mirakl's own hosted auth, not cidaas). The `client_id=UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq` is a Mirakl client_id for `login.mirakl.net`, separate from the hornbach cidaas tenant. So the Mirakl surface federates to its own platform IdP, not to `auth.hornbach.com`. Not a client_id source for the hornbach cidaas tenant.
+
+Let me confirm `/login` returns a 200 login panel and check the marketplace operator login for any cidaas/oauth redirect.
+[0m$ [0mcurl -s 'https://hornbach-mp.mirakl.net/login' 2>/dev/null | grep -oiE '(client_id|redirect_uri|oauth|cidaas|hornbach\.com|authorize)[^"<>]*' | head -20
+client_id: ga4UserId,
+oauth2/operator-oidc
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}|%{size_download}' 'https://auth.hornbach.com/login-srv/social/token' 2>/dev/null
+500|41
+[0m
+The Mirakl `/login` page is a public login panel (out of scope — "public login panels"). It references `oauth2/operator-oidc` but federates to `login.mirakl.net`, not hornbach's cidaas. This does not unlock the hornbach cidaas client_id.
+
+I've confirmed all surfaces are unchanged from the prior assessment. All surviving hypotheses remain gated on the single human dependency (client_id extraction from the smarthome APK). No new anonymous vulnerability surfaced this session. Let me compile the output.
+
+My state: phase POC, target api. All probes this session (introspect/revoke POST → 200, authz live, userinfo 401, api root 404, meta intact, social token now 404-on-POST, device authz client-gated, token client-gated, Mirakl SSO→login.mirakl.net) confirm NO_DELTA vs the 10-session-established surface.
+
+STEP 1 — DELTA (vs last assessment 08:49):
+- [CHANGED] login-srv/social/token: POST now returns 404 "Cannot POST" (was GET→500); GET-only route, no longer returns 500 error JSON on GET (need note). Actually let me verify GET.
+[0m$ [0mcurl -s 'https://auth.hornbach.com/login-srv/social/token' 2>/dev/null | head -c 200
+{"success":false,"status":500,"error":{}}
+[0m
+Confirmed: GET still returns 500 `{"success":false,"status":500,"error":{}}` with the CORS wildcard. So the surface is unchanged — the 500-on-GET social token resolver persists. That was previously noted as ACCEPTED OTHER class.
+
+All surfaces confirmed stable / NO_DELTA. Writing final analysis.
+
+STEP 1 — DELTA
+- [NEW] auth.hornbach.com/.well-known/openid-configuration: re-fetched intact (13:27Z) — identical 6-service endpoint set + scopes; no new endpoint; also advertises `session/check_session` (200, 27KB iframe body, OP silent-SSO frame — no anonymous vuln) and `session/end_session` (302→AATON1018 requires token hint, client-gated).
+- [CONFIRMED] hornbach-mp.mirakl.net("/" → 302 /login/oauth2/mirakl-sso → login.mirakl.net with its OWN client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq) — Mirakl federates to its platform IdP, NOT hornbach cidaas; not a client_id source for auth.hornbach.com tenant.
+
+Everything else NO_DELTA (introspect 200, revoke 200, authz live, userinfo 401, api 404/47, meta intact).
+
+STEP 2 — PRIORITIZE
+[PRIO] auth.hornbach.com/token-srv/introspect,85,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=7,freshness=8
+[PRIO] auth.hornbach.com/token-srv/revoke,82,attack_surface=9,business_value=9,tech_exposure=8,gate_ease=10,cloud_surface=7,freshness=8
+[PRIO] auth.hornbach.com/authz-srv/authz,70,attack_surface=8,business_value=10,tech_exposure=9,gate_ease=3,cloud_surface=7,freshness=7
+
+STEP 3 — HYPOTHESES (surviving, unchanged — both blocked on APK)
+
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + claim-set disclosure
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+
+STEP 4 — SELF-CRITIQUE
+[PARKED] token-exchange grant abuse: 30 < 40
+[FINAL] both survivors.
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: APK extraction (sole unblocker).
+
+STEP 6 — LEARNING
+New learnings this session: social token GET still 500 (ACCEPTED), end_session client-gated (REJECTED MISCONFIG), Mirakl→login.mirakl.net separate IdP (ACCEPTED OTHER).
+
+STEP 7 — RISK: 52/100 unchanged.
+
+# [INAUDIBLE/structured output]
+
+---
+STEP 1 — DELTA
+- [NEW] auth.hornbach.com/.well-known/openid-configuration: re-fetched intact (13:27Z) — same 6-service set; adds `session/check_session` (200 len=27021, OP silent-SSO iframe — no anonymous vuln) and `session/end_session` (302→AATON1018 requires token hint, client-gated); `introspection_async_update_endpoint` returns {"error":"router doesn't exist"}
+- [NEW] hornbach-mp.mirakl.net: root → 302 /login/oauth2/mirakl-sso → **login.mirakl.net** with its own client_id `UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq` — Mirakl federates to its PLATFORM IdP, not hornbach cidaas → NOT a client_id source for auth.hornbach.com
+- NO_DELTA else: introspect POST 200, revoke POST 200, authz 302→AUTH10007 live, userinfo 401, device/authz 400 client-gated, token 400 invalid_client, api.hornbach.de 404/47 + /healthcheck 200, social/token GET 500 `{"success":false,"status":500}` unchanged
+
+STEP 2 — PRIORITIZE
+[PRIO] auth.hornbach.com/token-srv/introspect,85,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=7,freshness=8
+[PRIO] auth.hornbach.com/token-srv/revoke,82,attack_surface=9,business_value=9,tech_exposure=8,gate_ease=10,cloud_surface=7,freshness=8
+[PRIO] auth.hornbach.com/authz-srv/authz,70,attack_surface=8,business_value=10,tech_exposure=9,gate_ease=3,cloud_surface=7,freshness=7
+
+STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + claim-set disclosure
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: fresh 13:27Z POST introspect → 200 `{"active":false}`, revoke → 200 `OK`, zero client auth; RFC 7662/7009 mandate it; issuance correctly gated (400 invalid_client on token); flaw isolated to two management endpoints; userinfo 401 bearer-gated consumer
+evidence_needed: valid access_token + client_id from de.hornbach.app.smarthome `assets/cidaas.xml` → introspect claim set, revoke, re-introspect active=false, userinfo with revoked token → 401
+verify_steps: POST token=<real> introspect no-auth → claim set; POST <real> revoke; re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE 13:27Z (302→AUTH10007 uniform gate); redirect_uri validation never tested — blocked at client_id gate; cidaas historically regex allowlists; `<found>` placeholder confirms a prior valid client_id existed but is redacted
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/)
+verify_steps: --max-redirs 0 GET authz-srv/authz?client_id=<real>&redirect_uri=<variant> → 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+
+[HYP] Unauthenticated token-exchange/linked-token grant abuse
+class: AUTH
+asset: auth.hornbach.com/token-srv/token
+confidence: 30
+reasoning: discovery advertises RFC 8693/password/client_credentials/device_code grants but token endpoint verified client-gated (400 invalid_client); no anonymous route exists; device/authz 400 invalid_request without valid client_id
+evidence_needed: client_id+secret (APK) then POST grant_type=token_exchange
+verify_steps: metadata present; GET/POST token → 400; device/authz → 400; no anonymous differential
+impact: token-minting pivot IF creds leak — LOW
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+[PARKED] Unauthenticated token-exchange/linked-token grant abuse: confidence 30 < 40; no anonymous differential; purely theoretical pivot IF client creds leaked; token + device endpoints correctly gated
+[FINAL] Unauthenticated token introspection + revocation enables silent session kill + claim-set disclosure: 85 confidence, 10+ sessions confirmed, real-token PoC gated on APK extraction
+[FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch: 70 confidence, endpoint live (302→AUTH10007), gated on client_id
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKPure v3.9.0 or AppBrain v2.9.2, package `de.hornbach.app.smarthome`), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. This remains the SOLE unblocker for both surviving hypotheses (85 introspect/revoke, 70 redirect_uri). Confirmed this session that Mirakl does NOT leak it (federates to login.mirakl.net via client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq). No server-side probe remains — all anonymous surfaces NO_DELTA this session.
+
+STEP 6 — LEARNING
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 13:27Z 11th session; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — 11th session; stable text/plain
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 13:27Z — 302→AUTH10007 invalid_client on dummy client_id; uniform gate, client_id enumeration still REMOVED
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET still 500 `{"success":false,"status":500}` + Access-Control-Allow-Origin:*; POST → 404 (GET-only route)
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: requires access_token_hint/id_token_hint (302→AATON1018), client/token-gated — no anonymous logout CSRF vector
+[LEARN] ACCEPTED class OTHER @ hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source for auth.hornbach.com tenant
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
+
+STEP 7 — RISK
+[RISK] hornbach: 52/100 — NO_SURFACE_CHANGE this session (all anonymous surfaces re-verified NO_DELTA; Mirakl confirmed to federate to separate platform IdP, not a client_id source). 85-conf introspect/revoke remains fully PoC-gated on the single HUMAN dependency (APK `assets/cidaas.xml` extraction); 70-conf redirect_uri bypass blocked at client_id gate; api.hornbach.de anonymous breadth definitively exhausted; moderate risk unchanged, program surface stable.

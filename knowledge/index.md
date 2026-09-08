@@ -136,3 +136,9 @@
 - 2026-09-08 REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id enumeration via status-code differential is REMOVED — invalid client_ids return uniform 302→AUTH10007; 404 vs 302 variance is request-shape not client validity signal
 - 2026-09-08 REJECTED class MISCONFIG @ login.hornbach.com: Fastly CNAME takeover confirmed unlikely — active service (Varnish header, 200 response, resolving IP) eliminates takeover vector
 - 2026-09-08 REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 known scoped hosts resolve
+- 2026-09-08 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 13:27Z 11th session; systemic and stable
+- 2026-09-08 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — 11th session; stable text/plain
+- 2026-09-08 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 13:27Z — 302→AUTH10007 invalid_client on dummy client_id; uniform gate, client_id enumeration still REMOVED
+- 2026-09-08 ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET still 500 `{"success":false,"status":500}` + Access-Control-Allow-Origin:*; POST → 404 (GET-only route)
+- 2026-09-08 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: requires access_token_hint/id_token_hint (302→AATON1018), client/token-gated — no anonymous logout CSRF vector
+- 2026-09-08 ACCEPTED class OTHER @ hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source for auth.hornbach.com tenant
