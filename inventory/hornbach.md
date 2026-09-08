@@ -314,3 +314,5 @@ www.hornbach.com
 - CHANGED auth.hornbach.de/nitro/v1/config: 302→/logon/LogonPoint/tmindex.html — NetScaler management API NOT exposed unauthenticated
 
 ## 2026-09-08 17:33:24 UTC
+
+## 2026-09-08 20:19:01 UTC

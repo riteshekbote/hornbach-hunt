@@ -1904,3 +1904,28 @@ testability: AUTH_HELPED
 [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules
 [LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
 [RISK] hornbach: 52/100 — NO_SURFACE_CHANGE this session. 85-conf introspect/revoke remains fully PoC-gated on the single HUMAN dependency (APK extraction). 70-conf redirect_uri bypass blocked at client_id gate. api.hornbach.de anonymous breadth definitively exhausted. Moderate risk unchanged; program surface stable.
+## 2026-09-08 20:17:21 UTC [target] (model bigpickle)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST introspect returns 200 {"active":false} unauthenticated; POST revoke returns 200 OK unauthenticated; both RFC-mandated endpoints missing client auth; 11+ independent sessions confirm stability; token issuance correctly gated (400 invalid_client)
+evidence_needed: valid access_token + client_id from de.hornbach.app.smarthome assets/cidaas.xml → introspect claim set, revoke, re-introspect active=false, userinfo with revoked token → 401
+verify_steps: POST token=<real> introspect no-auth → claim set; POST <real> revoke; re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE (302→AUTH10007 uniform gate); redirect_uri validation never tested due to client_id gate; cidaas historically regex allowlists; valid client_id exists but is redacted in KB
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/)
+verify_steps: --max-redirs 0 GET authz-srv/authz?client_id=<real>&redirect_uri=<variant> → 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+class: AUTH
+asset: auth.hornbach.com/token-srv/token
+confidence: 30
+reasoning: discovery advertises RFC 8693/password/client_credentials grants but token endpoint verified client-gated (400 invalid_client); no anonymous route exists
+evidence_needed: client_id+secret (APK) then POST grant_type=token_exchange
+verify_steps: metadata present; GET/POST token → 400; device/authz → 400; no anonymous differential
+impact: token-minting pivot IF creds leak — LOW
+testability: AUTH_HELPED
