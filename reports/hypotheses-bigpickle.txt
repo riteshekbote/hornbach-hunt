@@ -1,4 +1,10 @@
-## 2026-09-08 03:49:30 UTC [target] (model bigpickle)
+## 2026-09-08 08:44:43 UTC [target] (model bigpickle)
+[NEW] auth.hornbach.com/token-srv/introspect: POST → 200 `{"active":false}` unauthenticated confirmed across 10+ sessions; systemic and stable
+[NEW] auth.hornbach.com/token-srv/revoke: POST → 200 `OK` unauthenticated confirmed stable; text/plain response body
+[NEW] auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z — 302→AUTH10007 invalid_client on dummy client_id; deprecation flag rejected
+[NEW] auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist
+[NEW] api.hornbach.de: SAP API Gateway exists with backend on localhost:8080; anonymous breadth definitively exhausted
+[NEW] hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is in-scope API surface; all /api/* require Mirakl auth
 [PRIO] auth.hornbach.com/token-srv/introspect,85,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=7,freshness=8
 [PRIO] auth.hornbach.com/token-srv/revoke,82,attack_surface=9,business_value=9,tech_exposure=8,gate_ease=10,cloud_surface=7,freshness=8  
 [PRIO] auth.hornbach.com/authz-srv/authz,70,attack_surface=8,business_value=10,tech_exposure=9,gate_ease=3,cloud_surface=7,freshness=7
@@ -15,7 +21,7 @@ testability: AUTH_HELPED
 class: OATH
 asset: auth.hornbach.com/authz-srv/authz
 confidence: 70
-reasoning: endpoint LIVE 18:13Z (302→AUTH10007 uniform gate); redirect_uri validation never tested — blocked at client_id gate; cidaas historically regex allowlists; <found> placeholder confirms prior valid client_id existed but is redacted from context
+reasoning: endpoint LIVE 18:13Z (302→AUTH10007 uniform gate); redirect_uri validation never tested — blocked at client_id gate; cidaas historically regex allowlists; `<found>` placeholder confirms prior valid client_id existed but is redacted from context
 evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/)
 verify_steps: --max-redirs 0 GET authz-srv/authz?client_id=<real>&redirect_uri=<variant> → 302-to-evil = code theft
 impact: authorization-code theft → ATO — HIGH

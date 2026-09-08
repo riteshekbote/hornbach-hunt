@@ -1,4 +1,4 @@
-## 2026-09-08 03:54:30 UTC [target] (model nemotron3)
+## 2026-09-08 08:49:20 UTC [target] (model nemotron3)
 [NEW] auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist — userinfo is single consuming gate on token plane (2026-09-07 21:38)
 [CHANGED] auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z 2026-09-07 — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:58 deprecation/404 flag as transient shared-routing noise
 [CHANGED] auth.hornbach.com/token-srv/introspect: POST method confirmed as only working method (GET/HEAD return 404); 10th session 18:13Z confirms POST → 200 `{"active":false}` unauthenticated — methodology artifact identified
@@ -39,7 +39,7 @@ testability: AUTH_HELPED
 [PARKED] Userinfo endpoint token binding / subject claim extraction via public subject_type: confidence 55 below actionable threshold without valid token; requires client_id extraction first (same gate as OAuth hypothesis); no independent verify path without AUTH_HELPED
 [FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 85, AUTH_HELPED, MEDIUM-HIGH)
 [FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
-[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal/APKPure v3.9.0 or AppBrain v2.9.2), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks both 85-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal/APKPure v3.9.0 or AppBrain v2.9.2, package `de.hornbach.app.smarthome`), extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks both 85-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 10th session 18:13Z; GET/HEAD 404 was methodology artefact; systemic and stable
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — 10th session 18:13Z; stable text/plain; parameter-sensitive 404 on GET/HEAD
 [LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:58 deprecation/404 flag as transient shared-routing noise

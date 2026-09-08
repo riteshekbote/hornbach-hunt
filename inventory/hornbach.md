@@ -288,3 +288,15 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z 2026-09-07 — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:58 deprecation/404 flag as transient shared-routing 
 - CHANGED auth.hornbach.com/token-srv/introspect: POST method confirmed as only working method (GET/HEAD return 404); 10th session 18:13Z confirms POST → 200 `{"active":false}` unauthenticated — methodology art
 - CHANGED auth.hornbach.com/token-srv/revoke: POST method confirmed as only working method (GET/HEAD return 404); 10th session 18:13Z confirms POST → 200 `OK` unauthenticated (text/plain) — methodology artifact
+
+## 2026-09-08 08:49:28 UTC
+- NEW auth.hornbach.com/token-srv/introspect: POST → 200 `{"active":false}` unauthenticated confirmed across 10+ sessions; systemic and stable
+- NEW auth.hornbach.com/token-srv/revoke: POST → 200 `OK` unauthenticated confirmed stable; text/plain response body
+- NEW auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z — 302→AUTH10007 invalid_client on dummy client_id; deprecation flag rejected
+- NEW auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist
+- NEW api.hornbach.de: SAP API Gateway exists with backend on localhost:8080; anonymous breadth definitively exhausted
+- NEW hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is in-scope API surface; all /api/* require Mirakl auth
+- NEW auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist — userinfo is single consuming gate on token plane (2026-09-07 21:38)
+- CHANGED auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z 2026-09-07 — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:58 deprecation/404 flag as transient shared-routing 
+- CHANGED auth.hornbach.com/token-srv/introspect: POST method confirmed as only working method (GET/HEAD return 404); 10th session 18:13Z confirms POST → 200 `{"active":false}` unauthenticated — methodology art
+- CHANGED auth.hornbach.com/token-srv/revoke: POST method confirmed as only working method (GET/HEAD return 404); 10th session 18:13Z confirms POST → 200 `OK` unauthenticated (text/plain) — methodology artifact

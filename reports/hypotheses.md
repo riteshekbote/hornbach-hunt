@@ -758,3 +758,28 @@
 - LEARN: REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id enumeration via status-code differential is REMOVED — invalid client_ids return uniform 302→A
 - LEARN: REJECTED class MISCONFIG @ login.hornbach.com: Fastly CNAME takeover confirmed unlikely — active service (Varnish header, 200 response, resolving IP) eliminates
 - LEARN: REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 know
+
+## RANKED HYPOTHESES 2026-09-08 08:49:28 UTC
+- [85] auth.hornbach.com/token-srv/{introspect,revoke}: Unauthenticated token introspection + revocation enables silent session kill + metadata leak (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Download `de.hornbach.app.smarthome` APK (APKPure v3.9.0 or AppBrain v2.9.2, package `de.hornbach.app.smarthome`), extract `assets/cidaas.xml` → client_i
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/VirusTotal/APKPure v3.9.0 or AppBrain v2.9.2, package `de.hornbach.app.smarthome`), extract `assets/c
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 10th session 18:13Z; GET/HEAD 404 was m
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — 10th session 18:13Z; stable text/plain; parameter-sensiti
+- LEARN: ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:5
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist — userinfo 
+- LEARN: ACCEPTED class OTHER @ api.hornbach.de: 10 paths today (root, health, api/v1, api/v2, odata, sap/opu/odata, sap/public/ping, iFlow, integration, monitoring) all
+- LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules (OPTIONS/TRACE excluded from scope)
+- LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 10th session 18:13Z; GET/HEAD 404 was
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 `OK` unauthenticated — 10th session 18:13Z; stable text/plain; parameter-sensi
+- LEARN: ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:5
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/users-srv/userinfo: mounted, anonymous 401 JSON bearer-gated; token-srv/userinfo → 404 router-doesn't-exist — userinfo 
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (06:30Z) — all 6 service endpoints + status advertised; REJ
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: GET with grant_type → 400 `invalid_client` (client required); token plane client-gated, isolating the u
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com: discovery advertises `token-exchange`(RFC 8693), `password`, `client_credentials` grants + `subject_types_supported=["
+- LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: 8 additional paths tested (graphql, api/graphql, v1/graphql, openapi.json, swagger.json, api-docs, sap/apigateway, s
+- LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules (OPTIONS/TRACE excluded from scope)
+- LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
+- LEARN: REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id enumeration via status-code differential is REMOVED — invalid client_ids return uniform 302→A
+- LEARN: REJECTED class MISCONFIG @ login.hornbach.com: Fastly CNAME takeover confirmed unlikely — active service (Varnish header, 200 response, resolving IP) eliminates
+- LEARN: REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 know
