@@ -338,3 +338,7 @@ www.hornbach.com
 - CHANGED auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
 
 ## 2026-09-09 06:13:02 UTC
+
+## 2026-09-09 11:46:39 UTC
+- CHANGED auth.hornbach.com/token-srv/introspect: probe-results.md shows 25+ consecutive GET probes returning 404 (latest 2026-09-09 06:13), but KB confirms POST → 200 `{"active":false}` unauthenticated across 
+- CHANGED auth.hornbach.com/token-srv/revoke: probe-results.md shows 25+ consecutive GET probes returning 404 (latest 2026-09-09 06:13), but KB confirms POST → 200 `OK` unauthenticated across 11+ sessions; para
