@@ -15602,3 +15602,191 @@ testability: PASSIVE
 
 ## STEP 7 — RISK
 [RISK] hornbach: 52/100 — no surface change across 12+ sessions; strongest defensible finding (unauthenticated introspect+revoke, RFC 7662/7009 bypass) stable but PoC-gated on real token; redirect_uri bypass gated on client_id; smarthome breadth partially tested, negative; single dependency (client_id from APK) blocks all report-grade chains.
+===== ANALYST bigpickle 2026-09-09 21:36:15 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la; cat scope.yml 2>/dev/null | head -50
+total 296
+drwxr-xr-x 12 runner runner   4096 Sep  9 21:33 .
+drwxr-xr-x  3 runner runner   4096 Sep  9 21:32 ..
+drwxr-xr-x  7 runner runner   4096 Sep  9 21:33 .git
+drwxr-xr-x  3 runner runner   4096 Sep  9 21:32 .github
+-rw-r--r--  1 runner runner   1901 Sep  9 21:32 README.md
+-rw-r--r--  1 runner runner     32 Sep  9 21:33 analyst-out.txt
+-rw-r--r--  1 runner runner 100046 Sep  9 21:33 analyst-prompt.txt
+-rw-r--r--  1 runner runner  96118 Sep  9 21:33 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:32 inventory
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:32 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:32 leads
+-rw-r--r--  1 runner runner  12968 Sep  9 21:32 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:32 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:32 reports
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:32 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep  9 21:32 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:32 scripts
+-rw-r--r--  1 runner runner     33 Sep  9 21:32 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep  9 21:32 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep  9 21:32 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep  9 21:32 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep  9 21:32 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep  9 21:32 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:32 triage
+programs:
+  hornbach:
+    name: HORNBACH Holding AG & Co. KGaA / HORNBACH Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, retail systems, e-commerce platforms, mobile applications, APIs, supply chain and logistics systems, customer accounts, in-store digital systems, and domains operated by HORNBACH Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+      - "Social engineering, physical attacks, and DoS/DDoS testing (per program notes)"
+      - "Exposure of customer/employee/financial/authentication data during testing (per program notes)"
+    github_orgs:
+      - none-configured
+
+rules:
+  passive_first: false          # deep-hunt agent: active probes allowed when scoped
+  max_requests_per_second: 1    # never hammer live infra
+  no_doom: true                 # no DoS/DDoS, no account-lockout attacks
+  account_creation: restricted  # only on test/sandbox assets, never live customer data
+  no_data_modification: true    # no writes/deletes on live customer data
+  no_pre_disclosure: true       # never disclose before program response
+  poc_required: true            # scanner output alone is REJECTED
+  redact_secrets_in_commits: true
+
+models:
+[0m
+[0m✱ [0mGlob "**/*.md"[90m 64 matches[0m
+[0m→ [0mRead triage/run-2026-09-09-21-28.md
+[0m
+[0m$ [0mtail -40 probe-results.md
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-08 22:51:02 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 01:17:56 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 06:13:08 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 11:46:45 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 15:26:09 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 18:46:44 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+[0m
+[0m$ [0mls leads; echo ---; rg -i "client_id|clientid|ridaas" leads/*.md | head -40
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-mimo.md
+lead-nemotron3.md
+reposcan-hornbach.md
+---
+/bin/bash: line 1: rg: command not found
+[0m
+[0m$ [0mrg -i "cidaas|client_id|smarthome|rudder" recon-notes/*.md knowledge/*.md 2>/dev/null | head -40
+(no output)
+[0m
+[0m✱ [0mGrep "client_id|clientid|cidaas|smarthome|rudder"[90m in leads · 100 matches[0m
+[0m✱ [0mGrep "client_id|smarthome|rudder|cidaas"[90m in recon-notes/DEDICATED-DEEP.md · 0 matches[0m
+[0m
+[0m$ [0mset -e
+probe() { echo "== $1"; curl -s -o /dev/null -w "code=%{http_code} len=%{size_download} loc=%{redirect_url}\n" --max-time 15 "$1"; sleep 1; }
+probe "https://auth.hornbach.com/.well-known/openid-configuration"
+probe "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=dummy123&redirect_uri=https://evil.com&scope=openid"
+probe "https://api.hornbach.de/"
+probe "https://auth.hornbach.com/users-srv/userinfo"
+probe "https://hornbach-mp.mirakl.net/api/healthcheck" 2>/dev/null || true
+== https://auth.hornbach.com/.well-known/openid-configuration
+code=200 len=3189 loc=
+== https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=dummy123&redirect_uri=https://evil.com&scope=openid
+code=302 len=0 loc=https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+== https://api.hornbach.de/
+code=404 len=47 loc=
+== https://auth.hornbach.com/users-srv/userinfo
+code=401 len=66 loc=
+== https://hornbach-mp.mirakl.net/api/healthcheck
+code=401 len=39 loc=
+[0m
+[0m✱ [0mGrep "smarthome"[90m in recon-notes/DEDICATED-DEEP.md · 0 matches[0m
+[0m
+[0m$ [0mls knowledge recon-notes; echo ---; grep -ri "smarthome" knowledge/ recon-notes/ leads/reposcan-hornbach.md 2>/dev/null | head -30
+knowledge:
+index.md
+
+recon-notes:
+DEDICATED-DEEP.md
+---
+knowledge/index.md:- 2026-09-09 ACCEPTED class MISCONFIG @ smarthomebyhornbach.com: 09-09 scan — 5 live CDN SPA shells all common paths uniform 404 (215B), api-gw-evvr Zscaler edge TLS-fail, dev/docs-dev 404 roots; no anonymous API beyond SPA shells; hypothesis confidence 35→30.
+[0m
+Surface unchanged — all gates match KB exactly (discovery 200/3189B, authz 302→AUTH10007, api root 404/47B, userinfo 401, Mirakl 401). No delta on the walled estate. Checking the one fresh passive angle: smarthome SPA bundles as a client_id/route dictionary source.
+[0m$ [0mgrep -i "smarthome" leads/reposcan-hornbach.md 2>/dev/null | head; echo "--- dns ---"; for h in smarthomebyhornbach.com api-gw-evvr.smarthomebyhornbach.com mgmt-dev.smarthomebyhornbach.com www-demo.smarthomebyhornbach.com; do d=$(getent hosts "$h" | head -1); echo "$h -> $d"; done
+--- dns ---
+smarthomebyhornbach.com -> 
+api-gw-evvr.smarthomebyhornbach.com -> 
+mgmt-dev.smarthomebyhornbach.com -> 2620:1ec:48:1::69 part-0041.t-0009.fb-t-msedge.net mgmt-dev.smarthomebyhornbach.com afd-mgmt-dev-fgsx4pihrhn56-begqe4gmbraggca2.z01.azurefd.net mr-z01.tm-azurefd.net dual.part-0041.t-0009.fb-t-msedge.net
+www-demo.smarthomebyhornbach.com -> 2620:1ec:29:1::69 part-0041.t-0009.fb-t-msedge.net www-demo.smarthomebyhornbach.com afd-www-demo-fgsx4pihrhn56-d7fqfrcmfeb9bpaq.z01.azurefd.net mr-z01.tm-azurefd.net dual.part-0041.t-0009.fb-t-msedge.net
+[0m
+[0m$ [0mcurl -s --max-time 20 -H "User-Agent: Mozilla/5.0" -o /tmp/spa-www-demo.html -w "www-demo code=%{http_code} len=%{size_download}\n" "https://www-demo.smarthomebyhornbach.com/"; sleep 1; curl -s --max-time 20 -H "User-Agent: Mozilla/5.0" -o /tmp/spa-mgmt-dev.html -w "mgmt-dev code=%{http_code} len=%{size_download}\n" "https://mgmt-dev.smarthomebyhornbach.com/"; sleep 1; curl -s --max-time 20 -H "User-Agent: Mozilla/5.0" -o /tmp/spa-root.html -w "root code=%{http_code} len=%{size_download}\n" "https://smarthomebyhornbach.com/"
+www-demo code=200 len=22559
+mgmt-dev code=200 len=1794
+root code=000 len=0
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mgrep -oE 'src="[^"]+\.js[^"]*"|href="[^"]+\.(css|js)[^"]*"' /tmp/spa-www-demo.html | sort -u | head -30; echo "=== mgmt-dev ==="; cat /tmp/spa-mgmt-dev.html failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

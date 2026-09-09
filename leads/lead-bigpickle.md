@@ -2158,3 +2158,4 @@ testability: PASSIVE
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.com: GET-plane recheck 09-09 — OIDC discovery 200/3189B, authz uniform 302→AUTH10007, api.hornbach.de root 404/47B; all core gates unchanged, walled estate confirmed.
 [LEARN] ACCEPTED class MISCONFIG @ smarthomebyhornbach.com: 09-09 scan — 5 live CDN SPA shells all common paths uniform 404 (215B), api-gw-evvr Zscaler edge TLS-fail, dev/docs-dev 404 roots; no anonymous API beyond SPA shells; hypothesis confidence 35→30.
 [RISK] hornbach: 52/100 — no surface change across 12+ sessions; strongest defensible finding (unauthenticated introspect+revoke, RFC 7662/7009 bypass) stable but PoC-gated on real token; redirect_uri bypass gated on client_id; smarthome breadth partially tested, negative; single dependency (client_id from APK) blocks all report-grade chains.
+## 2026-09-09 21:34:01 UTC [target] (model bigpickle)
