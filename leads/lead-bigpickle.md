@@ -1957,3 +1957,33 @@ evidence_needed: any anonymous 200/302 differential route on dev vs prod, or a l
 verify_steps: GET api-client.dev.smarthomebyhornbach.com/api/public/hornbach/glient/ → done, 401 (same as prod); GET docs-dev.smarthomebyhornbach.com/glient/metadata → 404; compare known app restApiUrl routes on prod vs dev for response differentials only
 impact: IF dev API reached anonymously → customer device-command/account surface (smart-home control) — HIGH but currently unproved; anonymous breadth exhausted at 404/401
 testability: PASSIVE
+## 2026-09-09 01:09:30 UTC [target] (model bigpickle)
+[HYP] POC: valid token introspect → claim disclosure, revoke → silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST introspect → 200 `{"active":false}` unauthenticated; POST revoke → 200 `OK` text/plain; RFC 7662/7009 client-auth missing; 11+ sessions stable; token issuance still client-gated (400 invalid_client). No real token/client_id exists in repo (log grep) — POC is fully gated on assets extraction.
+evidence_needed: valid access_token + client_id from `de.hornbach.app.smarthome` `assets/cidaas.xml` → introspect real claim set, revoke, re-introspect active=false, userinfo with revoked bearer → 401.
+verify_steps: POST token=<real> introspect no-auth; POST token=<real> revoke; POST re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401.
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] redirect_uri regex/wildcard bypass → authorization-code theft
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE (302→AUTH10007 uniform gate); redirect_uri validation never tested because no confirmed client_id; cidaas historically regex allowlists; discovery advertises authorizisation_code flow. Blocker confirmed real: no client_id validated in any repo log.
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid → 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] Mirakl operator/back-office route reachable anonymously
+class: MISCONFIG
+asset: hornbach-mp.mirakl.net
+confidence: 25
+reasoning: uniform 401 across all /api/* and Spring "No static resource" 404 elsewhere; actuator/swagger/api-docs 404; no differential to hang a bypass on.
+evidence_needed: any non-401 response on a Mirakl operator path
+verify_steps: GET /api/operators/... low-rate compare vs 401 baseline
+impact: marketplace admin/money surface — HIGH if present
+testability: PASSIVE
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` (APKMirror/APKPure/AppBrain; current APK v3.9.0, mSun 2.9.2, pkg `de.hornbach.app.smarthome`), unzip, copy out `assets/cidaas.xml` AND grep AndroidManifest.xml/classes.dex strings for `client_id`, `client_secret`, `redirect_uri`; `sha256sum` each artifact; return client_id + sha256(secret) + redirect_uri allowlist. Single action unblocks BOTH [FINAL] hypotheses (POC proof set + redirect_uri differential). Web path to client_id is bot-challenged (3038B stub) — HUMAN is the only route.
+[RISK] hornbach: 52/100 — no surface change; Upd. introspect/revoke (85-conf) and redirect_uri (70-conf) both blocked on the same unrecovered client_id; all three live probes today confirmed uniform gates. Program surface stable, campaign progressive-stuck on one HUMAN dependency.

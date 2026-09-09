@@ -13345,3 +13345,247 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] hornbach: 52/100 — NO differential on the known 4-host surface this session; the 85-conf introspect/revoke and 70-conf redirect_uri findings remain fully gated on the single HUMAN APK dependency; new smarthomebyhornbach.com cluster is fresh but gate-equal (404/401 anonymous everywhere, third-party ROC backend); program risk moderate and stable.
+===== ANALYST bigpickle 2026-09-09 01:17:49 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sS --max-time 15 -o /dev/null -w "dns=%{remote_ip} code=%{http_code} size=%{size_download}\n" https://hornbach-mp.mirakl.net/ 2>&1; sleep 1; curl -sS --max-time 15 -o /dev/null -w "dns=%{remote_ip} code=%{http_code} size=%{size_download}\n" https://api-client.prod.smarthomebyhornbach.com/ 2>&1
+dns=104.16.215.106 code=302 size=0
+dns=20.4.186.95 code=404 size=19
+[0m
+[0m$ [0mecho "=== mirakl root headers ==="; curl -sSI --max-time 15 https://hornbach-mp.mirakl.net/ 2>&1 | tr -d '\r' | grep -Ei '^HTTP|^location|^server|^x-|^set-cookie'; sleep 1
+echo "=== mirakl /api/ ==="; curl -sS --max-time 15 -o /tmp/mk_api.txt -w "code=%{http_code} size=%{size_download}\n" https://hornbach-mp.mirakl.net/api/; head -c 300 /tmp/mk_api.txt; sleep 1
+echo; echo "=== mirakl /api/offers ==="; curl -sS --max-time 15 -o /tmp/mk_offers.txt -w "code=%{http_code} size=%{size_download}\n" https://hornbach-mp.mirakl.net/api/offers; head -c 300 /tmp/mk_offers.txt; sleep 1
+echo; echo "=== mirakl /api/mcc/ ==="; curl -sS --max-time 15 -o /tmp/mk_mcc.txt -w "code=%{http_code} size=%{size_download}\n" https://hornbach-mp.mirakl.net/api/mcc/; head -c 300 /tmp/mk_mcc.txt; sleep 1
+echo; echo "=== mirakl /healthz ==="; curl -sS --max-time 15 -o /tmp/mk_hz.txt -w "code=%{http_code} size=%{size_download}\n" https://hornbach-mp.mirakl.net/healthz; head -c 300 /tmp/mk_hz.txt
+=== mirakl root headers ===
+HTTP/2 302 
+location: https://hornbach-mp.mirakl.net/login/oauth2/mirakl-sso?prompt=none
+set-cookie: XSRF-TOKEN=8354dfd4-d833-4c2d-919a-dd1ac9469451; Path=/; Secure
+x-content-type-options: nosniff
+x-correlation-id: 308ad5d2-37a0-4823-87ee-8022e0d5acaf
+x-frame-options: SAMEORIGIN
+x-robots-tag: noindex
+x-xss-protection: 1; mode=block
+server: cloudflare
+=== mirakl /api/ ===
+code=401 size=39
+{"message":"Unauthorized","status":401}
+=== mirakl /api/offers ===
+code=401 size=39
+{"message":"Unauthorized","status":401}
+=== mirakl /api/mcc/ ===
+code=401 size=39
+{"message":"Unauthorized","status":401}
+=== mirakl /healthz ===
+code=404 size=54
+{"status":404,"message":"No static resource healthz."}
+[0m
+[0m$ [0mecho "=== mirakl /actuator ==="; curl -sS --max-time 15 -o /tmp/mk_act.txt -w "code=%{http_code} size=%{size_download}\n" https://hornbach-mp.mirakl.net/actuator; head -c 300 /tmp/mk_act.txt; sleep 1
+echo; echo "=== mirakl /swagger-ui.html ==="; curl -sS --max-time 15 -o /tmp/mk_sw.txt -w "code=%{http_code} size=%{size_download}\n" https://hornbach-mp.mirakl.net/swagger-ui.html; head -c 300 /tmp/mk_sw.txt; sleep 1
+echo; echo "=== mirakl /api/v3/api-docs ==="; curl -sS --max-time 15 -o /tmp/mk_doc.txt -w "code=%{http_code} size=%{size_download}\n" https://hornbach-mp.mirakl.net/api/v3/api-docs; head -c 300 /tmp/mk_doc.txt; sleep 1
+echo; echo "=== smarthome api-client.prod root body ==="; curl -sS --max-time 15 https://api-client.prod.smarthomebyhornbach.com/ -w "\ncode=%{http_code}\n" 2>&1 | head -c 300
+=== mirakl /actuator ===
+code=404 size=55
+{"status":404,"message":"No static resource actuator."}
+=== mirakl /swagger-ui.html ===
+code=404 size=62
+{"status":404,"message":"No static resource swagger-ui.html."}
+=== mirakl /api/v3/api-docs ===
+code=401 size=39
+{"message":"Unauthorized","status":401}
+=== smarthome api-client.prod root body ===
+404 page not found
+
+code=404
+[0m
+[0m$ [0mfor L in prod dev; do echo "=== api-client.$L route ==="; curl -sS --max-time 15 -o /tmp/sc_$L.txt -w "code=%{http_code} size=%{size_download}\n" "https://api-client.$L.smarthomebyhornbach.com/api/public/hornbach/glient/"; head -c 300 /tmp/sc_$L.txt; echo; sleep 1; done
+echo "=== api-phone root ==="; curl -sS --max-time 15 -o /tmp/sc_ph.txt -w "code=%{http_code} size=%{size_download} ip=%{remote_ip}\n" https://api-phone.prod.smarthomebyhornbach.com/; head -c 300 /tmp/sc_ph.txt
+=== api-client.prod route ===
+code=401 size=101
+{"error":{"function":"request_allowed","line":412,"module":"oauth_middleware_http"},"status":"error"}
+=== api-client.dev route ===
+code=401 size=101
+{"error":{"function":"request_allowed","line":412,"module":"oauth_middleware_http"},"status":"error"}
+=== api-phone root ===
+code=404 size=19 ip=20.4.186.95
+404 page not found
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt 2>/dev/null; ls /home/runner/work/hornbach-hunt/hornbach-hunt/art 2>/dev/null
+total 264
+drwxr-xr-x 12 runner runner  4096 Sep  9 01:06 .
+drwxr-xr-x  3 runner runner  4096 Sep  9 01:06 ..
+drwxr-xr-x  7 runner runner  4096 Sep  9 01:06 .git
+drwxr-xr-x  3 runner runner  4096 Sep  9 01:06 .github
+-rw-r--r--  1 runner runner  1901 Sep  9 01:06 README.md
+-rw-r--r--  1 runner runner  4202 Sep  9 01:07 analyst-out.txt
+-rw-r--r--  1 runner runner 85630 Sep  9 01:06 analyst-prompt.txt
+-rw-r--r--  1 runner runner 81702 Sep  9 01:06 ctx.txt
+drwxr-xr-x  2 runner runner  4096 Sep  9 01:06 inventory
+drwxr-xr-x  2 runner runner  4096 Sep  9 01:06 knowledge
+drwxr-xr-x  2 runner runner  4096 Sep  9 01:06 leads
+-rw-r--r--  1 runner runner 11248 Sep  9 01:06 probe-results.md
+drwxr-xr-x  2 runner runner  4096 Sep  9 01:06 recon-notes
+drwxr-xr-x  2 runner runner  4096 Sep  9 01:06 reports
+drwxr-xr-x  2 runner runner  4096 Sep  9 01:06 reposcan-raw
+-rw-r--r--  1 runner runner  3341 Sep  9 01:06 scope.yml
+drwxr-xr-x  2 runner runner  4096 Sep  9 01:06 scripts
+-rw-r--r--  1 runner runner    33 Sep  9 01:06 state_bigpickle.json
+-rw-r--r--  1 runner runner    33 Sep  9 01:06 state_laguna.json
+-rw-r--r--  1 runner runner    33 Sep  9 01:06 state_ling3.json
+-rw-r--r--  1 runner runner    33 Sep  9 01:06 state_longcat.json
+-rw-r--r--  1 runner runner    33 Sep  9 01:06 state_mimo.json
+-rw-r--r--  1 runner runner    33 Sep  9 01:06 state_nemotron3.json
+drwxr-xr-x  2 runner runner  4096 Sep  9 01:06 triage
+[0m
+[0m$ [0mcd /home/runner/work/hornbach-hunt/hornbach-hunt; grep -rIoiE '(client_id|clientid)[=:][[:space:]]*[a-zA-Z0-9_.-]{6,}' leads/ knowledge/ probe-results.md recon-notes/ reports/ 2>/dev/null | sort -u | head -40
+leads/lead-bigpickle.md:client_id=public
+leads/lead-nemotron3.md:client_id=public
+probe-results.md:client_id=public
+reports/analyst-bigpickle.log:client_id: 85-confidence
+reports/analyst-bigpickle.log:client_id: ga4UserId
+reports/analyst-bigpickle.log:client_id=UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq
+reports/analyst-bigpickle.log:client_id=com.hornbach.android
+reports/analyst-bigpickle.log:client_id=de.hornbach
+reports/analyst-bigpickle.log:client_id=dummy-invalid
+reports/analyst-bigpickle.log:client_id=hornbach
+reports/analyst-bigpickle.log:client_id=hornbach-account
+reports/analyst-bigpickle.log:client_id=hornbach-de
+reports/analyst-bigpickle.log:client_id=hornbach-konto
+reports/analyst-bigpickle.log:client_id=hornbach-shop
+reports/analyst-bigpickle.log:client_id=hornbach_angular
+reports/analyst-bigpickle.log:client_id=hornbach_app
+reports/analyst-bigpickle.log:client_id=hornbach_ciam
+reports/analyst-bigpickle.log:client_id=hornbach_erp
+reports/analyst-bigpickle.log:client_id=hornbach_portal
+reports/analyst-bigpickle.log:client_id=hornbach_react
+reports/analyst-bigpickle.log:client_id=hornbach_webshop
+reports/analyst-bigpickle.log:client_id=myhornbach
+reports/analyst-bigpickle.log:client_id=public
+reports/analyst-bigpickle.log:client_id=unknown
+reports/analyst-bigpickle.log:client_id=web_4eda0f70-f075-4850-8116-8e46681151d3
+reports/analyst-bigpickle.log:client_id=webshop
+reports/analyst-bigpickle.log:client_id=www-hornbach-de
+reports/analyst-nemotron3.log:client_id: cidaas
+reports/analyst-nemotron3.log:client_id: customer
+reports/analyst-nemotron3.log:client_id: ecommerce
+reports/analyst-nemotron3.log:client_id: frontend
+reports/analyst-nemotron3.log:client_id: hornbach
+reports/analyst-nemotron3.log:client_id: hornbach-spa
+reports/analyst-nemotron3.log:client_id: hornbach-web
+reports/analyst-nemotron3.log:client_id: mobile
+reports/analyst-nemotron3.log:client_id: public
+reports/analyst-nemotron3.log:client_id: retail
+reports/analyst-nemotron3.log:client_id=hornbach
+reports/analyst-nemotron3.log:client_id=public
+reports/hypotheses.md:client_id=public
+[0m
+[0m$ [0mcd /home/runner/work/hornbach-hunt/hornbach-hunt; grep -rni "web_4eda0f70\|200\|AUTH100_3\|AUTH10007\|valid client\|<found>" reports/analyst-bigpickle.log 2>/dev/null | head -40
+136:200 https://www.hornbach.de/
+207:HTTP/2 200 
+253:OIDC discovery endpoint found at `auth.hornbach.com/.well-known/openid-configuration` returning 200 with `x-powered-by: cidaas`. Let me fetch the content.
+405:location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+467:Authorization endpoint confirmed live (`authz-srv/authz`) - returns `invalid_client` error. Device code endpoint (`authz-srv/device/authz`) returns 400 with JSON. Let me check the response bodies and try to find valid client_ids.
+468:[0m$ [0mcurl -s -D- "https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com" 2>&1 | head -100
+469:HTTP/2 200 
+539:[0m$ [0mcurl -s -D- -o /dev/null "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=web_4eda0f70-f075-4850-8116-8e46681151d3&redirect_uri=https://hornbach.de&scope=openid" --max-redirs 0 2>&1
+543:location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+556:HTTP/2 200 
+567:HTTP/2 200 
+717:[CHANGED] auth.hornbach.com: OIDC discovery endpoint `.well-known/openid-configuration` returns 200 with full provider metadata; 6 new service endpoints discovered (authz-srv, token-srv, users-srv, apps-srv, user-scim-srv, token-srv/introspect)
+748:reasoning: Authorization endpoint confirmed live at authz-srv/authz; returns detailed error about invalid client_id; redirect_uri parameter accepted in request without immediate rejection (server validates client_id first). Once a valid client_id is found, redirect_uri validation becomes the next gate. cidaas as a CIAM platform may use regex/wildcard matching for redirect_uri allowlists. Path traversal (../), subdomain variation (.evil.com), or open redirect within hornbach.de could bypass strict matching.
+749:evidence_needed: Find valid client_id (e.g. from hornbach.de frontend JS or login flow), then test redirect_uri variations: https://evil.com, https://hornbach.de.evil.com, https://hornbach.de@evil.com, https://hornbach.de/../../evil.com
+750:verify_steps: 1) Inspect www.hornbach.de/customer/login page source and JS bundles for client_id values; 2) curl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid" --max-redirs 0; 3) If redirected to login page (not error), test redirect_uri variations
+758:reasoning: Device authorization endpoint confirmed live (returns 400 "invalid_request" with correct params expected). Device code flow (RFC 8628) generates a user_code + verification_uri pair that user must enter on their device. If attacker can initiate device code flow for a valid client_id and obtain a user_code, they can social-engineer victim into approving on their device, granting attacker session tokens. The verbose error messages suggest the endpoint validates request format but doesn't reject the flow outright.
+766:[PARKED] Device code flow social engineering: confidence 45 < 50 threshold; requires valid client_id to initiate; social engineering element makes it less reliable for pure technical testing
+778:[LEARN] ACCEPTED class OATH: Authorization endpoint confirmed live at authz-srv/authz with verbose error messages; redirect_uri validation testing requires valid client_id discovery first
+814:HTTP/2 200 
+841:location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+959:location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1078:- [PARKED] Device code flow: needs valid client_id + human social-engineering; not a pure technical finding
+1082:- [NEXT] PROBE: GET `https://auth.hornbach.com/.well-known/jwks.json` for kid/n/e confirmation, then fetch `hornbach.com`/`www.hornbach.de` frontend with a googlebot UA to extract a real `client_id` from JS — the shared blocker across alg-confusion, redirect_uri, and SCIM tests; without a valid client_id none of the AUTH_HELPED flows can be executed.
+1131:location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1261:[0m$ [0m# Try to find valid client_ids by testing common names against the authz endpoint
+1266:client_id=hornbach -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1267:client_id=webshop -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1268:client_id=hornbach-de -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1269:client_id=hornbach_webshop -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1270:client_id=hornbach-shop -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1271:client_id=hornbach_app -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1272:client_id=hornbach_angular -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1273:client_id=hornbach_react -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1274:client_id=hornbach_erp -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1275:client_id=hornbach_ciam -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1276:client_id=ciam -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1277:client_id=hornbach_portal -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1278:client_id=myhornbach -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1279:client_id=hornbach-account -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+1280:client_id=hornbach-konto -> 302|https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+[0m
+[0m$ [0mUA="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"; echo "=== www.hornbach.de/customer ==="; curl -sS --max-time 20 -A "$UA" -o /tmp/hb_cust.html -w "code=%{http_code} size=%{size_download}\n" -L "https://www.hornbach.de/customer"; grep -ioE 'cidaas[^"'"'"' ]{0,80}|client[/_-]id["'"'"']?[:=][^,}"'"'"']{4,80}|auth\.hornbach\.com[^"'"'"' ]{0,60}' /tmp/hb_cust.html | sort -u | head -20; sleep 1
+echo "=== login.hornbach.com/customer ==="; curl -sSI --max-time 20 -A "$UA" "https://login.hornbach.com/customer" | tr -d '\r' | grep -Ei '^HTTP|^location'
+=== www.hornbach.de/customer ===
+code=200 size=3038
+=== login.hornbach.com/customer ===
+HTTP/2 302 
+location: https://www.hornbach.de/customer
+[0m
+## 2026-09-09 POC/API asset session — HORNBACH analyst output (model bigpickle)
+
+### STEP 1 — DELTA
+- NEW hornbach-mp.mirakl.net: non-API paths → Spring `{"status":404,"message":"No static resource <path>."}` (healthz/actuator/swagger-ui); `/api/`, `/api/offers`, `/api/mcc/`, `/api/v3/api-docs` → uniform 401 JSON `{"message":"Unauthorized","status":401}` (39B); no anonymous differential anywhere.
+- NEW smarthomebyhornbach.com: `api-client.prod` and `api-client.dev` `/api/public/hornbach/glient/` → byte-identical 401 `{"error":{"function":"request_allowed","line":412,"module":"oauth_middleware_http"},"status":"error"}`; `api-phone.prod` shares edge IP 20.4.186.95 with api-client, root = Go `404 page not found`; no prod/dev differential.
+- NO_CHANGE www.hornbach.de/customer: 200 len=3038 FingerprintJS `_fs_ch_st_` bot-challenge stub persists; `login.hornbach.com/customer` → 302 → www.hornbach.de/customer. Passive web client_id extraction remains blocked.
+- CORRECTION (trace): grep of analyst logs (reports/analyst-bigpickle.log:539-543,1266-1280) shows EVERY tested client_id incl. `web_4eda0f70-f075-4850-8116-8e46681151d3` returned 302→AUTH10007 `invalid_client`. The KB "valid client_id → 200" claims correspond to the `<found>` redaction placeholder that was never verified — no real cidaas client_id has ever been confirmed.
+
+### STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke}, 6.25, AUTH — POC asset; unauthenticated endpoints confirmed 11 sessions but impact gated on real token
+- [PRIO] auth.hornbach.com/authz-srv/authz, 5.90, OATH — redirect_uri test blocked at client_id gate; prior "valid client 200" never actually confirmed (see DELTA correction)
+
+### STEP 3 — HYPOTHESES
+[HYP] POC: valid token introspect → claim disclosure, revoke → silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST introspect → 200 `{"active":false}` unauthenticated; POST revoke → 200 `OK` text/plain; RFC 7662/7009 client-auth missing; 11+ sessions stable; token issuance still client-gated (400 invalid_client). No real token/client_id exists in repo (log grep) — POC is fully gated on assets extraction.
+evidence_needed: valid access_token + client_id from `de.hornbach.app.smarthome` `assets/cidaas.xml` → introspect real claim set, revoke, re-introspect active=false, userinfo with revoked bearer → 401.
+verify_steps: POST token=<real> introspect no-auth; POST token=<real> revoke; POST re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401.
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+
+[HYP] redirect_uri regex/wildcard bypass → authorization-code theft
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE (302→AUTH10007 uniform gate); redirect_uri validation never tested because no confirmed client_id; cidaas historically regex allowlists; discovery advertises authorizisation_code flow. Blocker confirmed real: no client_id validated in any repo log.
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid → 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+
+[HYP] Mirakl operator/back-office route reachable anonymously
+class: MISCONFIG
+asset: hornbach-mp.mirakl.net
+confidence: 25
+reasoning: uniform 401 across all /api/* and Spring "No static resource" 404 elsewhere; actuator/swagger/api-docs 404; no differential to hang a bypass on.
+evidence_needed: any non-401 response on a Mirakl operator path
+verify_steps: GET /api/operators/... low-rate compare vs 401 baseline
+impact: marketplace admin/money surface — HIGH if present
+testability: PASSIVE
+
+### STEP 4 — SELF-CRITIQUE
+- [PARKED] Mirakl operator route: uniform 401 baseline, no differential, no doc/robots hint → evidence-none, confidence 25.
+- [PARKED] smarthome prod/dev differential: byte-identical 401; `oauth_middleware_http::request_allowed:412` in body is descriptive-only (REJECTED class); no route leak.
+- [FINAL] 1) introspect/revoke POC (85, HUMAN-gated) 2) authz redirect_uri (70, client_id-gated).
+
+### STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` (APKMirror/APKPure/AppBrain; current APK v3.9.0, mSun 2.9.2, pkg `de.hornbach.app.smarthome`), unzip, copy out `assets/cidaas.xml` AND grep AndroidManifest.xml/classes.dex strings for `client_id`, `client_secret`, `redirect_uri`; `sha256sum` each artifact; return client_id + sha256(secret) + redirect_uri allowlist. Single action unblocks BOTH [FINAL] hypotheses (POC proof set + redirect_uri differential). Web path to client_id is bot-challenged (3038B stub) — HUMAN is the only route.
+
+### STEP 6 — LEARNING
+- [LEARN] ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: /api/{base,offers,mcc,v3/api-docs} → uniform 401 (39B), non-API → Spring "No static resource" 404, actuator/swagger 404 — anonymous surface gated, breadth exhausted.
+- [LEARN] REJECTED class MISCONFIG @ smarthomebyhornbach.com: prod/dev REST byte-identical 401 `oauth_middleware_http::request_allowed:412`; shared edge 20.4.186.95; internal module/line in body is descriptive-only (REJECTED class).
+- [LEARN] REJECTED class MISCONFIG @ www.hornbach.de/customer: 200 len=3038 FingerprintJS stub persists; login.hornbach.com/customer→302→www; passive client_id extraction blocked (HUMAN route confirmed as sole path).
+- [LEARN] REJECTED class AUTH @ auth.hornbach.com: log-grep proves no client_id (incl. web_4eda...) ever passed the AUTH10007 gate — KB "<found>→200" claims were unverified redaction placeholders; do not cite as evidence.
+
+### STEP 7 — RISK
+[RISK] hornbach: 52/100 — no surface change; Upd. introspect/revoke (85-conf) and redirect_uri (70-conf) both blocked on the same unrecovered client_id; all three live probes today confirmed uniform gates. Program surface stable, campaign progressive-stuck on one HUMAN dependency.
