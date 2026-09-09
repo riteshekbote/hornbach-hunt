@@ -342,3 +342,8 @@ www.hornbach.com
 ## 2026-09-09 11:46:39 UTC
 - CHANGED auth.hornbach.com/token-srv/introspect: probe-results.md shows 25+ consecutive GET probes returning 404 (latest 2026-09-09 06:13), but KB confirms POST → 200 `{"active":false}` unauthenticated across 
 - CHANGED auth.hornbach.com/token-srv/revoke: probe-results.md shows 25+ consecutive GET probes returning 404 (latest 2026-09-09 06:13), but KB confirms POST → 200 `OK` unauthenticated across 11+ sessions; para
+
+## 2026-09-09 15:26:03 UTC
+- NEW probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-09 06:13), but KB confirms POST → 200 works across 11+ sessions; methodolo
+- NEW auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE at 13:27Z 2026-09-08 — 302→AUTH10007 on dummy client_id; uniform gate, client_id enum REMOVED
+- CHANGED No new assets discovered; attack surface stable; only gate remains valid client_id extraction from mobile app

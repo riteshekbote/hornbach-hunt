@@ -157,3 +157,9 @@
 - 2026-09-09 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
 - 2026-09-09 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 11th session 13:27Z; systemic and stable
 - 2026-09-09 ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET still 500 `{"success":false,"status":500}` + Access-Control-Allow-Origin:*; POST → 404 (GET-only route)
+- 2026-09-09 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: systemic unauthenticated POST → 200 across 11+ sessions; GET/HEAD 404 was methodology artefact
+- 2026-09-09 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: stable unauthenticated POST → 200 OK text/plain; GET/HEAD parameter-sensitive 404
+- 2026-09-09 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: LIVE uniform gate; client_id enumeration REMOVED
+- 2026-09-09 ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+- 2026-09-09 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- 2026-09-09 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope

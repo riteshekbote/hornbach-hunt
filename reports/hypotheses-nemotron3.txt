@@ -1,6 +1,7 @@
-## 2026-09-09 11:41:50 UTC [target] (model nemotron3)
-[CHANGED] auth.hornbach.com/token-srv/introspect: probe-results.md shows 25+ consecutive GET probes returning 404 (latest 2026-09-09 06:13), but KB confirms POST → 200 `{"active":false}` unauthenticated across 11+ independent sessions; methodology artifact (GET vs POST) persists in probe logs
-[CHANGED] auth.hornbach.com/token-srv/revoke: probe-results.md shows 25+ consecutive GET probes returning 404 (latest 2026-09-09 06:13), but KB confirms POST → 200 `OK` unauthenticated across 11+ sessions; parameter-sensitive routing (GET/HEAD 404, POST form works)
+## 2026-09-09 15:21:15 UTC [target] (model nemotron3)
+[NEW] probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-09 06:13), but KB confirms POST → 200 works across 11+ sessions; methodology artifact (GET vs POST) persists
+[NEW] auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE at 13:27Z 2026-09-08 — 302→AUTH10007 on dummy client_id; uniform gate, client_id enum REMOVED
+[CHANGED] No new assets discovered; attack surface stable; only gate remains valid client_id extraction from mobile app
 [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.35,attack_surface=9,business_value=8,tech_exposure=8,gate_ease=10,cloud_surface=5,freshness=9
 [PRIO] auth.hornbach.com/authz-srv/authz,6.20,attack_surface=7,business_value=9,tech_exposure=6,gate_ease=3,cloud_surface=4,freshness=6
 [PRIO] auth.hornbach.com/users-srv/userinfo,5.95,attack_surface=6,business_value=8,tech_exposure=7,gate_ease=2,cloud_surface=4,freshness=8

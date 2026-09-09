@@ -14542,3 +14542,817 @@ STEP 6 — LEARNING:
 
 STEP 7 — RISK:
 - [RISK] hornbach: 53/100 — new brand-domain estate (smarthomebyhornbach.com) breaks the 09-08 surface stagnation (+surface), but both top-value proofs (introspect 85, redirect_uri 70) remain blocked on the same unrecovered cidaas client_id (APK-mirrors bot-walled, web+SCA routes closed, mgmt portals use vendor OAuth); prod b2c portal currently broken (BlobNotFound) reducing usable new surface; no exploitable finding validated; program progressive, one HUMAN dependency (APK) persists.
+===== ANALYST bigpickle 2026-09-09 15:26:03 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m◈ [0mExa Web Search "hornbach cidaas client_id oauth github"
+[0m◈ [0mExa Web Search "de.hornbach.app.smarthome apk download 2026"
+**STEP 1 — DELTA**: NO_DELTA — all findings re-confirmed stable across 11+ sessions; no new surface changes since last assessment.
+
+**STEP 2 — PRIORITIZE**:
+
+| Asset | Score | a | b | t | g | c | f |
+|---|---|---|---|---|---|---|---|
+| auth.hornbach.com token-srv | 7.55 | 9 | 10 | 9 | 3 | 7 | 1 |
+| smarthomebyhornbach.com | 7.30 | 7 | 8 | 6 | 7 | 6 | 10 |
+| auth.hornbach.com/authz-srv | 6.80 | 8 | 10 | 8 | 2 | 7 | 1 |
+
+**STEP 3 — HYPOTHESES**:
+
+```
+[HYP] Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 {"active":false} / OK unauthenticated, stable 11+ sessions; RFC 7662/7009 client-auth bypass; token issuance client-gated (400 invalid_client) isolates flaw to this plane
+evidence_needed: valid access_token → introspect shows real claim set; re-introspect after revoke → active=false
+verify_steps: POST token-srv/introspect token=<real> no-auth; POST token-srv/revoke token=<real>; re-introspect; GET users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+```
+
+```
+[HYP] OAuth redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE (302→AUTH10007 uniform gate); redirect_uri validation never tested due to client_id gate; cidaas historically regex allowlists; authorization_code flow advertised in discovery
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline injection)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+```
+
+```
+[HYP] smarthomebyhornbach.com dev/demo infrastructure exposes unauthenticated API/config surface
+class: MISCONFIG
+asset: mgmt-dev.smarthomebyhornbach.com
+confidence: 35
+reasoning: fresh in-brand estate never tested; 4+ live hosts (www-public, www-demo, www-dev, mgmt-public, mgmt-dev); api-gw-evvr.dev TLS services; vendor multi-tenant ROC platform; dev/test variants weaker controls
+evidence_needed: any non-404 anonymous response beyond SPA shells on dev/demo hosts
+verify_steps: CT-log enum *.smarthomebyhornbach.com → DNS resolve → HTTP GET/HEAD /config, /api, /health on live dev hosts
+impact: admin/device-management or metadata access on customer smart-home infra — HIGH if present
+testability: PASSIVE
+```
+
+**STEP 4 — SELF-CRITIQUE**:
+
+- Token introspect/revoke (85): **KEEP** — high confidence, 11+ sessions stable, but POC blocked on client_id
+- redirect_uri bypass (70): **KEEP** — endpoint live, high impact, untested, blocked on same client_id
+- Smart home (35): **KEEP with caveat** — confidence <40 but PASSIVE testable immediately; fresh untested surface; if live APIs found, confidence jumps to 60+
+
+**[FINAL] Survivors ranked:**
+1. [85] introspect+revoke — blocked on client_id, needs HUMAN or OSINT
+2. [70] redirect_uri bypass — blocked on same client_id
+3. [35] smarthome surface — immediately testable, best fresh-ground ROI
+
+**STEP 5 — NEXT ACTION**:
+
+Both top hypotheses (85+70 conf) are blocked on one thing: valid cidaas `client_id`. Primary action: multi-channel OSINT to recover it. Fallback: smarthome surface recon.
+
+**STEP 6 — LEARN**:
+
+```
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: systemic unauthenticated POST → 200 across 11+ sessions; GET/HEAD 404 was methodology artefact
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: stable unauthenticated POST → 200 OK text/plain; GET/HEAD parameter-sensitive 404
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: LIVE uniform gate; client_id enumeration REMOVED
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+```
+
+**STEP 7 — RISK**:
+
+```
+[RISK] hornbach: 52/100 — no surface change; two HIGH-value hypotheses (introspect 85-conf, redirect_uri 70-conf) both blocked on unrecovered client_id; all live probes confirmed uniform gates; campaign progressive-stuck on one dependency; smart home surface unexplored but unproven
+```
+
+---
+
+Executing parallel batch: client_id OSINT + smart home CT enum + existing finding verification.
+[0m
+[0m$ [0mcurl -s -w "\n---HTTP_CODE:%{http_code}---" -X POST "https://auth.hornbach.com/token-srv/introspect" -d "token=test" 2>&1
+{"active":false}
+---HTTP_CODE:200---
+[0m
+[0m$ [0mcurl -s -w "\n---HTTP_CODE:%{http_code}---" -X POST "https://auth.hornbach.com/token-srv/revoke" -d "token=test" 2>&1
+OK
+---HTTP_CODE:200---
+[0m
+[0m% [0mWebFetch https://crt.sh/?q=%.smarthomebyhornbach.com&output=json
+[0m
+[0m$ [0mcat /home/runner/.local/share/opencode/tool-output/tool_086c2f4040012LxBiEMtnAhsDG | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+names = set()
+for entry in data:
+    name = entry.get('name_value', '')
+    for n in name.split('\n'):
+        n = n.strip().lower()
+        if n.endswith('.smarthomebyhornbach.com') or n == 'smarthomebyhornbach.com':
+            names.add(n)
+for n in sorted(names):
+    print(n)
+" 2>&1
+*.dev.smarthomebyhornbach.com
+*.prod.smarthomebyhornbach.com
+*.smarthomebyhornbach.com
+api-gw-evvr.dev.smarthomebyhornbach.com
+api.smarthomebyhornbach.com
+b2c-demo.smarthomebyhornbach.com
+b2c-dev.smarthomebyhornbach.com
+b2c-public.smarthomebyhornbach.com
+b2c-test.smarthomebyhornbach.com
+b2c.smarthomebyhornbach.com
+dev.smarthomebyhornbach.com
+docs-dev.smarthomebyhornbach.com
+docs-test.smarthomebyhornbach.com
+docs.smarthomebyhornbach.com
+metadata-release.smarthomebyhornbach.com
+metadata.smarthomebyhornbach.com
+mgmt-demo.smarthomebyhornbach.com
+mgmt-dev.smarthomebyhornbach.com
+mgmt-public.smarthomebyhornbach.com
+mgmt.smarthomebyhornbach.com
+mon-api-gw-evvr.dev.smarthomebyhornbach.com
+prod.smarthomebyhornbach.com
+reducer-dev.smarthomebyhornbach.com
+smarthomebyhornbach.com
+stream.smarthomebyhornbach.com
+www-demo.smarthomebyhornbach.com
+www-dev.smarthomebyhornbach.com
+www-public.smarthomebyhornbach.com
+www.smarthomebyhornbach.com
+[0m
+Both findings confirmed live. Now processing CT logs and pursuing APK download.
+
+**Results so far:**
+- Introspect: 200 `{"active":false}` ✓ (12th session)
+- Revoke: 200 `OK` ✓ (12th session)
+- AppBrain has `de.hornbach.app.smarthome` v3.13.0 (139.3MB) — direct download possible
+- cidaas docs confirm authz URL pattern: `https://{base}/authz-srv/authz?client_id=...&redirect_uri=...`
+- crt.sh returned 139KB of CT data for smarthomebyhornbach.com — need to parse
+[0m% [0mWebFetch https://www.appbrain.com/app/smart-home-by-hornbach/de.hornbach.app.smarthome
+Excellent. CT log enumeration yielded **29 unique subdomains** under `smarthomebyhornbach.com`. Both existing findings confirmed live (12th session). AppBrain has app at v3.14.2 but no direct APK download — links to Google Play only.
+
+Now probing the fresh smarthome surface and attempting APK acquisition in parallel:
+[0m◈ [0mExa Web Search "site:apkpure.com "de.hornbach.app.smarthome" download apk"
+[0m
+[0m$ [0m#!/bin/bash
+# Phase 1: DNS resolution for all smarthomebyhornbach.com subdomains
+HOSTS=(
+  "smarthomebyhornbach.com"
+  "api-gw-evvr.dev.smarthomebyhornbach.com"
+  "api.smarthomebyhornbach.com"
+  "b2c-demo.smarthomebyhornbach.com"
+  "b2c-dev.smarthomebyhornbach.com"
+  "b2c-public.smarthomebyhornbach.com"
+  "b2c-test.smarthomebyhornbach.com"
+  "b2c.smarthomebyhornbach.com"
+  "dev.smarthomebyhornbach.com"
+  "docs-dev.smarthomebyhornbach.com"
+  "docs-test.smarthomebyhornbach.com"
+  "docs.smarthomebyhornbach.com"
+  "metadata-release.smarthomebyhornbach.com"
+  "metadata.smarthomebyhornbach.com"
+  "mgmt-demo.smarthomebyhornbach.com"
+  "mgmt-dev.smarthomebyhornbach.com"
+  "mgmt-public.smarthomebyhornbach.com"
+  "mgmt.smarthomebyhornbach.com"
+  "mon-api-gw-evvr.dev.smarthomebyhornbach.com"
+  "prod.smarthomebyhornbach.com"
+  "reducer-dev.smarthomebyhornbach.com"
+  "stream.smarthomebyhornbach.com"
+  "www-demo.smarthomebyhornbach.com"
+  "www-dev.smarthomebyhornbach.com"
+  "www-public.smarthomebyhornbach.com"
+  "www.smarthomebyhornbach.com"
+)
+
+echo "=== DNS RESOLUTION ==="
+LIVE_HOSTS=()
+for host in "${HOSTS[@]}"; do
+  ip=$(dig +short "$host" A 2>/dev/null | tail -1)
+  cname=$(dig +short "$host" CNAME 2>/dev/null | head -1)
+  if [ -n "$ip" ]; then
+    echo "LIVE: $host -> $ip (CNAME: $cname)"
+    LIVE_HOSTS+=("$host")
+  else
+    echo "DEAD: $host"
+  fi
+done
+
+echo ""
+echo "=== LIVE: ${#LIVE_HOSTS[@]} / ${#HOSTS[@]} hosts ==="
+echo ""
+echo "=== HTTP PROBES (1rps) ==="
+for host in "${LIVE_HOSTS[@]}"; do
+  resp=$(curl -sk -o /tmp/sm_body -w "%{http_code}|%{size_download}|%{redirect_url}" -m 10 -H "User-Agent: Mozilla/5.0" "https://$host/" 2>/dev/null)
+  code=$(echo "$resp" | cut -d'|' -f1)
+  size=$(echo "$resp" | cut -d'|' -f2)
+  redir=$(echo "$resp" | cut -d'|' -f3)
+  srv=$(curl -skI -m 10 -H "User-Agent: Mozilla/5.0" "https://$host/" 2>/dev/null | grep -i "^server:" | head -1 | tr -d '\r')
+  hdrs=$(curl -skI -m 10 -H "User-Agent: Mozilla/5.0" "https://$host/" 2>/dev/null | tr '\r' '\n' | grep -iE "^(server|x-powered|set-cookie|location|content-type|via|x-correlation)" | tr '\n' '; ')
+  echo "$host | HTTP $code | size=$size | redir=$redir | $srv | $hdrs"
+  sleep 1
+done
+=== DNS RESOLUTION ===
+DEAD: smarthomebyhornbach.com
+LIVE: api-gw-evvr.dev.smarthomebyhornbach.com -> 68.210.80.65 (CNAME: dev.smarthomebyhornbach.com.)
+DEAD: api.smarthomebyhornbach.com
+LIVE: b2c-demo.smarthomebyhornbach.com -> 150.171.110.152 (CNAME: afd-b2c-demo-fgsx4pihrhn56-b5d8brdcgng6ctcg.z01.azurefd.net.)
+LIVE: b2c-dev.smarthomebyhornbach.com -> 150.171.110.145 (CNAME: afd-b2c-dev-fgsx4pihrhn56-anhkdwgthafqaget.z01.azurefd.net.)
+LIVE: b2c-public.smarthomebyhornbach.com -> 150.171.110.147 (CNAME: afd-b2c-public-fgsx4pihrhn56-f3dxfyacg3bkhqh8.z01.azurefd.net.)
+DEAD: b2c-test.smarthomebyhornbach.com
+LIVE: b2c.smarthomebyhornbach.com -> 150.171.110.152 (CNAME: afd-b2c-oscr7vip65tpq-eeeugsajgda4a8ew.z01.azurefd.net.)
+LIVE: dev.smarthomebyhornbach.com -> 68.210.80.65 (CNAME: )
+LIVE: docs-dev.smarthomebyhornbach.com -> 13.107.226.70 (CNAME: afd-www-dev-fgsx4pihrhn56-ddbebyc5ecdva6fx.z01.azurefd.net.)
+LIVE: docs-test.smarthomebyhornbach.com -> 150.171.110.152 (CNAME: afd-www-demo-fgsx4pihrhn56-d7fqfrcmfeb9bpaq.z01.azurefd.net.)
+LIVE: docs.smarthomebyhornbach.com -> 13.107.226.70 (CNAME: afd-docs-oscr7vip65tpq-evbkb8d0g5h9d5ae.z01.azurefd.net.)
+LIVE: metadata-release.smarthomebyhornbach.com -> 150.171.110.152 (CNAME: afd-metadata-fhedcrfhg4f5dpfy.z01.azurefd.net.)
+LIVE: metadata.smarthomebyhornbach.com -> 13.107.226.70 (CNAME: afd-metadata-fhedcrfhg4f5dpfy.z01.azurefd.net.)
+LIVE: mgmt-demo.smarthomebyhornbach.com -> 150.171.110.152 (CNAME: afd-mgmt-demo-fgsx4pihrhn56-h5f0aqhed3gbg2gb.z01.azurefd.net.)
+LIVE: mgmt-dev.smarthomebyhornbach.com -> 150.171.110.152 (CNAME: afd-mgmt-dev-fgsx4pihrhn56-begqe4gmbraggca2.z01.azurefd.net.)
+LIVE: mgmt-public.smarthomebyhornbach.com -> 150.171.110.145 (CNAME: afd-mgmt-public-fgsx4pihrhn56-c7adhfh6dgbqhqch.z01.azurefd.net.)
+LIVE: mgmt.smarthomebyhornbach.com -> 150.171.110.145 (CNAME: afd-mgmt-oscr7vip65tpq-eufyage6cmbfhthr.z01.azurefd.net.)
+LIVE: mon-api-gw-evvr.dev.smarthomebyhornbach.com -> 68.210.80.65 (CNAME: dev.smarthomebyhornbach.com.)
+LIVE: prod.smarthomebyhornbach.com -> 20.4.186.95 (CNAME: )
+DEAD: reducer-dev.smarthomebyhornbach.com
+LIVE: stream.smarthomebyhornbach.com -> 20.4.186.95 (CNAME: shhb.trafficmanager.net.)
+LIVE: www-demo.smarthomebyhornbach.com -> 13.107.226.70 (CNAME: afd-www-demo-fgsx4pihrhn56-d7fqfrcmfeb9bpaq.z01.azurefd.net.)
+LIVE: www-dev.smarthomebyhornbach.com -> 150.171.110.145 (CNAME: afd-www-dev-fgsx4pihrhn56-ddbebyc5ecdva6fx.z01.azurefd.net.)
+LIVE: www-public.smarthomebyhornbach.com -> 150.171.110.152 (CNAME: afd-www-public-fgsx4pihrhn56-f0avg9emaqb7ghfx.z01.azurefd.net.)
+LIVE: www.smarthomebyhornbach.com -> 13.107.253.70 (CNAME: afd-www-oscr7vip65tpq-ezbjewggbmf2decq.z01.azurefd.net.)
+
+=== LIVE: 22 / 26 hosts ===
+
+=== HTTP PROBES (1rps) ===
+api-gw-evvr.dev.smarthomebyhornbach.com | HTTP 000 | size=0 | redir= |  | 
+b2c-demo.smarthomebyhornbach.com | HTTP 404 | size=215 | redir= |  | 
+b2c-dev.smarthomebyhornbach.com | HTTP 404 | size=215 | redir= |  | 
+b2c-public.smarthomebyhornbach.com | HTTP 404 | size=215 | redir= |  | 
+b2c.smarthomebyhornbach.com | HTTP 404 | size=215 | redir= |  | 
+dev.smarthomebyhornbach.com | HTTP 404 | size=19 | redir= |  | content-type: text/plain; charset=utf-8;
+docs-dev.smarthomebyhornbach.com | HTTP 404 | size=215 | redir= |  | 
+docs-test.smarthomebyhornbach.com | HTTP 404 | size=215 | redir= |  | 
+docs.smarthomebyhornbach.com | HTTP 404 | size=215 | redir= |  | 
+metadata-release.smarthomebyhornbach.com | HTTP 404 | size=215 | redir= |  | 
+metadata.smarthomebyhornbach.com | HTTP 404 | size=215 | redir= |  | 
+mgmt-demo.smarthomebyhornbach.com | HTTP 200 | size=19944 | redir= |  | content-type: text/html;
+mgmt-dev.smarthomebyhornbach.com | HTTP 200 | size=1794 | redir= |  | content-type: text/html;
+mgmt-public.smarthomebyhornbach.com | HTTP 200 | size=19744 | redir= |  | content-type: text/html;
+mgmt.smarthomebyhornbach.com | HTTP 200 | size=19744 | redir= |  | content-type: text/html;
+mon-api-gw-evvr.dev.smarthomebyhornbach.com | HTTP 404 | size=19 | redir= |  | content-type: text/plain; charset=utf-8;
+prod.smarthomebyhornbach.com | HTTP 404 | size=19 | redir= |  | content-type: text/plain; charset=utf-8;
+stream.smarthomebyhornbach.com | HTTP 404 | size=19 | redir= |  | content-type: text/plain; charset=utf-8;
+www-demo.smarthomebyhornbach.com | HTTP 200 | size=22559 | redir= |  | content-type: text/html;
+www-dev.smarthomebyhornbach.com | HTTP 200 | size=2582 | redir= |  | content-type: text/html;
+www-public.smarthomebyhornbach.com | HTTP 200 | size=18699 | redir= |  | content-type: text/html;
+www.smarthomebyhornbach.com | HTTP 200 | size=22526 | redir= |  | content-type: text/html;
+[0m
+[0m$ [0mcurl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/" 2>&1
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>SMART HOME by Hornbach - Portal</title>
+		<script type="module">globalThis.BUILD_MODE = "development";globalThis.appInfo = {"build":"1.10.0-0+23.g0d9aaea5","buildDate":"2026-09-08T05:37:58.609Z","version":"1.10.0-0","name":"@roc/roc-management-portal","description":"ROC Management Portal","author":"Roc Connect <info@roc-connect.com> (https://www.roc-connect.com)"};</script>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"><meta name="robots" content="noindex"><link rel="icon" href="5b957e40ad48c42f9cd562fac6b464c58470ecd00b29ec46da93dd6c32c47115/favicon.svg"><script type="module" src="./runtime.js"></script><script type="module" src="./vendors.js"></script><script type="module" src="./src_LocalProviders_tsx-src_RootRenderElement_tsx-src_RouteListener_tsx.js"></script><script type="module" src="./src_OnlineProviders_tsx-src_scripts_cmp_row-entry_tsx-src_scripts_services_log_ts.js"></script><script type="module" src="./src_scripts_cmp_Toast_tsx-src_scripts_cmp_terminal_terminal_tsx-src_scripts_cmp_withNavigateA-d1fe7c.js"></script><script type="module" src="./src_scripts_cmp_gateway_zigbee-network-map_zigbee-network-map_tsx-src_scripts_pages_GatewaysP-69467a.js"></script><script type="module" src="./src_scripts_pages_UsersPage_tsx.js"></script><script type="module" src="./src_scripts_pages_SupportUsersPage_tsx.js"></script><script type="module" src="./src_scripts_pages_localization-page_tsx.js"></script><script type="module" src="./src_scripts_pages_log-page_tsx.js"></script><script type="module" src="./index.js"></script><link href="./index.css" rel="stylesheet"></head>
+	<body>
+		<div id="bg"></div>
+		<div id="container"></div>
+	</body>
+</html>
+[0m
+[0m$ [0mcurl -sk -m 10 "https://www-dev.smarthomebyhornbach.com/" 2>&1
+<!DOCTYPE html>
+<html translate="no">
+	<head>
+		<meta charset="utf-8" />
+		<title>SMART HOME by hornbach</title>
+		<script type="module">globalThis.BUILD_MODE = "development";globalThis.appInfo = {"build":"3.14.2-0+62.gc43162b3e","buildDate":"2026-09-09T14:19:36.325Z","version":"3.14.3","name":"@roc/roc-web-app","description":"ROC Web App","author":"Roc Connect <info@roc-connect.com> (https://www.roc-connect.com)"};window.dataLayer ??= [];
+
+window.hbDataLayer ??= {
+	language: null,
+	tld: globalThis.location.hostname.split(".").pop(),
+	contentGroup1: globalThis.location.hash.split("/")[1], // TODO
+	pageType: "spa",
+	customerId: null,
+	email: null,
+	app_platform: "web",
+	pageName: (globalThis.BUILD_MODE === "production") ? "www.smarthomebyhornbach.com" : "www-dev.smarthomebyhornbach.com",
+};
+
+/**
+ * Push a GTM command to the dataLayer.
+ * GTM expects each command as one array-like item: `[command, type, options]`
+ * (equivalent to the canonical `dataLayer.push(arguments)` form from Google's gtag.js snippet).
+ * @param {string} command
+ * @param {string} type
+ * @param {Record<string, unknown>} options
+ */
+function gtag(command, type, options) {
+	window.dataLayer?.push([command, type, options]); // eslint-disable-line unicorn/prefer-global-this
+}
+
+// Default: deny all tracking until consent is explicitly granted.
+gtag("consent", "default", {
+	ad_storage: "denied",
+	ad_user_data: "denied",
+	ad_personalization: "denied",
+	analytics_storage: "denied",
+	wait_for_update: 500,
+});
+
+/* eslint-disable */
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})
+(window,document, 'script', 'dataLayer', "GTM-54PRXDGS");
+/* eslint-enable */
+</script>
+		<script src="https://web.cmp.usercentrics.eu/ui/loader.js" async="true" id="usercentrics-cmp" data-settings-id="MoIJ2wd-vkKjkl"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"><meta name="robots" content="noindex"><link rel="icon" href="068c058aa7aa2e0616f0082bd4992a4e8707a3a2834b9b7f8925aabce48a2406/favicon.svg"><script type="module" src="./runtime.js"></script><script type="module" src="./vendors.js"></script><script type="module" src="./src_bootstrap_ts-src_runtime_ts.js"></script><script type="module" src="./index.js"></script></head>
+	<body>
+		<div id="container"></div>
+	</body>
+</html>
+[0m
+[0m$ [0mcurl -sk -m 10 "https://dev.smarthomebyhornbach.com/" 2>&1
+404 page not found
+[0m
+**22 of 26 hosts live!** Massive fresh surface. Key signals:
+
+| Host | HTTP | Size | Notes |
+|---|---|---|---|
+| mgmt-demo | 200 | 19944 | **Management interface** |
+| mgmt-dev | 200 | 1794 | **Dev mgmt — much smaller, different content?** |
+| mgmt-public | 200 | 19744 | Management |
+| mgmt | 200 | 19744 | Management |
+| www-dev | 200 | 2582 | **Small dev response** |
+| www-demo | 200 | 22559 | Demo frontend |
+| metadata* | 404 | 215 | Azure FD default |
+| dev/prod/stream | 404 | 19 | **19-byte plain text — what's the body?** |
+| api-gw-evvr.dev | 000 | — | TLS/connection fail |
+
+Prioritizing management hosts and the anomalous small responses:
+[0m✗ [0mWebFetch https://apkpure.com/smart-home-by-hornbach/de.hornbach.app.smarthome failed
+[91m[1mError: [0mStatusCode: non 2xx status code (410 GET https://apkpure.com/smart-home-by-hornbach/de.hornbach.app.smarthome)
+[0m
+[0m$ [0mcurl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/health" 2>&1; echo "---"; curl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/api" 2>&1; echo "---"; curl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/config" 2>&1; echo "---"; curl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/swagger" 2>&1; echo "---"; curl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/actuator" 2>&1
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:985f82a8-401e-0077-446f-4030ee000000
+Time:2026-09-09T15:23:55.8423121Z</Message></Error>---
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:26d8582b-f01e-0010-336f-402012000000
+Time:2026-09-09T15:23:56.1907959Z</Message></Error>---
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:2c43a027-101e-00a1-526f-403e07000000
+Time:2026-09-09T15:23:56.3364547Z</Message></Error>---
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:ef422230-901e-0039-386f-401e66000000
+Time:2026-09-09T15:23:56.7250036Z</Message></Error>---
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:89bbbd54-701e-00ea-396f-40c254000000
+Time:2026-09-09T15:23:57.0715248Z</Message></Error>
+[0m
+[0m$ [0mcurl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/runtime.js" 2>/dev/null | head -c 5000
+/*
+ * ATTENTION: An "eval-source-map" devtool has been used.
+ * This devtool is neither made for production nor for readable output files.
+ * It uses "eval()" calls to create a separate source file with attached SourceMaps in the browser devtools.
+ * If you are trying to read the output file, select a different devtool (https://webpack.js.org/configuration/devtool/)
+ * or disable the default devtool with "devtool: false".
+ * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
+ */
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	const __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		const cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		let module = __webpack_module_cache__[moduleId] = {
+/******/ 			id: moduleId,
+/******/ 			loaded: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		const execOptions = { id: moduleId, module: module, factory: __webpack_modules__[moduleId], require: __webpack_require__ };
+/******/ 		__webpack_require__.i.forEach(function(handler) { handler(execOptions); });
+/******/ 		if (!execOptions.factory) {
+/******/ 			delete __webpack_module_cache__[moduleId];
+/******/ 			const e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
+/******/ 		module = execOptions.module;
+/******/ 		execOptions.factory.call(module.exports, module, module.exports, execOptions.require);
+/******/ 	
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = __webpack_modules__;
+/******/ 	
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = __webpack_module_cache__;
+/******/ 	
+/******/ 	// expose the module execution interceptor
+/******/ 	__webpack_require__.i = [];
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/chunk loaded */
+/******/ 	(() => {
+/******/ 		const deferred = [];
+/******/ 		__webpack_require__.O = (result, chunkIds, fn, priority) => {
+/******/ 			if(chunkIds) {
+/******/ 				priority ||= 0;
+/******/ 				for(var i = deferred.length; i > 0 && deferred[i - 1][2] > priority; i--) deferred[i] = deferred[i - 1];
+/******/ 				deferred[i] = [chunkIds, fn, priority];
+/******/ 				return;
+/******/ 			}
+/******/ 			let notFulfilled = Infinity;
+/******/ 			for (var i = 0; i < deferred.length; i++) {
+/******/ 				let [chunkIds, fn, priority] = deferred[i];
+/******/ 				let fulfilled = true;
+/******/ 				for (var j = 0; j < chunkIds.length; j++) {
+/******/ 					if (((priority & 1) === 0 || notFulfilled >= priority) && Object.keys(__webpack_require__.O).every((key) => (__webpack_require__.O[key](chunkIds[j])))) {
+/******/ 						chunkIds.splice(j--, 1);
+/******/ 					} else {
+/******/ 						fulfilled = false;
+/******/ 						if(priority < notFulfilled) notFulfilled = priority;
+/******/ 					}
+/******/ 				}
+/******/ 				if(fulfilled) {
+/******/ 					deferred.splice(i--, 1)
+/******/ 					const r = fn();
+/******/ 					if (r !== undefined) result = r;
+/******/ 				}
+/******/ 			}
+/******/ 			return result;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = (module) => {
+/******/ 		const getter = module && module.__esModule ?
+/******/ 			() => (module['default']) :
+/******/ 			() => (module);
+/******/ 		__webpack_require__.d(getter, { a: getter });
+/******/ 		return getter;
+/******/ 	};
+/******/ 	
+/******/ 	/* webpack/runtime/create fake namespace object */
+/******/ 	(() => {
+/******/ 		const getProto = Object.getPrototypeOf;
+/******/ 		let leafPrototypes;
+/******/ 		// create a fake namespace object
+/******/ 		// mode & 1: value is a module id, require it
+/******/ 		// mode & 2: merge all properties of value into the ns
+/******/ 		// mode & 4: return value when already ns object
+/******/ 		// mode & 16: return value when it's Promise-like
+/******/ 		// mode & 8|1: behave like require
+/******/ 		__webpack_require__.t = function(value, mode) {
+/******/ 			if(mode & 1) value = this(value);
+/******/ 			if(mode & 8) return value;
+/******/ 			if(typeof value === 'object' && value) {
+/****
+[0m
+[0m$ [0mcurl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/index.js" 2>/dev/null | grep -oE '(api|baseURL|baseUrl|endpoint|client_id|clientId|auth|oauth|token|redirect|hornbach|cidaas|roc)[^"]*"[^"]*"' | head -50
+roc_roc_management_portal"] ||= []).push([["
+hornbach/theme.ts\");\n/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! react/jsx-dev-runtime */ \"
+authenticates\n      // through the oauth forwardAuth middleware (which requires an\n      // Origin header, so a plain navigation would be rejected).\n      const url = `${(0,_services_serverOption__WEBPACK_IMPORTED_MODULE_11__.getGupportHttpUrlFromGupportWsUrl)()}/firmware-report`;\n      const response = await fetch(url, {\n        credentials: \"include\"
+hornbach/theme.ts\");\n/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react/jsx-dev-runtime */ \"
+hornbach/theme.ts\");\n/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! react/jsx-dev-runtime */ \"
+hornbach/theme.ts\");\n/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! react/jsx-dev-runtime */ \"
+hornbach/theme.ts\");\n/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! react/jsx-dev-runtime */ \"
+hornbach/theme.ts\");\n/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! react/jsx-dev-runtime */ \"
+rocIdTableData\n}) => {\n  _s();\n  const {\n    t\n  } = (0,react_i18next__WEBPACK_IMPORTED_MODULE_1__.useTranslation)();\n  if (selectedDeviceStat.rocid.buckets.length === 0) {\n    return null;\n  }\n  const findColor = rocId => {\n    if (rocIdTableData) {\n      const rocIdData = rocIdTableData.find(data => data.rocid === rocId);\n      if (rocIdData) {\n        const color = rocIdData.color;\n        return color?.length === 9 ? color.substring(0, 7) : color;\n      }\n    }\n    return \"#27ae60\"
+rocid.buckets.reduce((bucketObj, bucket) => {\n    bucketObj.data.push(bucket.count);\n    bucketObj.bgColors.push(findColor(bucket.val));\n    bucketObj.labels.push(bucket.val);\n    return bucketObj;\n  }, {\n    data: [],\n    bgColors: [],\n    labels: []\n  });\n  const barChartData = {\n    datasets: [{\n      data: data,\n      backgroundColor: bgColors,\n      label: t(\"welcome.deviceChartTT\"
+apis.filter(schema => schema.data.dir === \"TX\"
+api === _services_constants__WEBPACK_IMPORTED_MODULE_6__[\"default\"
+api === _services_constants__WEBPACK_IMPORTED_MODULE_6__[\"default\"
+rocIdPrefixes = DEFAULT_ROC_ID_PREFIXES,\n  isDuplicate,\n  isRocIdDict,\n  onAddClick,\n  checkForExistingKeys,\n  onCloseHandler\n}) => {\n  _s();\n  const {\n    t\n  } = (0,react_i18next__WEBPACK_IMPORTED_MODULE_1__.useTranslation)();\n  const sortAlphabetically = (0,_hooks_useSorter__WEBPACK_IMPORTED_MODULE_13__[\"default\"
+rocIdPrefixes.DEFAULT ?? \"\"
+rocIdPrefixes).find(prefix => newKey.startsWith(prefix));\n      if (prefix) {\n        setPrefix(rocIdPrefixes[prefix]);\n      } else if (!Number.isNaN(Number(newKey))) {\n        setPrefix(rocIdPrefixes.DEFAULT);\n      }\n    }\n    setValue(newKey);\n    setError(checkForExistingKeys(newKey));\n    setHelperText(getHelperText(checkForExistingKeys(newKey)));\n  }, [newKey]);\n  const handleNewKeyChange = event => {\n    const text = event.target.value;\n    if (newKeyType === \"object\"
+rocid: value\n          };\n        }\n      } else {\n        const templateJson = _services_template_jsons__WEBPACK_IMPORTED_MODULE_14__[\"default\"
+rocid === \"{{ROCID}}\"
+rocId: value\n          };\n        }\n      }\n      return null;\n    };\n    onAddClick(value, getTemplateJson());\n  };\n  const templateList = TEMPLATE_KEYS.toSorted(sortAlphabetically);\n  return /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_15__.jsxDEV)(_mui_material__WEBPACK_IMPORTED_MODULE_2__[\"default\"
+rocIdPrefixes).map(key => /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_15__.jsxDEV)(_mui_material__WEBPACK_IMPORTED_MODULE_6__[\"default\"
+rocIdPrefixes[key],\n            children: /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_15__.jsxDEV)(_mui_material__WEBPACK_IMPORTED_MODULE_7__[\"default\"
+rocId\") : t(\"
+hornbach/theme.ts\");\n/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! react/jsx-dev-runtime */ \"
+rocIdPrefixes: {},\n      tableItemSelected: null,\n      open: false,\n      newKey: \"\"
+rocIdPrefixes: {},\n        tableItemSelected: null,\n        open: false,\n        newKey: \"\"
+rocIdPrefixes).find(prefix => newKey.startsWith(prefix));\n    if (prefix) {\n      return this.state.rocIdPrefixes[prefix];\n    } else if (!Number.isNaN(Number(newKey))) {\n      return this.state.rocIdPrefixes.DEFAULT;\n    }\n    return newKey;\n  }\n  getRocIdPrefix(tableItems) {\n    const prefixes = {};\n    tableItems.forEach(tableItem => {\n      let keyNumber = Number(tableItem.id.string_key);\n      let prefix = \"DEFAULT\"
+rocIdPrefix = ROCID_PREFIXES.find(rocIdPrefix => tableItem.id.string_key.startsWith(rocIdPrefix));\n      if (rocIdPrefix) {\n        keyNumber = Number(tableItem.id.string_key.substring(rocIdPrefix.length));\n        prefix = rocIdPrefix;\n      }\n      if (!Number.isNaN(keyNumber)) {\n        if (!prefixes.hasOwnProperty(prefix)) {\n          prefixes[prefix] = [];\n        }\n        prefixes[prefix].push(keyNumber);\n      }\n    });\n    const rocIdPrefixes = {};\n    Object.keys(prefixes).forEach(prefix => {\n      const newNumber = (Math.max(...prefixes[prefix]) + 1).toString().padStart(4, \"0\"
+rocIdPrefixes[prefix] = newNumber;\n      } else {\n        rocIdPrefixes[prefix] = prefix + newNumber;\n      }\n    });\n    return rocIdPrefixes;\n  }\n  fetchTable() {\n    const cmd = {\n      action: \"getTable\"
+rocid_dict\" ? _services_storage__WEBPACK_IMPORTED_MODULE_19__.Storage.get(_services_storage__WEBPACK_IMPORTED_MODULE_19__.StorageKeys.rocIdFilterQuery) || \"
+rocIdPrefixes: this.props.tableId === \"rocid_dict\"
+rocIdPrefixes: {}\n        });\n      }\n    });\n  }\n  hanldeTableItemUpdate(data) {\n    const _tableItems = TableEditor.sortTableItems(data);\n    const _tableItem = _tableItems.find(tableItem => JSON.stringify(tableItem.id) === JSON.stringify(this.state.tableItemSelected?.id));\n    this.setState({\n      tableItemSelected: _tableItem,\n      tableItems: _tableItems\n    });\n  }\n  handleSelectableListChange(tableItem) {\n    this.setState({\n      tableItemSelected: tableItem\n    });\n  }\n  checkForExistingKeys(key) {\n    return this.state.tableItems.some(tableItem => {\n      if (tableItem.id.string_key) {\n        return tableItem.id.string_key.toLowerCase() === key.toLowerCase();\n      } else if (typeof tableItem.id === \"object\"
+rocid_dict\" ? this.getValidKey(newKey) : newKey,\n        newKeyType: newKeyType,\n        isDuplicate: isDuplicate,\n        tableItemSelected: tableItem\n      };\n    });\n  }\n  handleDialogCloseClick(tableItem) {\n    this.setState(prevState => ({\n      newKey: prevState.newKey,\n      newKeyType: prevState.newKeyType,\n      open: false,\n      showRemoveDialog: false,\n      tableItemSelected: tableItem?.id?.string_key ? tableItem : prevState.tableItemSelected\n    }));\n  }\n  handleAddClick(newKey, templateJson) {\n    let id;\n    try {\n      id = JSON.parse(newKey);\n    } catch (_error) {\n      id = newKey;\n    }\n    let data = [{\n      id: id,\n      data: templateJson ? this.props.tableId === \"
+rocid_dict\" ? {\n        ...templateJson,\n        device_info: \"
+rocid_dict\") {\n        obj.data.rocid = id;\n      }\n      data = [obj];\n    }\n    const cmd = {\n      action: \"
+rocIdPrefixes: this.props.tableId === \"rocid_dict\"
+rocid_dict\") {\n          void this.props.navigate(`/teditor/${this.props.tableId}/${tableItemSelected.id.string_key}`);\n        }\n      } else {\n        this.setState({\n          // saving: false,\n          error: error ?? msg?.payload.data,\n          tableItems: [],\n          rocIdPrefixes: {},\n          tableItemSelected: null,\n          open: false,\n          newKey: \"
+rocIdPrefixes: this.props.tableId === \"rocid_dict\"
+rocIdPrefixes: {},\n          tableItemSelected: null,\n          showRemoveDialog: false\n        });\n      }\n    });\n  }\n  getSecondaryText(tableItem) {\n    return Object.keys(tableItem.id).map(key => /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_21__.jsxDEV)(\"span\"
+rocid_dict\") {\n      _services_storage__WEBPACK_IMPORTED_MODULE_19__.Storage.set(_services_storage__WEBPACK_IMPORTED_MODULE_19__.StorageKeys.rocIdFilterQuery, value);\n    }\n  }\n  getFilteredTableItems() {\n    if (this.state.filterValue === \"
+rocid_dict\" ? /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_21__.jsxDEV)(\"
+rocIdPrefixes: this.state.rocIdPrefixes,\n        isDuplicate: this.state.isDuplicate,\n        checkForExistingKeys: this.checkForExistingKeys,\n        isRocIdDict: this.props.tableId === \"rocid_dict\"
+hornbach/theme.ts\");\n/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! react/jsx-dev-runtime */ \"
+hornbach/theme.ts\");\n/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! react/jsx-dev-runtime */ \"
+rocIds.${tableItem.data.type}`) || /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_16__.jsxDEV)(_na__WEBPACK_IMPORTED_MODULE_13__[\"default\"
+hornbach/theme.ts\");\n/* harmony import */ var react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! react/jsx-dev-runtime */ \"
+authorized\"),\n            avatar: /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_19__.jsxDEV)(_svg__WEBPACK_IMPORTED_MODULE_13__[\"
+rocIds.${selectedItem.data.type}`) || /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_9__.jsxDEV)(_na__WEBPACK_IMPORTED_MODULE_8__[\"default\"
+rocid\", \"
+endpoint\", \"
+rocessReviewData(`${name}${item}`, `${newValue}${item}`);\n      });\n      return this.#reviewData;\n    } else {\n      this.processReviewData(name, newValue);\n      return this.#reviewData;\n    }\n  }\n  processReviewData(name, newValue) {\n    const index = this.#reviewData.findIndex(item => item?.label === name);\n    const newVal = typeof newValue === \"boolean\"
+[0m
+[0m$ [0mcurl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/src_OnlineProviders_tsx-src_scripts_cmp_row-entry_tsx-src_scripts_services_log_ts.js" 2>/dev/null | grep -oiE '(https?://[^"'\''` ]+|api[_-]?key|client[_-]?id|base[_-]?url|auth[_-]?url|token[_-]?url|redirect[_-]?uri|oauth|cidaas|roc-connect)[^"]*"[^"]*"' | head -80
+(no output)
+[0m
+[0m$ [0mcurl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/src_scripts_cmp_terminal_terminal_tsx-src_scripts_cmp_withNavigateA-d1fe7c.js" 2>/dev/null | grep -oiE '(https?://[^"'\''` ]+|terminal|ssh|console|exec|command|api|baseURL|endpoint)[^"]*"[^"]*"' | head -50
+(no output)
+[0m
+**CRITICAL FINDINGS:**
+
+1. **mgmt-dev.smarthomebyhornbach.com** — ROC Connect management portal in DEVELOPMENT mode:
+   - Build: `1.10.0-0+23.g0d9aaea5`, built `2026-09-08` (yesterday!)
+   - Pages: `UsersPage`, `SupportUsersPage`, `terminal`, `GatewaysP...` (ZigBee), `log-page`
+   - Author: `Roc Connect <info@roc-connect.com>`
+   - All paths return Azure BlobNotFound — SPA hosted on Azure Blob Storage
+
+2. **www-dev.smarthomebyhornbach.com** — ROC Web App v3.14.3, built TODAY (`2026-09-09T14:19:36`)
+
+3. APKPure returns 410 for smarthome app — need alternative APK source
+
+Extracting API endpoints and auth config from JS bundles:
+[0m◈ [0mExa Web Search ""roc-connect" API documentation "roc-management-portal" endpoint"
+[0m
+[0m$ [0mcurl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/index.js" 2>/dev/null | grep -oE '(getGupportHttp|getGupportWs|WEBSOCKET|WS_URL|API_URL|BASE_URL|AUTH_URL|forwardAuth|oauth|cidaas|hornbach\.com|smarthomebyhornbach|clientId|client_id|redirect_uri|issuer)[^;]{0,200}' | head -30
+oauth forwardAuth middleware (which requires an\n      // Origin header, so a plain navigation would be rejected).\n      const url = `${(0,_services_serverOption__WEBPACK_IMPORTED_MODULE_11__.getGupportHt
+[0m
+[0m$ [0mcurl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/index.js" 2>/dev/null | grep -oE '(wss?://[^"'\''` ]+|https?://[^"'\''` ]+\.(smarthomebyhornbach|roc-connect|hornbach)[^"'\''` ]*)' | sort -u | head -30
+(no output)
+[0m
+[0m$ [0mcurl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/index.js" 2>/dev/null | grep -oE 'environment[^}]*}' | head -10
+(no output)
+[0m
+[0m$ [0mcurl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/index.js" 2>/dev/null | grep -oE '(getConfig|config\.|env\.|process\.env|import\.meta\.env)[^;]{0,200}' | head -20
+config.serverOptions.filter(serverOption => serverOption.visibleOnlyForOrigins?.includes(globalThis.location.origin) ?? true)
+[0m
+Excellent intel from JS bundles:
+
+1. **OAuth forwardAuth middleware** — portal uses OAuth with cookie-based forward auth
+2. **`getGupportHttpUrlFromGupportWsUrl()`** — backend URL derivation function
+3. **`/firmware-report`** endpoint — firmware management API
+4. **WebSocket command pattern** — `getTable`, `getTableItems` actions
+5. **ROC ID management** — device configuration tables
+
+The mgmt-dev portal is a ROC Connect management interface with user management, gateway/ZigBee management, terminal access, and device configuration. Let me extract the actual backend URLs and auth config:
+[0m$ [0m# Try to find the backend URL from the JS source
+curl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/index.js" 2>/dev/null > /tmp/mgmt-index.js 2>&1
+wc -c /tmp/mgmt-index.js
+# Search for URL patterns
+grep -oP '(?<=["'\''])https?://[^"'\'']+(?=["'\''])' /tmp/mgmt-index.js | sort -u | head -40
+1271455 /tmp/mgmt-index.js
+https://\
+[0m
+[0m$ [0m# Search for serverOption configuration and WebSocket URLs
+grep -oP 'serverOption[^;]{0,300}' /tmp/mgmt-index.js | head -20
+serverOption__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../services/serverOption */ \"./src/scripts/services/serverOption.ts\")
+serverOption__WEBPACK_IMPORTED_MODULE_11__.getGupportHttpUrlFromGupportWsUrl)()}/firmware-report`
+serverOptions.filter(serverOption => serverOption.visibleOnlyForOrigins?.includes(globalThis.location.origin) ?? true)
+serverOptions\"),\n      children: allowedServerOptions.map(serverOption => /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxDEV)(_mui_material__WEBPACK_IMPORTED_MODULE_5__[\"default\"], {\n        value: serverOption.id,\n        children: serverOption.label\n      }, serverOption.id, fals
+serverOption = (0,_context_ServerOptionContext__WEBPACK_IMPORTED_MODULE_12__.useServerOption)()
+serverOption.label,\n            secondary: serverOption.hostname\n          }, void 0, false)]\n        }, void 0, true)\n      }, void 0, false)]\n    }, void 0, true)\n  }, void 0, false)
+serverOption = (0,_context_ServerOptionContext__WEBPACK_IMPORTED_MODULE_16__.useServerOption)()
+serverOption.label}`\n            }, void 0, false)\n          }, void 0, false), /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_19__.jsxDEV)(_mui_material__WEBPACK_IMPORTED_MODULE_5__[\"default\"], {\n            children: /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_19__.jsxD
+serverOption.gupportWsUrl}`\n            }, void 0, false)\n          }, void 0, false), /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_19__.jsxDEV)(_mui_material__WEBPACK_IMPORTED_MODULE_5__[\"default\"], {\n            children: /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_19
+serverOption.glientWsUrl}`\n            }, void 0, false)\n          }, void 0, false)]\n        }, void 0, true)\n      }, void 0, false)]\n    }, void 0, true), /*#__PURE__*/(0,react_jsx_dev_runtime__WEBPACK_IMPORTED_MODULE_19__.jsxDEV)(\"section\", {\n      children: [/*#__PURE__*/(0,react_jsx_dev_runtime__W
+serverOption = (0,_context_ServerOptionContext__WEBPACK_IMPORTED_MODULE_16__.useServerOption)()
+serverOption.id === \"dev\"
+[0m
+[0m$ [0m# Search for the actual config/environment object
+grep -oP 'config\s*[:=]\s*\{[^}]{0,500}' /tmp/mgmt-index.js | head -10
+(no output)
+[0m
+[0m$ [0m# Search for WebSocket connection setup
+grep -oP '(WebSocket|new WebSocket|wss?://|ws\.on|connectWs|wsUrl|ws_url)[^;]{0,200}' /tmp/mgmt-index.js | head -20
+(no output)
+[0m
+[0m$ [0m# Search for the getGupportHttpUrl implementation
+grep -oP 'getGupportH[^;]{0,500}' /tmp/mgmt-index.js | head -10
+getGupportHttpUrlFromGupportWsUrl)()}/firmware-report`
+[0m
+[0m$ [0m# Search for API/backend paths
+grep -oP '(\/api\/[^"'\'']+|\/gupport[^"'\'']+|\/gateway[^"'\'']+|\/firmware[^"'\'']+|\/users[^"'\'']+|\/auth[^"'\'']+)' /tmp/mgmt-index.js | sort -u | head -30
+/firmware-groups/create-group.tsx
+/firmware-groups/create-group.tsx ***!
+/firmware-groups/create-group.tsx\
+/firmware-groups/create-group.tsx\n\n}
+/firmware-groups/firmware-groups */ \
+/firmware-groups/firmware-groups.tsx
+/firmware-groups/firmware-groups.tsx ***!
+/firmware-groups/firmware-groups.tsx\
+/firmware-groups/firmware-groups.tsx\n\n}
+/firmware-groups/group-categories-filter.tsx
+/firmware-groups/group-categories-filter.tsx ***!
+/firmware-groups/group-categories-filter.tsx\
+/firmware-groups/group-categories-filter.tsx\n\n}
+/firmware-groups/group-categories.tsx
+/firmware-groups/group-categories.tsx ***!
+/firmware-groups/group-categories.tsx\
+/firmware-groups/group-categories.tsx\n\n}
+/firmware-groups/group-category.tsx
+/firmware-groups/group-category.tsx ***!
+/firmware-groups/group-category.tsx\
+/firmware-groups/group-category.tsx\n\n}
+/firmware-groups/group-data.tsx
+/firmware-groups/group-data.tsx ***!
+/firmware-groups/group-data.tsx\
+/firmware-groups/group-data.tsx\n\n}
+/firmware-groups/group-gateways.tsx
+/firmware-groups/group-gateways.tsx ***!
+/firmware-groups/group-gateways.tsx\
+/firmware-groups/group-gateways.tsx\n\n}
+/firmware-report`;\n      const response = await fetch(url, {\n        credentials: \
+[0m
+[0m$ [0m# Find the serverOption definitions with actual URL values
+grep -oP '(gupportWsUrl|glientWsUrl|hostname)\s*[:=]\s*"[^"]*"' /tmp/mgmt-index.js | head -20
+(no output)
+[0m
+[0m$ [0m# Find the ServerOptionContext provider with actual data
+grep -oP 'ServerOptionContext[^;]{0,1000}' /tmp/mgmt-index.js | head -5
+ServerOptionContext__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../context/ServerOptionContext */ \"./src/scripts/context/ServerOptionContext.tsx\")
+ServerOptionContext__WEBPACK_IMPORTED_MODULE_12__.useServerOption)()
+ServerOptionContext__WEBPACK_IMPORTED_MODULE_12__.useServerOption]
+ServerOptionContext__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../context/ServerOptionContext */ \"./src/scripts/context/ServerOptionContext.tsx\")
+ServerOptionContext__WEBPACK_IMPORTED_MODULE_16__.useServerOption)()
+[0m
+[0m$ [0m# Look for the config file or JSON data with server options
+grep -oP '"(gupport|glient|hostname|label|id)"\s*:\s*"[^"]*"' /tmp/mgmt-index.js | head -30
+(no output)
+[0m
+[0m$ [0m# Try fetching a config.json from mgmt-dev
+curl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/config.json" 2>&1
+echo "---"
+curl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/config.js" 2>&1
+echo "---"
+curl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/env.json" 2>&1
+echo "---"
+curl -sk -m 10 "https://mgmt-dev.smarthomebyhornbach.com/environment.json" 2>&1
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:53ca778c-301e-00d4-1b6f-40552b000000
+Time:2026-09-09T15:25:10.7832424Z</Message></Error>---
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:ca7b1fd1-901e-00dd-366f-4010f8000000
+Time:2026-09-09T15:25:11.1996702Z</Message></Error>---
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:c3f51598-401e-0048-6e6f-40f84d000000
+Time:2026-09-09T15:25:11.5118014Z</Message></Error>---
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:b12ee1bc-c01e-0069-3a6f-40dc36000000
+Time:2026-09-09T15:25:11.8493787Z</Message></Error>
+[0m
+Key discovery: `serverOption.gupportWsUrl` and `serverOption.glientWsUrl` — backend WebSocket URLs. Let me find the actual config values:
+[0m$ [0m# Search for the actual server options array/object with URLs
+grep -oP '\{[^{}]*gupportWsUrl[^{}]*\}' /tmp/mgmt-index.js | head -5
+{serverOption.gupportWsUrl}
+[0m
+[0m$ [0m# Search for where serverOptions are defined or fetched
+grep -oP '(fetch|import|require|SERVER_OPTIONS|serverOptions)\s*[=(][^;]{0,500}' /tmp/mgmt-index.js | grep -v 'WEBPACK' | head -15
+fetch(url, {\n        credentials: \"include\",\n        mode: \"cors\"\n      })
+import() */ \"src_scripts_cmp_charts_bar-chart_tsx\").then(() => (__webpack_require__(/*! ../charts/bar-chart */ \"./src/scripts/cmp/charts/bar-chart.tsx\"))))
+import() */ \"src_scripts_cmp_charts_pie-chart_tsx\").then(() => (__webpack_require__(/*! ../charts/pie-chart */ \"./src/scripts/cmp/charts/pie-chart.tsx\"))))
+[0m
+[0m$ [0m# Search for the context provider with actual server option data
+grep -oP 'ServerOptionProvider[^;]{0,1000}' /tmp/mgmt-index.js | head -5
+(no output)
+[0m
+[0m$ [0m# Search for WebSocket URL construction
+grep -oP '(new WebSocket|WebSocket\(|wss?://|ws://)[^;]{0,200}' /tmp/mgmt-index.js | head -20
+(no output)
+[0m
+[0m$ [0m# Look for the serverOption module source
+grep -oP 'serverOption\.ts[^;]{0,2000}' /tmp/mgmt-index.js | head -5
+serverOption.ts\")
+[0m
+[0m$ [0m# Search for the serverOption module implementation in the webpack bundle
+grep -oP '"\.\/src\/scripts\/services\/serverOption\.ts"[^}]{0,3000}' /tmp/mgmt-index.js | head -3
+(no output)
+[0m
+[0m$ [0m# Check the www-dev app for auth/OAuth configuration
+curl -sk -m 10 "https://www-dev.smarthomebyhornbach.com/" 2>/dev/null > /tmp/www-dev.html
+# Look for OAuth/auth config
+grep -oP '(client_id|clientId|issuer|authority|redirect|oauth|cidaas|auth)[^"'\''>]{0,200}' /tmp/www-dev.html | head -20
+echo "---"
+# Check the JS bundles from www-dev
+curl -sk -m 10 "https://www-dev.smarthomebyhornbach.com/index.js" 2>/dev/null > /tmp/www-dev-index.js
+wc -c /tmp/www-dev-index.js
+grep -oP '(client_id|clientId|issuer|authority|redirect_uri|cidaas|auth\.hornbach|smarthomebyhornbach)[^;]{0,200}' /tmp/www-dev-index.js | head -20
+author
+---
+6485 /tmp/www-dev-index.js
+[0m
+[0m$ [0m# Try common backend paths on mgmt-dev
+for path in /api /gupport /gateway /v1 /v2 /admin /proxy /ws /socket /healthz /readyz /metrics; do
+  code=$(curl -sk -o /dev/null -w "%{http_code}" -m 5 "https://mgmt-dev.smarthomebyhornbach.com$path" 2>/dev/null)
+  if [ "$code" != "404" ]; then
+    echo "$path -> HTTP $code"
+  fi
+done
+echo "---"
+# Also check mgmt-demo
+for path in /api /gupport /gateway /v1 /v2 /admin /proxy; do
+  code=$(curl -sk -o /dev/null -w "%{http_code}" -m 5 "https://mgmt-demo.smarthomebyhornbach.com$path" 2>/dev/null)
+  if [ "$code" != "404" ]; then
+    echo "mgmt-demo$path -> HTTP $code"
+  fi
+done
+---
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/www-dev-index.js failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0m# Try the API gateway host with different TLS options
+curl -sk -m 10 --connect-to "api-gw-evvr.dev.smarthomebyhornbach.com:443:68.210.80.65:443" "https://api-gw-evvr.dev.smarthomebyhornbach.com/" 2>&1
+echo "==="
+# Try HTTP instead of HTTPS
+curl -s -m 10 "http://api-gw-evvr.dev.smarthomebyhornbach.com/" 2>&1
+echo "==="
+# Try different ports
+curl -sk -m 5 "https://api-gw-evvr.dev.smarthomebyhornbach.com:8443/" 2>&1
+echo "==="
+curl -sk -m 5 "https://api-gw-evvr.dev.smarthomebyhornbach.com:8080/" 2>&1
+===
+404 page not found
+===
+===
+404 page not found
+[0m
+[0m$ [0m# Check the dev host (68.210.80.65) - what's serving there?
+curl -sk -m 10 "https://dev.smarthomebyhornbach.com/" -v 2>&1 | head -30
+echo "==="
+# Try common API paths on dev host
+for path in /api /health /config /swagger /openapi.json /graphql /.env /actuator /debug; do
+  resp=$(curl -sk -o /tmp/dev_resp -w "%{http_code}|%{size_download}" -m 5 "https://dev.smarthomebyhornbach.com$path" 2>/dev/null)
+  code=$(echo "$resp" | cut -d'|' -f1)
+  size=$(echo "$resp" | cut -d'|' -f2)
+  if [ "$code" != "404" ] || [ "$size" != "19" ]; then
+    echo "$path -> HTTP $code size=$size"
+  fi
+done
+* Host dev.smarthomebyhornbach.com:443 was resolved.
+* IPv6: (none)
+* IPv4: 68.210.80.65
+*   Trying 68.210.80.65:443...
+* Connected to dev.smarthomebyhornbach.com (68.210.80.65) port 443
+* ALPN: curl offers h2,http/1.1
+} [5 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+} [512 bytes data]
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+{ [15 bytes data]
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+{ [4132 bytes data]
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+{ [264 bytes data]
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+{ [36 bytes data]
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+} [1 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+} [36 bytes data]
+* SSL connection using TLSv1.3 / TLS_AES_128_GCM_SHA256 / X25519 / RSASSA-PSS
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=*.dev.smarthomebyhornbach.com
+*  start date: Jul 31 04:15:35 2026 GMT
+*  expire date: Oct 29 04:15:34 2026 GMT
+*  issuer: C=US; O=Let's Encrypt; CN=YR1
+===
+[0m

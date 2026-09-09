@@ -2060,3 +2060,39 @@ evidence_needed: any non-404 anonymous response beyond SPA shells (API/config/me
 verify_steps: volatile — catalog all 26 CT hosts (resolve+banner, 1rps GET/HEAD), then GET common config/api paths (/config, /api, /health) on live dev/demo hosts
 impact: admin/device-management or metadata access on customer smart-home infra — HIGH if present
 testability: PASSIVE
+## 2026-09-09 15:25:51 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 {"active":false} / OK unauthenticated, stable 11+ sessions; RFC 7662/7009 client-auth bypass; token issuance client-gated (400 invalid_client) isolates flaw to this plane
+evidence_needed: valid access_token → introspect shows real claim set; re-introspect after revoke → active=false
+verify_steps: POST token-srv/introspect token=<real> no-auth; POST token-srv/revoke token=<real>; re-introspect; GET users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE (302→AUTH10007 uniform gate); redirect_uri validation never tested due to client_id gate; cidaas historically regex allowlists; authorization_code flow advertised in discovery
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline injection)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] smarthomebyhornbach.com dev/demo infrastructure exposes unauthenticated API/config surface
+class: MISCONFIG
+asset: mgmt-dev.smarthomebyhornbach.com
+confidence: 35
+reasoning: fresh in-brand estate never tested; 4+ live hosts (www-public, www-demo, www-dev, mgmt-public, mgmt-dev); api-gw-evvr.dev TLS services; vendor multi-tenant ROC platform; dev/test variants weaker controls
+evidence_needed: any non-404 anonymous response beyond SPA shells on dev/demo hosts
+verify_steps: CT-log enum *.smarthomebyhornbach.com → DNS resolve → HTTP GET/HEAD /config, /api, /health on live dev hosts
+impact: admin/device-management or metadata access on customer smart-home infra — HIGH if present
+testability: PASSIVE
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: systemic unauthenticated POST → 200 across 11+ sessions; GET/HEAD 404 was methodology artefact
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: stable unauthenticated POST → 200 OK text/plain; GET/HEAD parameter-sensitive 404
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: LIVE uniform gate; client_id enumeration REMOVED
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[RISK] hornbach: 52/100 — no surface change; two HIGH-value hypotheses (introspect 85-conf, redirect_uri 70-conf) both blocked on unrecovered client_id; all live probes confirmed uniform gates; campaign progressive-stuck on one dependency; smart home surface unexplored but unproven
