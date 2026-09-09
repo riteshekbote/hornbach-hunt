@@ -950,3 +950,10 @@
 - LEARN: ACCEPTED class OTHER @ hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S2
 - LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules
 - LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
+
+## RANKED HYPOTHESES 2026-09-09 23:34:33 UTC
+- [85] auth.hornbach.com/token-srv/{introspect,revoke}: Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Obtain a valid cidaas client_id — still the sole unblocker for both FINAL chains. Repeat-first priority (a): open a fresh browser, hit `https://auth.horn
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com: GET-plane recheck ~23:2xZ 09-09 — discovery 200/3189B, status 200/60B, authz uniform 302→AUTH10007, api.hornbach.de 404
+- LEARN: ACCEPTED class OTHER @ smarthomebyhornbach.com: unreachable (code=000) from this egress — consistent with prior api-gw-evvr Zscaler TLS-fail; no additive surfac
+- LEARN: REJECTED class OTHER @ github.com/hornbach: 0 public repos; public-repo client_id grep exhausted (KB 09-09 02:33Z).

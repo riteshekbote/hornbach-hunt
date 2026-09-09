@@ -165,3 +165,6 @@
 - 2026-09-09 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - 2026-09-09 ACCEPTED class AUTH @ auth.hornbach.com: GET-plane recheck 09-09 — OIDC discovery 200/3189B, authz uniform 302→AUTH10007, api.hornbach.de root 404/47B; all core gates unchanged, walled estate confirmed.
 - 2026-09-09 ACCEPTED class MISCONFIG @ smarthomebyhornbach.com: 09-09 scan — 5 live CDN SPA shells all common paths uniform 404 (215B), api-gw-evvr Zscaler edge TLS-fail, dev/docs-dev 404 roots; no anonymous API beyond SPA shells; hypothesis confidence 35→30.
+- 2026-09-09 ACCEPTED class AUTH @ auth.hornbach.com: GET-plane recheck ~23:2xZ 09-09 — discovery 200/3189B, status 200/60B, authz uniform 302→AUTH10007, api.hornbach.de 404/47B; walled estate re-confirmed, no delta.
+- 2026-09-09 ACCEPTED class OTHER @ smarthomebyhornbach.com: unreachable (code=000) from this egress — consistent with prior api-gw-evvr Zscaler TLS-fail; no additive surface assertion.
+- 2026-09-09 REJECTED class OTHER @ github.com/hornbach: 0 public repos; public-repo client_id grep exhausted (KB 09-09 02:33Z).

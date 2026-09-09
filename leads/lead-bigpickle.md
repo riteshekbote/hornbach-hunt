@@ -2159,3 +2159,44 @@ testability: PASSIVE
 [LEARN] ACCEPTED class MISCONFIG @ smarthomebyhornbach.com: 09-09 scan — 5 live CDN SPA shells all common paths uniform 404 (215B), api-gw-evvr Zscaler edge TLS-fail, dev/docs-dev 404 roots; no anonymous API beyond SPA shells; hypothesis confidence 35→30.
 [RISK] hornbach: 52/100 — no surface change across 12+ sessions; strongest defensible finding (unauthenticated introspect+revoke, RFC 7662/7009 bypass) stable but PoC-gated on real token; redirect_uri bypass gated on client_id; smarthome breadth partially tested, negative; single dependency (client_id from APK) blocks all report-grade chains.
 ## 2026-09-09 21:34:01 UTC [target] (model bigpickle)
+## 2026-09-09 23:34:23 UTC [target] (model bigpickle)
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.30,auth=9|business=8|tech=9|gate=10|cloud=7|fresh=5 — unauthenticated RFC 7662/7009 bypass, stable 11+ sessions, sole reportable finding
+[PRIO] auth.hornbach.com/authz-srv/authz,7.40,auth=8|business=9|tech=9|gate=5|cloud=7|fresh=5 — authorization endpoint LIVE (302→AUTH10007), redirect_uri untested behind client_id gate
+[PRIO] auth.hornbach.com/login-srv/social/token,5.70,auth=5|business=5|tech=7|gate=8|cloud=6|fresh=5 — GET 500 + ACAO:* anonymous (informational)
+[HYP] Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 `{"active":false}` / 200 `OK` unauthenticated, stable across 11+ independent sessions (KB, latest 13:27Z 09-08); RFC 7662/7009 client-auth bypass; token issuance client-gated (400 invalid_client) isolates flaw to this plane; gates re-confirmed alive this session (discovery/status/authz 302).
+evidence_needed: valid access_token + client_id (from `de.hornbach.app.smarthome` `assets/cidaas.xml`) → introspect real claim set; re-introspect after revoke → active=false
+verify_steps: POST token-srv/introspect token=<real> no-auth → claim set; POST token-srv/revoke token=<real>; re-introspect → active=false; GET users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth authorization endpoint redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE — 302→AUTH10007 uniform gate re-confirmed this session on dummy client_id; redirect_uri validation never testable behind client_id gate; cidaas historically regex allowlists; authorization_code flow advertised in discovery (200/3189B re-fetched).
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline) → 302-to-evil
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] smarthomebyhornbach.com SPA bundles expose undocumented ROC API route prefixes beyond 404 shells
+class: MISCONFIG
+asset: mgmt-dev/www-dev.smarthomebyhornbach.com
+confidence: 30
+reasoning: 09-09 scan showed 5 live CDN SPA shells with uniform 404 (215B) on common paths; only untested angle is app-bundle-derived path dictionary; this egress cannot reach the cluster (code=000) so verification is blocked here.
+evidence_needed: any anonymous non-404 response on an API/config path derived from SPA JS bundles
+verify_steps: fetch www-demo/www-dev index.html + JS bundles (external egress), grep restApiUrl/route prefixes, then GET those exact paths ≤1rps
+impact: device-command/admin surface on customer smart-home infra — HIGH if present
+testability: PASSIVE
+[PARKED] smarthomebyhornbach.com bundle-dict: confidence 30 < 40 and unreachable from this egress — no additive value this session.
+[PARKED] login-srv/social/token CORS wildcard: no data reachable on error-only 500; informational, not reportable.
+[PARKED] SCIM v2 / device-flow / token-exchange / client registration: all client-/token-gated or 404/REJECTED per KB; no anonymous differential.
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — PoC-gated on client_id.
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id.
+[NEXT] HUMAN: Obtain a valid cidaas client_id — still the sole unblocker for both FINAL chains. Repeat-first priority (a): open a fresh browser, hit `https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<your-real-account-login-entrypoint>` — i.e. capture the `client_id` in the OAuth start URL during a manual www.hornbach.de login before the FingerprintJS wall (DevTools → Network). Fallback (b): Android device/emulator install of `de.hornbach.app.smarthome` (verify HORNBACH signature first), extract `assets/cidaas.xml` (ClientId + redirect_uri scheme) via `adb backup`/filesystem; `sha256sum` every artifact. Web-path repo grep is exhausted (org has 0 public repos), APK mirrors bot-walled — do NOT re-automate them. Return: client_id + sha256 of any secret + redirect_uri allowlist; no live authz/token probes until confirmed.
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com: GET-plane recheck ~23:2xZ 09-09 — discovery 200/3189B, status 200/60B, authz uniform 302→AUTH10007, api.hornbach.de 404/47B; walled estate re-confirmed, no delta.
+[LEARN] ACCEPTED class OTHER @ smarthomebyhornbach.com: unreachable (code=000) from this egress — consistent with prior api-gw-evvr Zscaler TLS-fail; no additive surface assertion.
+[LEARN] REJECTED class OTHER @ github.com/hornbach: 0 public repos; public-repo client_id grep exhausted (KB 09-09 02:33Z).
+[RISK] hornbach: **52/100** — unchanged. Unauthenticated token-management plane bypass (introspect+revoke, RFC 7662/7009) remains the strongest defensible finding at 85-confidence over 11+ sessions but is 100% PoC-gated on a single HUMAN dependency (client_id via browser-capture or Smarthome APK). redirect_uri bypass (70) blocked on the same artifact; all web/repo/APK-mirror client_id sources exhausted/blocked; api.hornbach.de anonymous breadth definitively exhausted; Mirakl/NetScaler/SCIM/token-issue planes client-gated; no anonymous PII reachable; campaign progressive-stuck, risk stable until client_id unblocks real-token POC or redirect_uri testing.
