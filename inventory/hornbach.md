@@ -347,3 +347,9 @@ www.hornbach.com
 - NEW probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-09 06:13), but KB confirms POST → 200 works across 11+ sessions; methodolo
 - NEW auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE at 13:27Z 2026-09-08 — 302→AUTH10007 on dummy client_id; uniform gate, client_id enum REMOVED
 - CHANGED No new assets discovered; attack surface stable; only gate remains valid client_id extraction from mobile app
+
+## 2026-09-09 18:46:37 UTC
+- NEW probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-09 15:26), but KB confirms POST → 200 works across 11+ sessions; methodolo
+- NEW auth.hornbach.com/users-srv/userinfo consistently returns HTTP 401 JSON (bearer-gated) across last 10+ probe sessions; token-srv/userinfo → 404 confirmed router gap
+- CHANGED No new assets discovered since 2026-09-08; attack surface stable; only gate remains valid client_id extraction from mobile app (de.hornbach.app.smarthome)
+- CHANGED auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE at 13:27Z 2026-09-08 — 302→AUTH10007 on dummy client_id; uniform gate, client_id enum REMOVED

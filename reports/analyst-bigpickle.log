@@ -15356,3 +15356,249 @@ done
 *  issuer: C=US; O=Let's Encrypt; CN=YR1
 ===
 [0m
+===== ANALYST bigpickle 2026-09-09 18:46:37 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && cat scope.yml 2>/dev/null | head -50
+total 272
+drwxr-xr-x 12 runner runner  4096 Sep  9 18:43 .
+drwxr-xr-x  3 runner runner  4096 Sep  9 18:43 ..
+drwxr-xr-x  7 runner runner  4096 Sep  9 18:43 .git
+drwxr-xr-x  3 runner runner  4096 Sep  9 18:43 .github
+-rw-r--r--  1 runner runner  1901 Sep  9 18:43 README.md
+-rw-r--r--  1 runner runner    32 Sep  9 18:43 analyst-out.txt
+-rw-r--r--  1 runner runner 89908 Sep  9 18:43 analyst-prompt.txt
+-rw-r--r--  1 runner runner 85980 Sep  9 18:43 ctx.txt
+drwxr-xr-x  2 runner runner  4096 Sep  9 18:43 inventory
+drwxr-xr-x  2 runner runner  4096 Sep  9 18:43 knowledge
+drwxr-xr-x  2 runner runner  4096 Sep  9 18:43 leads
+-rw-r--r--  1 runner runner 12624 Sep  9 18:43 probe-results.md
+drwxr-xr-x  2 runner runner  4096 Sep  9 18:43 recon-notes
+drwxr-xr-x  2 runner runner  4096 Sep  9 18:43 reports
+drwxr-xr-x  2 runner runner  4096 Sep  9 18:43 reposcan-raw
+-rw-r--r--  1 runner runner  3341 Sep  9 18:43 scope.yml
+drwxr-xr-x  2 runner runner  4096 Sep  9 18:43 scripts
+-rw-r--r--  1 runner runner    33 Sep  9 18:43 state_bigpickle.json
+-rw-r--r--  1 runner runner    33 Sep  9 18:43 state_laguna.json
+-rw-r--r--  1 runner runner    33 Sep  9 18:43 state_ling3.json
+-rw-r--r--  1 runner runner    33 Sep  9 18:43 state_longcat.json
+-rw-r--r--  1 runner runner    33 Sep  9 18:43 state_mimo.json
+-rw-r--r--  1 runner runner    33 Sep  9 18:43 state_nemotron3.json
+drwxr-xr-x  2 runner runner  4096 Sep  9 18:43 triage
+programs:
+  hornbach:
+    name: HORNBACH Holding AG & Co. KGaA / HORNBACH Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, retail systems, e-commerce platforms, mobile applications, APIs, supply chain and logistics systems, customer accounts, in-store digital systems, and domains operated by HORNBACH Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+      - "Social engineering, physical attacks, and DoS/DDoS testing (per program notes)"
+      - "Exposure of customer/employee/financial/authentication data during testing (per program notes)"
+    github_orgs:
+      - none-configured
+
+rules:
+  passive_first: false          # deep-hunt agent: active probes allowed when scoped
+  max_requests_per_second: 1    # never hammer live infra
+  no_doom: true                 # no DoS/DDoS, no account-lockout attacks
+  account_creation: restricted  # only on test/sandbox assets, never live customer data
+  no_data_modification: true    # no writes/deletes on live customer data
+  no_pre_disclosure: true       # never disclose before program response
+  poc_required: true            # scanner output alone is REJECTED
+  redact_secrets_in_commits: true
+
+models:
+[0m
+[0m$ [0mfor u in \
+ "https://auth.hornbach.com/.well-known/openid-configuration" \
+ "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=zz-dummy-zz&scope=openid" \
+ "https://api.hornbach.de/" \
+ "https://auth.hornbach.com/.well-known/status"; do
+  curl -sS -o /tmp/p.out -w "%{http_code} %{size_download}B loc=%{redirect_url} " -m 15 -A "Mozilla/5.0" --max-redirs 0 "$u"
+  echo "| $u"
+  sleep 1.1
+done
+200 3189B loc= | https://auth.hornbach.com/.well-known/openid-configuration
+302 0B loc=https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com | https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=zz-dummy-zz&scope=openid
+404 47B loc= | https://api.hornbach.de/
+200 60B loc= | https://auth.hornbach.com/.well-known/status
+[0m
+[0m$ [0mcat leads/* 2>/dev/null | grep -i "smarthome\|magenta\|roc" | head -30; echo "---"; cat probe-results.md | grep -i "smarthome" | head -20; echo "---"; ls leads inventory knowledge
+reasoning: Authorization endpoint live at authz-srv/authz; returns HTTP 200 (login/consent page) when valid client_id provided; redirect_uri parameter accepted before client validation per OAuth flow; cidaas CIAM may use regex/wildcard matching for redirect_uri allowlists; verbose error messages confirm parameter processing
+reasoning: Endpoint live; returns HTTP 200 login/consent for a valid client_id (per KB) vs uniform 302→AUTH10007 for invalid; redirect_uri processed pre/post client validation per OAuth; cidaas historically matches redirect_uri with regex/wildcard allowlists. All impact chains (code theft → token → introspect/revoke abuse) pivot here.
+[NEXT] HUMAN: Obtain a valid cidaas client_id — the sole gate across all three FINAL chains. Revised priority: (1) capture `client_id` from the `/authz-srv/authz` redirect during a manual www.hornbach.de login in a fresh browser (bot-challenge passes in a real browser; the OAuth start URL is on the login flow); (2) fallback: the HORNBACH main shopping app is absent from Google Play/APKMirror (likely retired→PWA), so use the HORNBACH Smarthome app (`de.hornbach.app.smarthome`, shares the same cidaas tenant) — install on an Android device/emulator and extract `assets/cidaas.xml` (client_id + redirect_uri scheme) via device filesystem or `adb backup`; APK-mirror scraping is bot-walled (APKPure CF-challenge, APKCombo 404, uptodown blocked) and NOT worth further automation.
+[NEXT] HUMAN: Obtain a valid cidaas `client_id` — the single blocker across all escalation chains. Priority: (1) capture `client_id` from the `/authz-srv/authz` redirect during a manual `www.hornbach.de` login in a fresh browser (bot-challenge passes in real browser; the OAuth start URL fires during the login flow before the FingerprintJS wall); (2) fallback: install HORNBACH Smarthome app (`de.hornbach.app.smarthome`, shares same cidaas tenant) on Android device/emulator and extract `assets/cidaas.xml` (ClientId + redirect_uri scheme) via `adb backup` or device filesystem; (3) last resort: grep public HORNBACH GitHub/GitLab repos or npm packages for hardcoded cidaas client_ids. With a client_id, the 80-confidence unauthenticated introspect/revoke bypass converts to a reportable PoC (real-token metadata exfil + silent session kill) and the 55-confidence redirect_uri bypass becomes testable.
+[RISK] hornbach: **53/100** — unauthenticated token-management plane bypass (introspect+revocation) re-confirmed at 80 confidence, 6th session, POST-only body-gated; systemic cidaas tenant misconfig, strongest defensible finding; token issuance correctly isolated (400 invalid_client); all escalation chains gated on client_id acquisition (main app retired/PWA, APK mirrors bot-walled, Smarthome app is alternative extraction path); redirect_uri bypass 55-confidence but blocked; API surfaces (SAP APIM, Mirakl) gated and anonymous surface exhausted; no anonymous PII reachable; critical path remains client_id, then real-token PoC.
+reasoning: Authorization endpoint live at authz-srv/authz; returns HTTP 200 (login/consent page) when valid client_id provided; redirect_uri parameter accepted before client validation per OAuth flow; cidaas CIAM may use regex/wildcard matching for redirect_uri allowlists; verbose error messages confirm parameter processing
+reasoning: Endpoint live; returns HTTP 200 login/consent for a valid client_id (per KB) vs uniform 302→AUTH10007 for invalid; redirect_uri processed pre/post client validation per OAuth; cidaas historically matches redirect_uri with regex/wildcard allowlists. All impact chains (code theft → token → introspect/revoke abuse) pivot here.
+[NEXT] HUMAN: Obtain a valid cidaas client_id — the sole gate across all three FINAL chains. Revised priority: (1) capture `client_id` from the `/authz-srv/authz` redirect during a manual www.hornbach.de login in a fresh browser (bot-challenge passes in a real browser; the OAuth start URL is on the login flow); (2) fallback: the HORNBACH main shopping app is absent from Google Play/APKMirror (likely retired→PWA), so use the HORNBACH Smarthome app (`de.hornbach.app.smarthome`, shares the same cidaas tenant) — install on an Android device/emulator and extract `assets/cidaas.xml` (client_id + redirect_uri scheme) via device filesystem or `adb backup`; APK-mirror scraping is bot-walled (APKPure CF-challenge, APKCombo 404, uptodown blocked) and NOT worth further automation.
+[NEXT] HUMAN: Obtain a valid cidaas `client_id` — the single blocker across all escalation chains. Priority: (1) capture `client_id` from the `/authz-srv/authz` redirect during a manual `www.hornbach.de` login in a fresh browser (bot-challenge passes in real browser; the OAuth start URL fires during the login flow before the FingerprintJS wall); (2) fallback: install HORNBACH Smarthome app (`de.hornbach.app.smarthome`, shares same cidaas tenant) on Android device/emulator and extract `assets/cidaas.xml` (ClientId + redirect_uri scheme) via `adb backup` or device filesystem; (3) last resort: grep public HORNBACH GitHub/GitLab repos or npm packages for hardcoded cidaas client_ids. With a client_id, the 80-confidence unauthenticated introspect/revoke bypass converts to a reportable PoC (real-token metadata exfil + silent session kill) and the 55-confidence redirect_uri bypass becomes testable.
+[RISK] hornbach: **53/100** — unauthenticated token-management plane bypass (introspect+revocation) re-confirmed at 80 confidence, 6th session, POST-only body-gated; systemic cidaas tenant misconfig, strongest defensible finding; token issuance correctly isolated (400 invalid_client); all escalation chains gated on client_id acquisition (main app retired/PWA, APK mirrors bot-walled, Smarthome app is alternative extraction path); redirect_uri bypass 55-confidence but blocked; API surfaces (SAP APIM, Mirakl) gated and anonymous surface exhausted; no anonymous PII reachable; critical path remains client_id, then real-token PoC.
+[HYP] Cross-check: Hornbach Smarthome app leaks cidaas client_id + redirect_uri scheme
+asset: de.hornbach.app.smarthome (app assets) / auth.hornbach.com/authz-srv/authz
+reasoning: Kernel/Memory shows the single blocker across all escalation chains is a valid cidaas `client_id`; KB states the main app is retired/PWA and APK mirrors are bot-walled, but the Smarthome app (`de.hornbach.app.smarthome`) shares the same HORNBACH cidaas tenant and was explicitly nominated as fallback extraction path. Expected artifact is `assets/cidaas.xml` (ClientId + redirect_uri scheme). Static client secrets baked into APK would additionally enable confidential-client calls to introspect/revoke.
+evidence_needed: cidaas.xml (ClientId), any redirect_uri scheme (e.g. `de.hornbach.app.smarthome://`), proof same tenant as auth.hornbach.com
+verify_steps: JUDGEMENT: (a) H|apkfiles.com|APKMirror for `de.hornbach.app.smarthome` APK, download; (b) unzip and grep `assets/*` and `res/xml/*` for `cidaas`/`ClientId`/`client_id`/`skipCookieWarning`; (c) no client_secret expected (public client, PKCE/device flow) — mirror upload of same APK to VirusTotal cache possible; (d) if client_id obtained, POST-only authz probe gated until confirmed. No live request fired.
+[PARKED] redirect_uri validation bypass (55) — needs client_id; Smarthome APK is cleanest path.
+[NEXT] HUMAN: Get `de.hornbach.app.smarthome` APK (VirusTotal/apkfiles/APKMirror), extract `assets/cidaas.xml` → client_id + redirect_uri scheme; feeds both the 85-conf introspect/revoke PoC and the 55-conf redirect_uri bypass; check `de.hornbach.app.smarthome` is genuinely HORNBACH's (checksum/signature) before installing anywhere.
+[RISK] hornbach: 55/100 — unauthenticated token-management plane bypass (introspect+revoke) persists at 85-confidence across 8+ sessions; redirect_uri bypass gated on Smarthome-APK client_id extraction; Mirakl surfaces gated; no new anonymous surface; main escalation remaining is client-side (APK) not server-side.
+reasoning: Authorization endpoint live at authz-srv/authz; returns HTTP 200 (login/consent page) when valid client_id provided as query param; redirect_uri parameter accepted before client validation per OAuth flow; cidaas CIAM may use regex/wildcard matching for redirect_uri allowlists; verbose error messages confirm parameter processing  
+reasoning: Authorization endpoint live at authz-srv/authz; returns HTTP 200 (login/consent page) when valid client_id provided as query param; redirect_uri parameter accepted before client validation per OAuth flow; cidaas CIAM may use regex/wildcard matching for redirect_uri allowlists; verbose error messages confirm parameter processing
+reasoning: Authorization endpoint live at authz-srv/authz; returns HTTP 200 (login/consent page) when valid client_id provided as query param; redirect_uri parameter accepted before client validation per OAuth flow; cidaas CIAM may use regex/wildcard matching for redirect_uri allowlists; verbose error messages confirm parameter processing  
+reasoning: Authorization endpoint live at authz-srv/authz; returns HTTP 200 (login/consent page) when valid client_id provided as query param; redirect_uri parameter accepted before client validation per OAuth flow; cidaas CIAM may use regex/wildcard matching for redirect_uri allowlists; verbose error messages confirm parameter processing
+[HYP] Cross-check: Hornbach Smarthome app leaks cidaas client_id + redirect_uri scheme
+asset: de.hornbach.app.smarthome (app assets) / auth.hornbach.com/authz-srv/authz
+reasoning: Kernel/Memory shows the single blocker across all escalation chains is a valid cidaas `client_id`; KB states the main app is retired/PWA and APK mirrors are bot-walled, but the Smarthome app (`de.hornbach.app.smarthome`) shares the same HORNBACH cidaas tenant and was explicitly nominated as fallback extraction path. Expected artifact is `assets/cidaas.xml` (ClientId + redirect_uri scheme). Static client secrets baked into APK would additionally enable confidential-client calls to introspect/revoke.
+evidence_needed: cidaas.xml (ClientId), any redirect_uri scheme (e.g. `de.hornbach.app.smarthome://`), proof same tenant as auth.hornbach.com
+verify_steps: JUDGEMENT: (a) H|apkfiles.com|APKMirror for `de.hornbach.app.smarthome` APK, download; (b) unzip and grep `assets/*` and `res/xml/*` for `cidaas`/`ClientId`/`client_id`/`skipCookieWarning`; (c) no client_secret expected (public client, PKCE/device flow) — mirror upload of same APK to VirusTotal cache possible; (d) if client_id obtained, POST-only authz probe gated until confirmed. No live request fired.
+[PARKED] redirect_uri validation bypass (55) — needs client_id; Smarthome APK is cleanest path.
+[NEXT] HUMAN: Get `de.hornbach.app.smarthome` APK (VirusTotal/apkfiles/APKMirror), extract `assets/cidaas.xml` → client_id + redirect_uri scheme; feeds both the 85-conf introspect/revoke PoC and the 55-conf redirect_uri bypass; check `de.hornbach.app.smarthome` is genuinely HORNBACH's (checksum/signature) before installing anywhere.
+[RISK] hornbach: 55/100 — unauthenticated token-management plane bypass (introspect+revoke) persists at 85-confidence across 8+ sessions; redirect_uri bypass gated on Smarthome-APK client_id extraction; Mirakl surfaces gated; no new anonymous surface; main escalation remaining is client-side (APK) not server-side.
+---
+---
+inventory:
+hornbach.md
+
+knowledge:
+index.md
+
+leads:
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-mimo.md
+lead-nemotron3.md
+reposcan-hornbach.md
+[0m
+[0m$ [0mgrep -iho "\(mgmt\|www\|api\|mon\)-[a-z-]*\.smarthomebyhornbach\.com\|[a-z0-9-]*\.smarthomebyhornbach\.com" leads/*.md inventory/*.md | sort -u
+.smarthomebyhornbach.com
+dev.smarthomebyhornbach.com
+docs-dev.smarthomebyhornbach.com
+mgmt-dev.smarthomebyhornbach.com
+[0m
+[0m$ [0mfor h in www-public.smarthomebyhornbach.com www-demo.smarthomebyhornbach.com www-dev.smarthomebyhornbach.com mgmt-public.smarthomebyhornbach.com mgmt-dev.smarthomebyhornbach.com api-gw-evvr.dev.smarthomebyhornbach.com mon-api-gw-evvr.dev.smarthomebyhornbach.com dev.smarthomebyhornbach.com docs-dev.smarthomebyhornbach.com; do
+  ip=$(getent ahostsv4 "$h" | awk '{print $1}' | sort -u | head -1)
+  code=$(curl -sS -o /dev/null -w "%{http_code}" -m 12 -I -A "Mozilla/5.0" "https://$h/" 2>/dev/null)
+  echo "$code  ${ip:-NXDOMAIN}  $h"
+  sleep 1.1
+done
+200  150.171.109.151  www-public.smarthomebyhornbach.com
+200  150.171.109.151  www-demo.smarthomebyhornbach.com
+200  150.171.109.147  www-dev.smarthomebyhornbach.com
+200  150.171.109.151  mgmt-public.smarthomebyhornbach.com
+200  150.171.109.151  mgmt-dev.smarthomebyhornbach.com
+000  68.210.80.65  api-gw-evvr.dev.smarthomebyhornbach.com
+000  68.210.80.65  mon-api-gw-evvr.dev.smarthomebyhornbach.com
+404  68.210.80.65  dev.smarthomebyhornbach.com
+404  150.171.109.151  docs-dev.smarthomebyhornbach.com
+[0m
+[0m$ [0mfor h in mgmt-dev.smarthomebyhornbach.com www-demo.smarthomebyhornbach.com www-dev.smarthomebyhornbach.com; do
+  for p in /config /health /api/health /api/config /version /robots.txt; do
+    code=$(curl -sS -o /tmp/b.out -w "%{http_code} %{size_download}B loc=%{redirect_url}" -m 12 -A "Mozilla/5.0" --max-redirs 0 "https://$h$p" 2>/dev/null)
+    echo "$h$p -> $code"
+    sleep 1.1
+  done
+done
+mgmt-dev.smarthomebyhornbach.com/config -> 404 215B loc=
+mgmt-dev.smarthomebyhornbach.com/health -> 404 215B loc=
+mgmt-dev.smarthomebyhornbach.com/api/health -> 404 215B loc=
+mgmt-dev.smarthomebyhornbach.com/api/config -> 404 215B loc=
+mgmt-dev.smarthomebyhornbach.com/version -> 404 215B loc=
+mgmt-dev.smarthomebyhornbach.com/robots.txt -> 404 215B loc=
+www-demo.smarthomebyhornbach.com/config -> 404 215B loc=
+www-demo.smarthomebyhornbach.com/health -> 404 215B loc=
+www-demo.smarthomebyhornbach.com/api/health -> 404 215B loc=
+www-demo.smarthomebyhornbach.com/api/config -> 404 215B loc=
+www-demo.smarthomebyhornbach.com/version -> 404 215B loc=
+www-demo.smarthomebyhornbach.com/robots.txt -> 404 215B loc=
+www-dev.smarthomebyhornbach.com/config -> 404 215B loc=
+www-dev.smarthomebyhornbach.com/health -> 404 215B loc=
+www-dev.smarthomebyhornbach.com/api/health -> 404 215B loc=
+www-dev.smarthomebyhornbach.com/api/config -> 404 215B loc=
+www-dev.smarthomebyhornbach.com/version -> 404 215B loc=
+www-dev.smarthomebyhornbach.com/robots.txt -> 404 215B loc=
+[0m
+NO significant surface change confirmed by live probes. Core gates (OIDC discovery 200/3189B, authz uniform 302→AUTH10007, api.hornbach.de root 404/47B) are stable; freshly re-scanned the smarthomebyhornbach.com estate with no new anonymous surface.
+
+## STEP 1 — DELTA
+- [CHANGED] smarthomebyhornbach.com estate: 5 live CDN shells (www-public/demo/dev, mgmt-public/dev — Azure Front Door 150.171.109.x), /config /health /api/* /version /robots.txt all uniform 404 (215B); dev + docs-dev 404 roots; api-gw-evvr.dev + mon-api-gw-evvr.dev resolve only via Zscaler edge 68.210.80.65, TLS handshake fails (000) — no anonymous API surface beyond SPA shells, smart-home hypothesis stays unproven.
+- [UNCHANGED] auth.hornbach.com OIDC metadata, authz-srv/authz uniform invalid_client gate, token-plane client-gating, api.hornbach.de 404 root — all re-confirmed live at identical shapes.
+
+## STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},6.70,auth+tech_exposure+gate_ease
+- [PRIO] auth.hornbach.com/authz-srv/authz,6.50,business_value+tech_exposure
+- [PRIO] smarthomebyhornbach.com dev/demo estate,5.15,freshness
+
+## STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 `{"active":false}` / 200 `OK` unauthenticated, stable 11+ sessions (KB, latest 13:27Z 09-08); RFC 7662/7009 client-auth bypass; token issuance client-gated (400 invalid_client) isolates flaw to this plane; all live gates reconfirmed this session on GET/HEAD plane.
+evidence_needed: valid access_token (from `de.hornbach.app.smarthome` `assets/cidaas.xml` + real login) → introspect shows real claim set; re-introspect after revoke → active=false
+verify_steps: POST token-srv/introspect token=<real> no-auth; POST token-srv/revoke token=<real>; re-introspect; GET users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+
+[HYP] OAuth authorization endpoint redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE (uniform 302→AUTH10007 re-confirmed 09-09 18:xxZ on dummy client_id); redirect_uri validation untestable behind client_id gate; cidaas historically regex allowlists; authorization_code flow advertised in discovery.
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline injection)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+
+[HYP] smarthomebyhornbach.com dev/demo estate exposes weakly-gated ROC management surface beyond SPA shells
+class: MISCONFIG
+asset: mgmt-dev.smarthomebyhornbach.com
+confidence: 30
+reasoning: 5 live CDN-fronted SPA shells; common /config /health /api/* /version paths all uniform 404 (215B); api-gw-evvr.dev Zscaler edge TLS-fail; vendor multi-tenant ROC platform serving HORNBACH brand is untested ground; only unresolved angle is app-bundle-derived path dictionary.
+evidence_needed: any non-404 anonymous response outside SPA shells on dev/demo hosts
+verify_steps: passive: fetch www-demo/www-dev SPA index.html + referenced JS bundles, grep for API base URLs/route prefixes, then GET those exact paths on mgmt-dev/www-dev (≤1rps)
+impact: admin/device-management access on customer smart-home infra — HIGH if present
+testability: PASSIVE
+
+## STEP 4 — SELF-CRITIQUE
+- [PARKED] smarthome estate prior guesses of accessible mgmt console/health endpoints: probed, all 404/000 — residual value only via JS-bundle path extraction.
+- [FINAL] 1) introspect/revoke 85 (AUTH_HELPED) — strongest, PoC-ready once real token exists; 2) redirect_uri bypass 70 (AUTH_HELPED) — gated; 3) smarthome estate 30 (PASSIVE) — breadth play, needs bundle path mining.
+
+## STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Obtain `de.hornbach.app.smarthome` APK (apkfiles.com/APKMirror/VirusTotal cache; verify signature belongs to HORNBACH before any install), extract `assets/cidaas.xml` → ClientId + redirect_uri scheme — feeds both the 85-conf introspect/revoke PoC and the 70-conf redirect_uri bypass; this single artifact unblocks all report-grade escalation.
+
+## STEP 6 — LEARNING
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com: GET-plane recheck 09-09 — OIDC discovery 200/3189B, authz uniform 302→AUTH10007, api.hornbach.de root 404/47B; all core gates unchanged, walled estate confirmed.
+[LEARN] ACCEPTED class MISCONFIG @ smarthomebyhornbach.com: 09-09 scan — 5 live CDN SPA shells all common paths uniform 404 (215B), api-gw-evvr Zscaler edge TLS-fail, dev/docs-dev 404 roots; no anonymous API beyond SPA shells; hypothesis confidence 35→30.
+
+## STEP 7 — RISK
+[RISK] hornbach: 52/100 — no surface change across 12+ sessions; strongest defensible finding (unauthenticated introspect+revoke, RFC 7662/7009 bypass) stable but PoC-gated on real token; redirect_uri bypass gated on client_id; smarthome breadth partially tested, negative; single dependency (client_id from APK) blocks all report-grade chains.
