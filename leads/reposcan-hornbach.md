@@ -87,3 +87,12 @@ TARGET_ORG not configured for hornbach; skipping public-org deep scan.
 TARGET_ORG not configured for hornbach; skipping public-org deep scan.
 ## REPOSCAN 2026-09-08 23:47:25 UTC
 TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-09 02:33:29 UTC
+[HYP] No public candidate repos exist in scope
+class: OTHER
+asset: github.com/hornbach (org)
+confidence: 95
+reasoning: The HORNBACH Baumarkt AG GitHub org (@hornbach) has 0 public repositories. The cands.txt explicitly lists "no org candidates." The scope.yml has github_orgs set to none-configured. The GitHub API returned 403, likely due to rate limiting on unauthenticated requests, but web search confirms zero public repos.
+impact: N/A — no surface to audit
+verify_steps: Visit https://github.com/hornbach to confirm zero public repos.
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
