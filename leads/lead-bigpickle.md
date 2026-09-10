@@ -2368,3 +2368,4 @@ testability: HUMAN_ONLY
 [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 [LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
 [RISK] hornbach: 50/100 — down 2 points. Root HTML extraction angle (hypothesis #3, 65-conf) is now DEAD: auth.hornbach.com serves F5 bot-challenge, not cidaas login UI. Unauthenticated token-management plane (85-conf, 12+ sessions) remains strongest defensible finding but is 100% PoC-gated on client_id. redirect_uri bypass (70) blocked on same artifact. Last viable path is Smarthome APK decompilation (HUMAN_ONLY). All web/repo/passive client_id sources now exhausted. Program finding ceiling without HUMAN step: 0 actionable PoCs.
+## 2026-09-10 21:45:11 UTC [target] (model bigpickle)

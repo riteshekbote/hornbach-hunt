@@ -404,3 +404,12 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot hypothesis
 - CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
 - CHANGED hornbach-mp.mirakl.net federates to login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for auth.hornbach.com tenant
+
+## 2026-09-10 21:46:49 UTC
+- CHANGED `auth.hornbach.com/` root is now F5 Shape Security bot-challenge (`_fs-ch-*` assets, CSP, noscript fallback), NOT cidaas login UI — 0 cidaas config exposed; root HTML client_id extraction hypothesis d
+- CHANGED `probe-results.md` shows 25+ consecutive GET probes returning 404 for `token-srv/introspect` and `token-srv/revoke` (latest 2026-09-10 19:11), but KB confirms POST → 200 works across 12+ independent s
+- NEW `auth.hornbach.com/token-srv/introspect`: POST → 200 `{"active":false}` unauthenticated confirmed 12th session (2026-09-10 01:29Z); systemic and stable
+- NEW `auth.hornbach.com/token-srv/revoke`: POST → 200 OK unauthenticated confirmed 12th session; stable text/plain; parameter-sensitive 404 on GET/HEAD
+- NEW `auth.hornbach.com/authz-srv/authz`: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enumeration REMOVED
+- CHANGED `auth.hornbach.com/.well-known/openid-configuration`: RE-CONFIRMED fully intact (06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot hypothesis
+- CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)

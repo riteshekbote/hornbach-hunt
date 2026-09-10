@@ -16482,3 +16482,322 @@ testability: HUMAN_ONLY
 ```
 [RISK] hornbach: 50/100 — down 2 points. Root HTML extraction angle (hypothesis #3, 65-conf) is now DEAD: auth.hornbach.com serves F5 bot-challenge, not cidaas login UI. Unauthenticated token-management plane (85-conf, 12+ sessions) remains strongest defensible finding but is 100% PoC-gated on client_id. redirect_uri bypass (70) blocked on same artifact. Last viable path is Smarthome APK decompilation (HUMAN_ONLY). All web/repo/passive client_id sources now exhausted. Program finding ceiling without HUMAN step: 0 actionable PoCs.
 ```
+===== ANALYST bigpickle 2026-09-10 21:46:49 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && echo "---" && ls art 2>/dev/null && echo "---" && ls -la *.md 2>/dev/null
+total 304
+drwxr-xr-x 12 runner runner   4096 Sep 10 21:42 .
+drwxr-xr-x  3 runner runner   4096 Sep 10 21:41 ..
+drwxr-xr-x  7 runner runner   4096 Sep 10 21:42 .git
+drwxr-xr-x  3 runner runner   4096 Sep 10 21:41 .github
+-rw-r--r--  1 runner runner   1901 Sep 10 21:41 README.md
+-rw-r--r--  1 runner runner     32 Sep 10 21:42 analyst-out.txt
+-rw-r--r--  1 runner runner 104869 Sep 10 21:42 analyst-prompt.txt
+-rw-r--r--  1 runner runner 100941 Sep 10 21:42 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 10 21:41 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 10 21:41 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 10 21:41 leads
+-rw-r--r--  1 runner runner  14952 Sep 10 21:41 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 10 21:41 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 10 21:41 reports
+drwxr-xr-x  2 runner runner   4096 Sep 10 21:41 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep 10 21:41 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 10 21:41 scripts
+-rw-r--r--  1 runner runner     33 Sep 10 21:41 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 10 21:41 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 10 21:41 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 10 21:41 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 10 21:41 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 10 21:41 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 10 21:41 triage
+---
+[0m
+[0m→ [0mRead scope.yml
+[0m→ [0mRead probe-results.md
+[0m
+[0m$ [0mls scripts recon-notes knowledge leads reports
+knowledge:
+index.md
+
+leads:
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-mimo.md
+lead-nemotron3.md
+reposcan-hornbach.md
+
+recon-notes:
+DEDICATED-DEEP.md
+
+reports:
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+hypotheses-nemotron3.txt
+hypotheses.md
+valid-bugs.md
+
+scripts:
+sync-issues.py
+[0m
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead recon-notes/DEDICATED-DEEP.md
+[0m
+[0m$ [0mfor p in "/healthcheck" "/\$metadata" "/api/v1/\$metadata" "/sap/public/icf_info/logon" "/sap/bc/ping" "/apim/contents" "/api/v1/APIs" "/sap/apim/contents"; do
+  echo "=== $p ==="
+  curl -s -o /tmp/hb_body -w "code=%{http_code} len=%{size_download} ctype=%{content_type}\n" --max-time 15 "https://api.hornbach.de$p"
+  head -c 300 /tmp/hb_body | tr '\n' ' ' ; echo
+  sleep 1
+done
+=== /healthcheck ===
+code=200 len=19 ctype=text/xml
+<status>ok</status>
+=== /$metadata ===
+code=404 len=47 ctype=application/json
+{"message":{"status":"404","text":"Not Found"}}
+=== /api/v1/$metadata ===
+code=404 len=47 ctype=application/json
+{"message":{"status":"404","text":"Not Found"}}
+=== /sap/public/icf_info/logon ===
+code=404 len=47 ctype=application/json
+{"message":{"status":"404","text":"Not Found"}}
+=== /sap/bc/ping ===
+code=404 len=47 ctype=application/json
+{"message":{"status":"404","text":"Not Found"}}
+=== /apim/contents ===
+code=404 len=47 ctype=application/json
+{"message":{"status":"404","text":"Not Found"}}
+=== /api/v1/APIs ===
+code=404 len=47 ctype=application/json
+{"message":{"status":"404","text":"Not Found"}}
+=== /sap/apim/contents ===
+code=404 len=47 ctype=application/json
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+All uniform 404 on api.hornbach.de — anonymous surface still fully walled. Let me check passive CT for undiscovered api-related subdomains and re-verify the headline token-plane finding.
+[0m$ [0mcurl -s --max-time 30 "https://crt.sh/?q=%25.hornbach.de&output=json" -o /tmp/crt_de.json; ls -la /tmp/crt_de.json; curl -s --max-time 30 "https://crt.sh/?q=%25.hornbach.com&output=json" -o /tmp/crt_com.json; ls -la /tmp/crt_com.json
+-rw-r--r-- 1 runner runner 1095802 Sep 10 21:43 /tmp/crt_de.json
+-rw-r--r-- 1 runner runner 150 Sep 10 21:43 /tmp/crt_com.json
+[0m
+[0m$ [0mhead -c 300 /tmp/crt_com.json; echo; python3 - <<'EOF'
+import json
+d=json.load(open('/tmp/crt_de.json'))
+names=set()
+for e in d:
+    for n in e.get('name_value','').split('\n'):
+        n=n.strip().lower()
+        if n: names.add(n)
+print("total unique:", len(names))
+import re
+interesting=[n for n in names if re.search(r'api|dev|gate|stage|staging|mobile|int|test|internal|back|svc|service|auth|admin|citrix|net|apps?|prod|pre|beta|g?ateway', n.split('.')[0])]
+for n in sorted(interesting)[:120]: print(n)
+EOF
+<html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+
+total unique: 106
+backend-api.dev.gcp.hornbach.de
+backend-api.dev.hornbach.de
+backend-api.hornbach.de
+backend-api.int.gcp.hornbach.de
+backend-api.int.hornbach.de
+backend-api.prd.gcp.hornbach.de
+backend-api.stage.hornbach.de
+backend-api.stg.gcp.hornbach.de
+dev-svc.hornbach.de
+dev.cloud.gcp.hornbach.de
+dev.hornbach.de
+int-cdn.hornbach.de
+int-services.hornbach.de
+int-svc.hornbach.de
+int.cloud.gcp.hornbach.de
+int.hornbach.de
+inthws-terminrueckmeldung.hornbach.de
+oneapp-api.dev.gcp.hornbach.de
+oneapp-api.int.gcp.hornbach.de
+oneapp-api.prd.gcp.hornbach.de
+oneapp.dev.hornbach.de
+oneapp.hornbach.de
+oneapp.int.hornbach.de
+oneappv2.dev.hornbach.de
+oneappv2.hornbach.de
+oneappv2.int.hornbach.de
+preferences.newsletter.hornbach.de
+preprod.hornbach.de
+services.hornbach.de
+stage.cloud.gcp.hornbach.de
+stage.hornbach.de
+stg-svc.hornbach.de
+svc.hornbach.de
+[0m
+CT for `hornbach.de` reveals a rich untracked API subdomain family (`backend-api.*`, `oneapp-api.*`, `oneapp*`, `dev/int/stage/preprod`, `svc/services`). All are HORNBACH-operated → in scope. Resolving + status only:
+[0m$ [0mfor h in backend-api.hornbach.de oneapp-api.hornbach.de oneapp.hornbach.de oneappv2.hornbach.de services.hornbach.de svc.hornbach.de preprod.hornbach.de dev.hornbach.de int.hornbach.de stage.hornbach.de preferences.newsletter.hornbach.de inthws-terminrueckmeldung.hornbach.de int-cdn.hornbach.de oneapp.dev.hornbach.de backend-api.stage.hornbach.de; do
+  ip=$(getent ahosts "$h" 2>/dev/null | awk 'NR==1{print $1}')
+  echo "$h -> ${ip:-NORESOLVE}"
+done
+backend-api.hornbach.de -> 35.227.197.65
+oneapp-api.hornbach.de -> NORESOLVE
+oneapp.hornbach.de -> 34.117.226.190
+oneappv2.hornbach.de -> 146.75.105.91
+services.hornbach.de -> NORESOLVE
+svc.hornbach.de -> 151.101.161.91
+preprod.hornbach.de -> 34.117.201.203
+dev.hornbach.de -> 151.101.163.52
+int.hornbach.de -> 146.75.107.52
+stage.hornbach.de -> 151.101.163.52
+preferences.newsletter.hornbach.de -> 151.101.161.91
+inthws-terminrueckmeldung.hornbach.de -> 91.240.77.57
+int-cdn.hornbach.de -> 146.75.107.52
+oneapp.dev.hornbach.de -> 35.244.179.185
+backend-api.stage.hornbach.de -> 34.149.136.215
+[0m
+New resolving surface — GCP/Fastly backend APs (`backend-api`, `oneapp`, `svc`, `preprod`, env tiers) not in inventory. Read-only status probes at ≤1 rps:
+[0m$ [0mfor h in backend-api.prd.gcp.hornbach.de oneapp-api.prd.gcp.hornbach.de oneapp.int.hornbach.de oneappv2.int.hornbach.de backend-api.int.gcp.hornbach.de oneappv2.dev.hornbach.de int-svc.hornbach.de dev-svc.hornbach.de stg-svc.hornbach.de int-services.hornbach.de; do
+  ip=$(getent ahosts "$h" 2>/dev/null | awk 'NR==1{print $1}')
+  echo "$h -> ${ip:-NORESOLVE}"
+done
+backend-api.prd.gcp.hornbach.de -> 35.227.197.65
+oneapp-api.prd.gcp.hornbach.de -> 34.117.226.190
+oneapp.int.hornbach.de -> 35.201.75.230
+oneappv2.int.hornbach.de -> 151.101.163.52
+backend-api.int.gcp.hornbach.de -> 34.120.189.52
+oneappv2.dev.hornbach.de -> 151.101.163.52
+int-svc.hornbach.de -> 151.101.163.52
+dev-svc.hornbach.de -> 151.101.163.52
+stg-svc.hornbach.de -> 151.101.163.52
+int-services.hornbach.de -> NORESOLVE
+[0m
+`oneapp.hornbach.de` shares IP with `oneapp-api.prd.gcp.hornbach.de` (34.117.226.190) — a production OneApp API gateway. Probing roots/healths read-only:
+[0m$ [0mprobe() {
+  echo "=== $1 ==="
+  curl -s -D /tmp/hd -o /tmp/hb_body --max-time 15 "https://$1/" 
+  grep -iE "^(HTTP/|server:|location:|content-type:|x-powered|www-auth|allow:|cf-ray|x-kong|via:)" /tmp/hd | tr '\n' ' '; echo
+  wc -c < /tmp/hb_body
+  head -c 200 /tmp/hb_body | tr '\n' ' '; echo
+  sleep 1
+}
+probe oneapp.hornbach.de
+probe backend-api.hornbach.de
+probe oneappv2.hornbach.de
+probe svc.hornbach.de
+probe preprod.hornbach.de
+=== oneapp.hornbach.de ===
+HTTP/2 500 
+ content-type: application/json; charset=utf-8
+ server: istio-envoy
+ via: 1.1 google
+ 
+67
+{"statusCode":500,"error":"Internal Server Error","message":"🦊"}
+=== backend-api.hornbach.de ===
+HTTP/2 404 
+ content-type: text/html; charset=UTF-8
+ 
+134
+<!doctype html><meta charset="utf-8"><meta name=viewport content="width=device-width, initial-scale=1"><title>404</title>404 Not Found
+=== oneappv2.hornbach.de ===
+HTTP/2 500 
+ content-type: application/json; charset=utf-8
+ 
+67
+{"statusCode":500,"error":"Internal Server Error","message":"🦊"}
+=== svc.hornbach.de ===
+HTTP/2 404 
+ content-type: text/plain; charset=utf-8
+ 
+21
+default backend - 404
+=== preprod.hornbach.de ===
+HTTP/2 404 
+ content-type: text/html; charset=UTF-8
+ 
+134
+<!doctype html><meta charset="utf-8"><meta name=viewport content="width=device-width, initial-scale=1"><title>404</title>404 Not Found
+[0m
+`oneapp.hornbach.com` (prod OneApp API, NestJS-style 500 with HORNBACH fox mascot on Istio/GCP) is a genuinely new live API surface. Probing common read-only paths:
+[0m$ [0mprobe_path() {
+  echo "=== /$2 on $1 ==="
+  curl -s -D /tmp/hd -o /tmp/hb_body --max-time 15 "https://$1/$2"
+  grep -iE "^(HTTP/|content-type:|server:|www-auth:)" /tmp/hd | tr '\n' ' '; echo
+  wc -c < /tmp/hb_body
+  head -c 250 /tmp/hb_body | tr '\n' ' '; echo
+  sleep 1
+}
+for p in health healthz api api/v1 version graphql config; do probe_path oneapp.hornbach.de "$p"; done
+=== /health on oneapp.hornbach.de ===
+HTTP/2 200 
+ content-type: text/plain; charset=utf-8
+ server: istio-envoy
+ 
+2
+OK
+=== /healthz on oneapp.hornbach.de ===
+HTTP/2 500 
+ content-type: application/json; charset=utf-8
+ server: istio-envoy
+ 
+67
+{"statusCode":500,"error":"Internal Server Error","message":"🦊"}
+=== /api on oneapp.hornbach.de ===
+HTTP/2 500 
+ content-type: application/json; charset=utf-8
+ server: istio-envoy
+ 
+67
+{"statusCode":500,"error":"Internal Server Error","message":"🦊"}
+=== /api/v1 on oneapp.hornbach.de ===
+HTTP/2 500 
+ content-type: application/json; charset=utf-8
+ server: istio-envoy
+ 
+67
+{"statusCode":500,"error":"Internal Server Error","message":"🦊"}
+=== /version on oneapp.hornbach.de ===
+HTTP/2 500 
+ content-type: application/json; charset=utf-8
+ server: istio-envoy
+ 
+67
+{"statusCode":500,"error":"Internal Server Error","message":"🦊"}
+=== /graphql on oneapp.hornbach.de ===
+HTTP/2 200 
+ content-type: application/json; charset=utf-8
+ server: istio-envoy
+ 
+13
+{"data":null}
+=== /config on oneapp.hornbach.de ===
+HTTP/2 500 
+ content-type: application/json; charset=utf-8
+ server: istio-envoy
+ 
+67
+{"statusCode":500,"error":"Internal Server Error","message":"🦊"}
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mecho "=== GET graphql __typename ==="
+curl -s -D /tmp/hd -o /tmp/hb1 --max-time 15 "https://oneapp.hornbach.com/graphql?query=%7B__typename%7D"
+grep -iE "^(HTTP/|content-type:|www-auth:)" /tmp/hd | tr '\n' ' '; echo; cat /tmp/hb1; echo; sleep 1
+echo "=== POST graphql __typename ==="
+curl -s -D /tmp/hd -o /tmp/hb2 --max-time 15 -X POST "https://oneapp.hornbach.com/graphql" -H "Content-Type: application/json" -d '{"query":"{__typename}"}'
+grep -iE "^(HTTP/|content-type:|www-auth:)" /tmp/hd | tr '\n' ' '; echo; cat /tmp/hb2; echo; sleep 1
+echo "=== POST introspection (trimmed) ==="
+curl -s -D /tmp/hd -o /tmp/hb3 --max-time 20 -X POST "https://oneapp.hornbach.com/graphql" -H "Content-Type: application/json" -d '{"query":"query{__schema{queryType{name} mutationType{name} types{name kind}}}"}'
+grep -iE "^(HTTP/|content-type:|www-auth:)" /tmp/hd | tr '\n' ' '; echo; head -c 600 /tmp/hb3; echo failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+`oneapp.hornbach.com/graphql` returns `{"data":null}` anonymously — a live GraphQL service on the production OneApp API. Testing read-only introspection:
