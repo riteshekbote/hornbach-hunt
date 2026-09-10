@@ -31,3 +31,10 @@
   - | Q4 Provable | **NO (currently)** | Cannot test redirect_uri validation without a valid client_id. Bot-wall on www.hornbach.de blocks frontend JS extraction. |
   - | 1 | Unauthenticated token introspection | **HOLD** | 5.3 MEDIUM | Needs valid token (client_id acquisition) |
   - | 2 | Unauthenticated token revocation | **HOLD** | 5.3 MEDIUM | Needs valid token (client_id acquisition) |
+
+- 5 lead(s) marked VALID at 2026-09-10 15:43:14 UTC
+  - | Q3 | Real security impact? **WEAK** — RFC 7662/7009 mandate client auth on introspection/revocation; violation is confirmed. However, impact is gated: fake tokens return `{"active":false}` (no metad
+  - | Q4 | Provable non-invasively? **YES** — POST with form data `token=fake` → 200. The misconfiguration is provable. Full data-exfil proof requires a valid token (AUTH_HELPED) |
+  - **Verdict: HOLD** — Confirmed RFC 7662/7009 violation (unauthenticated introspection + revocation), but full impact (metadata exfil, session kill) requires a valid access_token. Recommend: extract cli
+  - | Q4 | Provable non-invasively? **NO** — requires valid client_id to even begin testing. All guessed client_ids rejected (uniform 302→AUTH10007). www.hornbach.de bot-walled (FingerprintJS) blocks fron
+  - | Q4 | Provable? | **NO** — requires valid Mirakl API key |
