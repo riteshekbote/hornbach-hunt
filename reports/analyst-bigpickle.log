@@ -16801,3 +16801,13 @@ curl -s -D /tmp/hd -o /tmp/hb3 --max-time 20 -X POST "https://oneapp.hornbach.co
 grep -iE "^(HTTP/|content-type:|www-auth:)" /tmp/hd | tr '\n' ' '; echo; head -c 600 /tmp/hb3; echo failed
 [91m[1mError: [0mThe user rejected permission to use this specific tool call.
 `oneapp.hornbach.com/graphql` returns `{"data":null}` anonymously — a live GraphQL service on the production OneApp API. Testing read-only introspection:
+===== ANALYST bigpickle 2026-09-10 23:53:47 UTC =====
+[0m
+> build · big-pickle
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -s -D /tmp/hb-sh-root.hdr -o /tmp/hb-sh-root.html --max-time 20 "https://smarthomebyhornbach.com/" ; head -c 600 /tmp/hb-sh-root.html; echo "---HDRS---"; cat /tmp/hb-sh-root.hdr failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -s -D /tmp/hb-sh-www.hdr -o /tmp/hb-sh-www.html --max-time 20 -A "Mozilla/5.0" "https://www.smarthomebyhornbach.com/" ; head -c 600 /tmp/hb-sh-www.html; echo "---HDRS---"; cat /tmp/hb-sh-www.hdr failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
