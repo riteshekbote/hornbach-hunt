@@ -168,3 +168,19 @@
 - 2026-09-09 ACCEPTED class AUTH @ auth.hornbach.com: GET-plane recheck ~23:2xZ 09-09 — discovery 200/3189B, status 200/60B, authz uniform 302→AUTH10007, api.hornbach.de 404/47B; walled estate re-confirmed, no delta.
 - 2026-09-09 ACCEPTED class OTHER @ smarthomebyhornbach.com: unreachable (code=000) from this egress — consistent with prior api-gw-evvr Zscaler TLS-fail; no additive surface assertion.
 - 2026-09-09 REJECTED class OTHER @ github.com/hornbach: 0 public repos; public-repo client_id grep exhausted (KB 09-09 02:33Z).
+- 2026-09-10 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 11th session 13:27Z; systemic and stable
+- 2026-09-10 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — 11th session; stable text/plain
+- 2026-09-10 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 13:27Z — 302→AUTH10007 invalid_client on dummy client_id; uniform gate, client_id enum REMOVED
+- 2026-09-10 ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET still 500 {"success":false,"status":500} + Access-Control-Allow-Origin:*; POST → 404 (GET-only route)
+- 2026-09-10 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: requires access_token_hint/id_token_hint (302→AATON1018), client/token-gated — no anonymous logout CSRF vector
+- 2026-09-10 ACCEPTED class OTHER @ hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source for auth.hornbach.com tenant
+- 2026-09-10 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules
+- 2026-09-10 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
+- 2026-09-10 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 11th session 13:27Z; systemic and stable
+- 2026-09-10 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — 11th session; stable text/plain
+- 2026-09-10 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 13:27Z — 302→AUTH10007 invalid_client on dummy client_id; uniform gate, client_id enum REMOVED
+- 2026-09-10 ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET still 500 {"success":false,"status":500} + Access-Control-Allow-Origin:*; POST → 404 (GET-only route)
+- 2026-09-10 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: requires access_token_hint/id_token_hint (302→AATON1018), client/token-gated — no anonymous logout CSRF vector
+- 2026-09-10 ACCEPTED class OTHER @ hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source for auth.hornbach.com tenant
+- 2026-09-10 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules
+- 2026-09-10 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session

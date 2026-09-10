@@ -361,3 +361,15 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE at 13:27Z 2026-09-08 — 302→AUTH10007 on dummy client_id; uniform gate, client_id enum REMOVED
 
 ## 2026-09-09 23:34:33 UTC
+
+## 2026-09-10 01:31:59 UTC
+- NEW No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+- CHANGED probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-09 23:34), but KB confirms POST → 200 works across 11+ independent session
+- CHANGED auth.hornbach.com/users-srv/userinfo consistently returns HTTP 401 JSON (bearer-gated) across last 10+ probe sessions; token-srv/userinfo → 404 confirmed router gap
+- CHANGED auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE at 13:27Z 2026-09-08 — 302→AUTH10007 on dummy client_id; uniform gate, client_id enumeration REMOVED
+- CHANGED hornbach-mp.mirakl.net federates to login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for auth.hornbach.com tenant
+- NEW No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+- CHANGED probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-09 23:34), but KB confirms POST → 200 works across 11+ independent session
+- CHANGED auth.hornbach.com/users-srv/userinfo consistently returns HTTP 401 JSON (bearer-gated) across last 10+ probe sessions; token-srv/userinfo → 404 confirmed router gap
+- CHANGED auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE at 13:27Z 2026-09-08 — 302→AUTH10007 on dummy client_id; uniform gate, client_id enumeration REMOVED
+- CHANGED hornbach-mp.mirakl.net federates to login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for auth.hornbach.com tenant
