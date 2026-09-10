@@ -114,3 +114,14 @@ TARGET_ORG not configured for hornbach; skipping public-org deep scan.
 TARGET_ORG not configured for hornbach; skipping public-org deep scan.
 ## REPOSCAN 2026-09-10 12:22:06 UTC
 TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-10 16:41:57 UTC
+class: MISCONFIG
+asset: github.com/moe-bit/hornbach-cloud-engineering-test → main.tf:248-252
+confidence: 65
+class: MISCONFIG
+asset: github.com/krzysztof-tarasiewicz-private/hornbach-e2e-tests → tests/steps/world.ts:25
+confidence: 85
+class: MISCONFIG
+asset: github.com/moe-bit/hornbach-cloud-engineering-test → environments/*.tfvars
+confidence: 80
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
