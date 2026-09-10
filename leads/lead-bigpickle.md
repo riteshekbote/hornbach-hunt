@@ -2320,3 +2320,4 @@ testability: PASSIVE
 [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 [LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
 [RISK] hornbach: 52/100 — unchanged. Unauthenticated token-management plane bypass (introspect+revoke, RFC 7662/7009) remains strongest defensible finding at 85-confidence over 12+ sessions but is 100% PoC-gated on a single HUMAN dependency (client_id via browser-capture or Smarthome APK). redirect_uri bypass (70) blocked on the same artifact. All web/repo/APK-mirror client_id sources exhausted/blocked. NEW ANGLE: auth.hornbach.com root page (3038-byte cidaas login UI) has NEVER been content-analyzed and may embed client_id in its JavaScript — a fully passive probe that could unblock both chains without HUMAN dependency.
+## 2026-09-10 16:05:53 UTC [target] (model bigpickle)

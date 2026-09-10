@@ -269,3 +269,9 @@ https://auth.hornbach.com/ -> 200 len=3038
 
 ## 2026-09-10 12:06:59 UTC
 https://auth.hornbach.com/ -> 200 len=3038
+
+## 2026-09-10 16:16:35 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
