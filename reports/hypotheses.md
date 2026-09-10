@@ -1022,3 +1022,23 @@
 - LEARN: REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
 - LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+
+## RANKED HYPOTHESES 2026-09-10 19:11:18 UTC
+- [85] auth.hornbach.com/token-srv/{introspect,revoke}: Unauthenticated token introspection/revocation enables silent session kill + metadata leak (from art/lead_bigpickle.txt)
+- [85] auth.hornbach.com/token-srv/{introspect,revoke}: Unauthenticated token introspection + revocation enables silent session kill + metadata leak (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas
+- LEARN: REJECTED class OTHER @ auth.hornbach.com/ (root): root HTML is F5/Shape Security bot-challenge shell (_fs-ch-* prefix, Client Challenge title), NOT cidaas login
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+- LEARN: ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+- LEARN: REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+- LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 12th session 01:29Z 09-10; systemic a
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+- LEARN: ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+- LEARN: REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+- LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed

@@ -191,3 +191,5 @@
 - 2026-09-10 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
 - 2026-09-10 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - 2026-09-10 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 11th session 13:27Z; systemic and stable
+- 2026-09-10 REJECTED class OTHER @ auth.hornbach.com/ (root): root HTML is F5/Shape Security bot-challenge shell (_fs-ch-* prefix, Client Challenge title), NOT cidaas login UI — prior "3038-byte cidaas login UI" KB claim was stale; page rotated to challenge gate; no client_id/OIDC config extractable; Hypothesis #3 (65-conf) PARKED
+- 2026-09-10 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 12th session 01:29Z 09-10; systemic and stable

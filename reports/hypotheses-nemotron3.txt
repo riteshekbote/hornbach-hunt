@@ -1,4 +1,4 @@
-## 2026-09-10 16:16:16 UTC [target] (model nemotron3)
+## 2026-09-10 19:10:50 UTC [target] (model nemotron3)
 [NEW] auth.hornbach.com/token-srv/introspect: POST → 200 {"active":false} unauthenticated confirmed 12th session (2026-09-10 01:29Z); systemic and stable across 12+ sessions; GET/HEAD 404 was methodology artifact
 [NEW] auth.hornbach.com/token-srv/revoke: POST → 200 OK unauthenticated confirmed 12th session; stable text/plain; parameter-sensitive 404 on GET/HEAD
 [NEW] auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enumeration REMOVED
@@ -8,7 +8,14 @@
 [CHANGED] hornbach-mp.mirakl.net federates to login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for auth.hornbach.com tenant
 [PRIO] auth.hornbach.com/token-srv/{introspect,revoke}, 8.8, attack_surface=10 business_value=9 tech_exposure=9 gate_ease=10 cloud_surface=6 freshness=9
 [PRIO] auth.hornbach.com/authz-srv/authz, 7.8, attack_surface=9 business_value=9 tech_exposure=8 gate_ease=3 cloud_surface=6 freshness=9
-[PRIO] auth.hornbach.com/users-srv/userinfo, 6.5,[0m
+[PRIO] auth.hornbach.com/users-srv/userinfo, 6.5, attack_surface=7 business_value=8 tech_exposure=7 gate_ease=2 cloud_surface=6 freshness=9
+[PRIO] api.hornbach.de, 5.2, attack_surface=6 business_value=7 tech_exposure=6 gate_ease=4 cloud_surface=8 freshness=7
+[PRIO] auth.hornbach.de, 4.1, attack_surface=5 business_value=6 tech_exposure=5 gate_ease=2 cloud_surface=7 freshness=6
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST /token-srv/introspect returns 200 {"active":false} unauthenticated across 12+ sessions (RFC 7662 violation); POST /token-srv/revoke returns 200 OK unauthenticated across 12+ sessions (RFC 7009 violation); both endpoints only respond to POST with form data, GET/HEAD return 404 (parameter-sensitive routing); token-srv/token requires client_auth (400 invalid_client), isolating flaw to introspect/revoke only
 evidence_needed: Valid access_token to demonstrate revocation of active session; confirm session kill on subsequent introspect/userinfo call; verify introspect returns token metadata for active tokens (not just active=false)
 verify_steps: 1) POST https://auth.hornbach.com/token-srv/introspect -H "Content-Type: application/x-www-form-urlencoded" -d "token=<valid_token>" — observe 200 with token metadata; 2) POST https://auth.hornbach.com/token-srv/revoke -H "Content-Type: application/x-www-form-urlencoded" -d "token=<valid_token>&token_type_hint=access_token" — observe 200 OK; 3) POST introspect again with same token — observe active=false
 impact: Silent session termination + token metadata leak for any valid access_token; enables account takeover via token theft + revocation denial-of-service (AUTH class, MEDIUM-HIGH)
@@ -35,7 +42,7 @@ testability: AUTH_HELPED
 [FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 85, AUTH_HELPED, MEDIUM-HIGH)
 [FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
 [NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks both 85-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
-[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 12th session 01:29Z 09-10; systemic and stable
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
 [LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
