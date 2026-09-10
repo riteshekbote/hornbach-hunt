@@ -383,3 +383,5 @@ www.hornbach.com
 - CHANGED probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-09 23:34), but KB confirms POST → 200 works across 11+ independent session
 - CHANGED auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot hypothesis
 - CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+
+## 2026-09-10 12:06:57 UTC

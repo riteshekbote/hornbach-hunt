@@ -7606,3 +7606,37 @@ testability: AUTH_HELPED
 **STEP 7 — RISK**
 
 [RISK] hornbach: 78 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled; token introspection + revocation both confirmed live unauthenticated via POST (RFC 7009/7662 violations systemic); authorization endpoint responds to valid client_id with login page but shows router-level deprecation signal (404 at 16:58Z). Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) identified as SAP APIM with localhost:8080 backend leak but no routes enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra (version 25.5.1.15, likely patched). Mirakl marketplace is separate auth-gated surface. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz and token management endpoints.
+===== ANALYST nemotron3 2026-09-10 12:06:57 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt/
+total 308
+drwxr-xr-x 12 runner runner   4096 Sep 10 11:51 .
+drwxr-xr-x  3 runner runner   4096 Sep 10 11:51 ..
+drwxr-xr-x  7 runner runner   4096 Sep 10 11:51 .git
+drwxr-xr-x  3 runner runner   4096 Sep 10 11:51 .github
+-rw-r--r--  1 runner runner   1901 Sep 10 11:51 README.md
+-rw-r--r--  1 runner runner     43 Sep 10 11:51 analyst-out.txt
+-rw-r--r--  1 runner runner 106343 Sep 10 11:51 analyst-prompt.txt
+-rw-r--r--  1 runner runner 102415 Sep 10 11:51 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 10 11:51 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 10 11:51 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 10 11:51 leads
+-rw-r--r--  1 runner runner  14193 Sep 10 11:51 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 10 11:51 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 10 11:51 reports
+drwxr-xr-x  2 runner runner   4096 Sep 10 11:51 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep 10 11:51 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 10 11:51 scripts
+-rw-r--r--  1 runner runner     33 Sep 10 11:51 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 10 11:51 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 10 11:51 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 10 11:51 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 10 11:51 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 10 11:51 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 10 11:51 triage
+[0m
+[0m→ [0mRead probe-results.md[90m [limit=100][0m
+[0m→ [0mRead state_nemotron3.json
+[91m[1mError: [0m{"message":"Streaming response failed: [502] Upstream error from Nvidia: Service temporarily overloaded","type":"server_error"}

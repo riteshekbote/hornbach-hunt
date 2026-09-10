@@ -16217,3 +16217,127 @@ testability: PASSIVE
 ---
 
 **Summary:** Campaign is stuck on client_id acquisition. The single highest-leverage action is fetching and parsing the raw HTML of `auth.hornbach.com/` — the cidaas login page that has been returning 200/3038B since day 1 but has never been content-analyzed. This page MUST embed client_id to construct the OAuth redirect to `/authz-srv/authz`. If extractable, it converts both FINAL hypotheses from HUMAN-gated to immediately testable and potentially reportable.
+===== ANALYST bigpickle 2026-09-10 12:06:57 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m# [0mTodos
+[•] STEP 1: DELTA analysis - compare inventory vs current surface
+[ ] STEP 2: PRIORITIZE assets with scoring
+[ ] STEP 3: HYPOTHESES for top 3 assets
+[ ] STEP 4: SELF-CRITIQUE - drop weak hypotheses
+[ ] STEP 5: NEXT ACTION - single concrete step
+[ ] STEP 6: LEARNING - accept/reject findings
+[ ] STEP 7: RISK assessment
+[0m
+[0m# [0mTodos
+[✓] STEP 1: DELTA analysis - compare inventory vs current surface
+[✓] STEP 2: PRIORITIZE assets with scoring
+[✓] STEP 3: HYPOTHESES for top 3 assets
+[✓] STEP 4: SELF-CRITIQUE - drop weak hypotheses
+[✓] STEP 5: NEXT ACTION - single concrete step
+[•] STEP 6: LEARNING - accept/reject findings
+[ ] STEP 7: RISK assessment
+[0m
+## STEP 1 — DELTA
+
+**NO_DELTA** — All inventory assets confirmed unchanged since 09-08; 25+ GET probes returning 404 for introspect/revoke are methodology artifacts (POST is correct method per KB); no new hosts, routes, or service endpoints discovered. Root page (3038 bytes) is the sole untested angle.
+
+---
+
+## STEP 2 — PRIORITIZE
+
+```
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.30,attack_surface:9,business_value:8,tech_exposure:9,gate_ease:10,cloud_surface:7,freshness:5
+[PRIO] auth.hornbach.com/authz-srv/authz,7.40,attack_surface:8,business_value:9,tech_exposure:9,gate_ease:5,cloud_surface:7,freshness:5
+[PRIO] auth.hornbach.com/(root),6.50,attack_surface:6,business_value:7,tech_exposure:7,gate_ease:10,cloud_surface:6,freshness:9
+[PRIO] api.hornbach.de,5.50,attack_surface:5,business_value:7,tech_exposure:6,gate_ease:3,cloud_surface:5,freshness:4
+[PRIO] hornbach-mp.mirakl.net,5.00,attack_surface:5,business_value:6,tech_exposure:5,gate_ease:2,cloud_surface:5,freshness:3
+```
+
+---
+
+## STEP 3 — HYPOTHESES
+
+```
+[HYP] Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 {"active":false} / 200 OK unauthenticated, stable 12+ sessions (latest 01:29Z 09-10); RFC 7662/7009 client-auth bypass; token issuance correctly client-gated (400 invalid_client) isolates flaw to management plane; empty-body rejects with named params proving param-routed real handler
+evidence_needed: valid access_token + client_id → introspect real claim set; revoke then re-introspect → active=false
+verify_steps: POST /token-srv/introspect token=<real> no-auth → claims; POST /token-srv/revoke token=<real>; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+
+[HYP] OAuth authorization endpoint redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE — 302→AUTH10007 uniform gate re-confirmed this session; redirect_uri validation never testable behind client_id gate; cidaas historically regex allowlists; authorization_code flow advertised in discovery
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+
+[HYP] auth.hornbach.com root HTML page embeds cidaas client_id in JavaScript configuration
+class: OTHER
+asset: auth.hornbach.com/ (root page, 3038 bytes)
+confidence: 65
+reasoning: Root page returns 200 len=3038 (cidaas login UI) since 09-03; identical 3038 bytes on login.hornbach.com suggests shared cidaas-hosted login template; modern cidaas implementations embed client_id + redirect_uri in the page's JavaScript for the OIDC authorize redirect initiation; this page has NEVER been content-analyzed in any session despite being live since day 1; it is the cidaas login page that actually fires the OAuth start — it MUST contain the client_id to construct the /authz-srv/authz redirect; since the page is served unauthenticated from auth.hornbach.com, the client_id should be extractable from the raw HTML/JS
+evidence_needed: fetch auth.hornbach.com/ raw HTML → parse for client_id, redirect_uri, cidaas config objects (window.__config, cidaas.init, etc.)
+verify_steps: curl -s https://auth.hornbach.com/ | grep -oP '(client_id|ClientId|client-id)["\s:=]+["\x27]?([a-f0-9-]{20,})' — or parse full page for JS bundle URLs, then fetch those bundles for config extraction
+impact: client_id extraction → unblocks 85-conf introspect/revoke PoC AND 70-conf redirect_uri bypass; MEDIUM (enabler, not standalone finding)
+testability: PASSIVE
+```
+
+---
+
+## STEP 4 — SELF-CRITIQUE
+
+```
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — PoC-gated on client_id
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id
+[FINAL] 3. Root HTML client_id extraction (65, PASSIVE) — novel angle, may unblock both
+```
+
+No hypotheses dropped. All three survive confidence≥40, are not REJECTED class, and have concrete verify_steps.
+
+---
+
+## STEP 5 — NEXT ACTION
+
+```
+[NEXT] PROBE: GET https://auth.hornbach.com/ → save full HTML (3038 bytes) → grep for client_id / ClientId / client-id / cidaas config objects / JS bundle URLs; if JS bundles found, fetch them and grep for authz-srv/authz redirect construction or cidaas.init() call; this is the cidaas login page that fires the OAuth start — client_id must be present to construct the redirect; ≤1 request, read-only
+```
+[0m# [0mTodos
+[✓] STEP 1: DELTA analysis - compare inventory vs current surface
+[✓] STEP 2: PRIORITIZE assets with scoring
+[✓] STEP 3: HYPOTHESES for top 3 assets
+[✓] STEP 4: SELF-CRITIQUE - drop weak hypotheses
+[✓] STEP 5: NEXT ACTION - single concrete step
+[✓] STEP 6: LEARNING - accept/reject findings
+[✓] STEP 7: RISK assessment
+[0m
+---
+
+## STEP 6 — LEARNING
+
+```
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+```
+
+---
+
+## STEP 7 — RISK
+
+```
+[RISK] hornbach: 52/100 — unchanged. Unauthenticated token-management plane bypass (introspect+revoke, RFC 7662/7009) remains strongest defensible finding at 85-confidence over 12+ sessions but is 100% PoC-gated on a single HUMAN dependency (client_id via browser-capture or Smarthome APK). redirect_uri bypass (70) blocked on the same artifact. All web/repo/APK-mirror client_id sources exhausted/blocked. NEW ANGLE: auth.hornbach.com root page (3038-byte cidaas login UI) has NEVER been content-analyzed and may embed client_id in its JavaScript — a fully passive probe that could unblock both chains without HUMAN dependency.
+```
+All 7 steps complete. **Critical insight:** The auth.hornbach.com root page (3038 bytes, served unauthenticated since day 1) is the cidaas login UI that *must* contain the client_id to initiate the OAuth redirect — it has never been content-analyzed. This single PASSIVE probe (≤1 request) could unblock both FINAL chains (introspect/revoke PoC at 85, redirect_uri bypass at 70) without any HUMAN dependency.

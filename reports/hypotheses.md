@@ -1000,3 +1000,14 @@
 - LEARN: ACCEPTED class OTHER @ hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S2
 - LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header is REJECTED class per scope rules
 - LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed — 302→logon closes NetScaler management API; requires authenticated session
+
+## RANKED HYPOTHESES 2026-09-10 12:06:57 UTC
+- [85] auth.hornbach.com/token-srv/{introspect,revoke}: Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): PROBE: GET https://auth.hornbach.com/ → save full HTML (3038 bytes) → grep for client_id / ClientId / client-id / cidaas config objects / JS bundle URLs; if JS 
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+- LEARN: ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+- LEARN: REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+- LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed

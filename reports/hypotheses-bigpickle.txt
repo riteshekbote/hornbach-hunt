@@ -1,4 +1,4 @@
-## 2026-09-10 06:45:38 UTC [target] (model bigpickle)
+## 2026-09-10 11:52:29 UTC [target] (model bigpickle)
 [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.30,attack_surface:9,business_value:8,tech_exposure:9,gate_ease:10,cloud_surface:7,freshness:5
 [PRIO] auth.hornbach.com/authz-srv/authz,7.40,attack_surface:8,business_value:9,tech_exposure:9,gate_ease:5,cloud_surface:7,freshness:5
 [PRIO] auth.hornbach.com/(root),6.50,attack_surface:6,business_value:7,tech_exposure:7,gate_ease:10,cloud_surface:6,freshness:9
@@ -42,4 +42,4 @@ testability: PASSIVE
 [LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
 [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 [LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
-[RISK] hornbach: 52/100 — unchanged. Unauthenticated token-management plane bypass (introspect+revoke, RFC 7662/7009) remains the strongest defensible finding at 85-confidence over 12+ sessions but is 100% PoC-gated on a single HUMAN dependency (client_id via browser-capture or Smarthome APK). redirect_uri bypass (70) blocked on the same artifact. All web/repo/APK-mirror client_id sources exhausted/blocked. NEW ANGLE: auth.hornbach.com root page (3038-byte cidaas login UI) has NEVER been content-analyzed and may embed client_id in its JavaScript — a fully passive probe that could unblock both chains without HUMAN dependency.
+[RISK] hornbach: 52/100 — unchanged. Unauthenticated token-management plane bypass (introspect+revoke, RFC 7662/7009) remains strongest defensible finding at 85-confidence over 12+ sessions but is 100% PoC-gated on a single HUMAN dependency (client_id via browser-capture or Smarthome APK). redirect_uri bypass (70) blocked on the same artifact. All web/repo/APK-mirror client_id sources exhausted/blocked. NEW ANGLE: auth.hornbach.com root page (3038-byte cidaas login UI) has NEVER been content-analyzed and may embed client_id in its JavaScript — a fully passive probe that could unblock both chains without HUMAN dependency.
