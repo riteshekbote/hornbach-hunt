@@ -373,3 +373,13 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/users-srv/userinfo consistently returns HTTP 401 JSON (bearer-gated) across last 10+ probe sessions; token-srv/userinfo → 404 confirmed router gap
 - CHANGED auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE at 13:27Z 2026-09-08 — 302→AUTH10007 on dummy client_id; uniform gate, client_id enumeration REMOVED
 - CHANGED hornbach-mp.mirakl.net federates to login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for auth.hornbach.com tenant
+
+## 2026-09-10 06:46:13 UTC
+- NEW auth.hornbach.com/token-srv/introspect: POST → 200 `{"active":false}` unauthenticated confirmed 11th independent session (2026-09-08 13:27Z); systemic and stable across 11+ sessions; GET/HEAD 404 was 
+- NEW auth.hornbach.com/token-srv/revoke: POST → 200 `OK` unauthenticated confirmed 11th session (2026-09-08 13:27Z); stable text/plain response; parameter-sensitive 404 on GET/HEAD
+- NEW auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 13:27Z 2026-09-08 — 302→AUTH10007 invalid_client on dummy client_id; uniform gate, client_id enumeration REMOVED
+- NEW auth.hornbach.com/users-srv/userinfo: consistently returns HTTP 401 JSON (bearer-gated) across 10+ probe sessions; token-srv/userinfo → 404 confirmed router gap
+- NEW hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source f
+- CHANGED probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-09 23:34), but KB confirms POST → 200 works across 11+ independent session
+- CHANGED auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact (06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot hypothesis
+- CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
