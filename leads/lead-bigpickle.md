@@ -2671,3 +2671,48 @@ testability: HUMAN_ONLY
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com: root 302→hornbach.de unchanged at 19:5xZ — stable across 08:47Z/13:31Z/19:5xZ; no client_id exposure in redirect/headers.
 [LEARN] ACCEPTED class OTHER @ smarthomebyhornbach.com: DNS NXDOMAIN for full/apex from this egress — consistent with prior code=000; no additive surface assertion.
 [RISK] hornbach: 50/100 — unchanged. Unauthenticated token-management plane (introspect+revoke, RFC 7662/7009, 85-conf, 14+ sessions) remains the single strongest defensible finding but is 100% PoC-gated on ONE HUMAN dependency (client_id via Smarthome APK decompilation). redirect_uri bypass (70) blocked on the same artifact. api.hornbach.de re-confirmed exhausted this session (19:50Z); smarthomebyhornbach.com unreachable. Program finding ceiling without the HUMAN step: 0 actionable PoCs.
+## 2026-09-11 22:21:35 UTC [target] (model bigpickle)
+[HYP] No findings
+class: OTHER
+asset: N/A
+confidence: 0
+reasoning: No public repositories exist under the hornbach GitHub org. cands.txt and scope.yml both confirm zero candidates. No source code is available for audit.
+impact: None
+verify_steps: Confirm via https://github.com/orgs/hornbach/repositories?type=public that the org has 0 public repos.
+[HYP] No public candidate repos exist in scope
+class: OTHER
+asset: github.com/hornbach (org)
+confidence: 95
+reasoning: The HORNBACH Baumarkt AG GitHub org (@hornbach) has 0 public repositories. The cands.txt explicitly lists "no org candidates." The scope.yml has github_orgs set to none-configured. The GitHub API returned 403, likely due to rate limiting on unauthenticated requests, but web search confirms zero public repos.
+impact: N/A — no surface to audit
+verify_steps: Visit https://github.com/hornbach to confirm zero public repos.
+class: MISCONFIG
+asset: github.com/moe-bit/hornbach-cloud-engineering-test → main.tf:248-252
+confidence: 65
+class: MISCONFIG
+asset: github.com/krzysztof-tarasiewicz-private/hornbach-e2e-tests → tests/steps/world.ts:25
+confidence: 85
+class: MISCONFIG
+asset: github.com/moe-bit/hornbach-cloud-engineering-test → environments/*.tfvars
+confidence: 80
+[HYP] GCP Project IDs Exposed in Terraform Variables
+class: MISCONFIG
+asset: github.com/moe-bit/hornbach-cloud-engineering-test → environments/*.tfvars
+confidence: 80
+reasoning: Three .tfvars files expose internal GCP project IDs: `hornbach-dev-project`, `hornbach-prod-project`, and `hornbach-int-project`. These follow Google Cloud naming conventions and reveal HORNBACH's internal infrastructure naming scheme. While tfvars files are typically gitignored, these are committed to a public repo.
+impact: LOW-MEDIUM — Information disclosure of internal naming conventions. Could aid reconnaissance for targeting actual HORNBACH GCP infrastructure if these projects exist.
+verify_steps: 1) Check if https://github.com/moe-bit/hornbach-cloud-engineering-test is a legitimate HORNBACH engineering test. 2) Verify if these GCP project IDs exist via Google Cloud Console (requires auth). 3) Cross-reference with HORNBACH's known GCP footprint.
+[HYP] Cloud Run Public Access via allUsers IAM Binding
+class: MISCONFIG
+asset: github.com/moe-bit/hornbach-cloud-engineering-test → main.tf:248-252
+confidence: 65
+reasoning: The Terraform code grants `roles/run.invoker` to `allUsers`, which would make Cloud Run services publicly accessible without authentication. If applied to production, this would allow anyone to invoke backend services.
+impact: MEDIUM — Would expose backend APIs to unauthenticated access. However, this appears to be a test/hiring repository, not necessarily applied to production.
+verify_steps: 1) Confirm if this Terraform was actually applied to HORNBACH infrastructure. 2) Check if the Cloud Run services defined (frontend/backend) are accessible at the URLs shown in outputs. 3) Test if the services accept unauthenticated requests.
+[HYP] Internal Development URL Hardcoded in E2E Tests
+class: MISCONFIG
+asset: github.com/krzysztof-tarasiewicz-private/hornbach-e2e-tests → tests/steps/world.ts:25
+confidence: 85
+reasoning: The test code hardcodes `https://frontend.hornbach-develop.loyaltyharbor.dev` as the target URL. This reveals an internal development/staging domain for HORNBACH's loyalty platform. "loyaltyharbor.dev" appears to be a third-party platform (LoyaltyHarbor) used by HORNBACH.
+impact: LOW — Information disclosure of internal infrastructure. The URL appears to be unreachable from the public internet (connection refused), suggesting it's an internal/VPN-only endpoint.
+verify_steps: 1) Verify if `loyaltyharbor.dev` is a legitimate third-party vendor for HORNBACH. 2) Check if the domain resolves (it currently doesn't respond). 3) Determine if this was contractor work or official HORNBACH code.
