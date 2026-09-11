@@ -234,3 +234,6 @@
 - 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14+ sessions; systemic and stable
 - 2026-09-11 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: fully intact 3189B — all 6 service endpoints + status advertised
 - 2026-09-11 ACCEPTED class OTHER @ hornbach.com web estate: estate-wide F5 bot-challenge; no web-based client_id extraction
+- 2026-09-11 ACCEPTED class OTHER @ api.hornbach.de: 19:50Z re-confirm — root 404/47B, /healthcheck 200 xml with Host: localhost:8080 backend leak, Via sapigwprd01 (both hops); anonymous surface breadth unchanged; node flip sapigwprd01↔sapigwprd02 observed, not exploitable.
+- 2026-09-11 ACCEPTED class OTHER @ auth.hornbach.com: root 302→hornbach.de unchanged at 19:5xZ — stable across 08:47Z/13:31Z/19:5xZ; no client_id exposure in redirect/headers.
+- 2026-09-11 ACCEPTED class OTHER @ smarthomebyhornbach.com: DNS NXDOMAIN for full/apex from this egress — consistent with prior code=000; no additive surface assertion.

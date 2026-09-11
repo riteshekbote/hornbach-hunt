@@ -2629,3 +2629,45 @@ testability: HUMAN_ONLY
 [LEARN] ACCEPTED class OTHER @ hornbach.com web estate: estate-wide F5 bot-challenge; no web-based client_id extraction
 [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 [RISK] hornbach: 50/100 — unchanged. Unauthenticated token-management plane (introspect+revoke, 85-conf, 14+ sessions) is strongest defensible finding but 100% PoC-gated on HUMAN client_id extraction via APK decompilation. api.hornbach.de re-confirmed exhausted this session (2 novel ICM paths → uniform 404). redirect_uri bypass (70) blocked on same artifact. Program finding ceiling without HUMAN step: 0 actionable PoCs.
+## 2026-09-11 19:52:25 UTC [target] (model bigpickle)
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.30,"attack_surface=9,business_value=8,tech_exposure=9,gate_ease=10,cloud_surface=7,freshness=4"
+[PRIO] auth.hornbach.com/authz-srv/authz,7.40,"attack_surface=8,business_value=9,tech_exposure=9,gate_ease=5,cloud_surface=7,freshness=5"
+[PRIO] hornbach-mp.mirakl.net/api/*,5.00,"attack_surface=5,business_value=6,tech_exposure=5,gate_ease=2,cloud_surface=5,freshness=3"
+[PRIO] api.hornbach.de,4.50,"attack_surface=4,business_value=7,tech_exposure=5,gate_ease=2,cloud_surface=4,freshness=3"
+[HYP] Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 {"active":false} / 200 OK unauthenticated, stable across 14+ independent sessions; RFC 7662/7009 client-auth bypass; token issuance correctly client-gated (400 invalid_client); body-presence is sole gate
+evidence_needed: valid access_token + client_id → introspect real claim set; revoke; re-introspect → active=false
+verify_steps: POST /token-srv/introspect token=<real> no-auth → claims; POST /token-srv/revoke token=<real>; POST re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth authorization endpoint redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE — 302→AUTH10007 uniform gate; cidaas error table confirms AUTH10008/AUTH10009 fire only after valid client_id → allowlist testable with known client_id; cidaas historically regex allowlists
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid → 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] HORNBACH mobile app APK embeds cidaas tenant client_id + redirect_uri for auth.hornbach.com
+class: AUTH
+asset: de.hornbach.app.smarthome APK
+confidence: 55
+reasoning: all web/repo/passive client_id paths closed (estate-wide F5 challenge; auth.hornbach.com root 302→hornbach.de; github.com/hornbach 0 repos); smarthome WEB estate uses ROC oauth2-cookie-1 NOT cidaas; mobile/binary client is sole remaining client_id source
+evidence_needed: decompile → UUID client_id + redirect_uri allowlist + any secret sha256
+verify_steps: download APK (APKMirror/APKPure) → unzip → grep assets/cidaas*.xml, assets/config*.json, *.properties + strings -a classes*.dex lib/*.so for auth.hornbach.com / UUID / redirect_uri
+impact: client_id unblocks 85-conf introspect/revoke PoC AND 70-conf redirect_uri bypass — MEDIUM (enabler)
+testability: HUMAN_ONLY
+[PARKED] api.hornbach.de documented-route discovery: 48+ paths exhausted this and prior sessions (root, health, api/v1|v2, graphql, openapi, swagger, sap/*, odata, actuator, iFlow, monitoring, sap/bc/ping, sap/wdisp/...) — uniform 404 len=47; /healthcheck backend leak (localhost:8080) informational only; sapigwprd01/02 node flip not exploitable.
+[PARKED] api.hornbach.de Host-header SSRF: REJECTED class 2026-09-06; Host→503, default Host→localhost:8080 only; no cross-backend; re-verified this session via /healthcheck.
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — 14+ session stability; 100% PoC-gated on client_id.
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id + AUTH10008/10009 confirm.
+[FINAL] 3. Mobile-APK cidaas client_id extraction (55, HUMAN_ONLY) — sole remaining unblock for both FINAL-1/2.
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0 plus any `de.hornbach.*`/`com.hornbach.*` retail app), unzip, then (1) grep `assets/*.properties`, `assets/cidaas*.xml`, `assets/config*.json`, `res/raw/*` for `auth.hornbach.com`, UUID-format client_id, redirect_uri; (2) `strings -a classes*.dex` and `lib/*.so`; return exact client_id + redirect_uri allowlist + sha256(any embedded secret). This is the single last unblock for both FINAL findings — api.hornbach.de re-confirmed dead this session (19:50Z), smarthomebyhornbach.com NXDOMAIN, all web/repo/oracle client_id paths exhausted.
+[LEARN] ACCEPTED class OTHER @ api.hornbach.de: 19:50Z re-confirm — root 404/47B, /healthcheck 200 xml with Host: localhost:8080 backend leak, Via sapigwprd01 (both hops); anonymous surface breadth unchanged; node flip sapigwprd01↔sapigwprd02 observed, not exploitable.
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com: root 302→hornbach.de unchanged at 19:5xZ — stable across 08:47Z/13:31Z/19:5xZ; no client_id exposure in redirect/headers.
+[LEARN] ACCEPTED class OTHER @ smarthomebyhornbach.com: DNS NXDOMAIN for full/apex from this egress — consistent with prior code=000; no additive surface assertion.
+[RISK] hornbach: 50/100 — unchanged. Unauthenticated token-management plane (introspect+revoke, RFC 7662/7009, 85-conf, 14+ sessions) remains the single strongest defensible finding but is 100% PoC-gated on ONE HUMAN dependency (client_id via Smarthome APK decompilation). redirect_uri bypass (70) blocked on the same artifact. api.hornbach.de re-confirmed exhausted this session (19:50Z); smarthomebyhornbach.com unreachable. Program finding ceiling without the HUMAN step: 0 actionable PoCs.

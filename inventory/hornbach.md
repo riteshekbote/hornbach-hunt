@@ -458,3 +458,8 @@ www.hornbach.com
 - CHANGED probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-11 08:49), but KB confirms POST → 200 works across 12+ independent session
 - CHANGED auth.hornbach.com/.well-known/openid-configuration RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised; rejects metadata-rot hypothesis.
 - CHANGED auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enumeration REMOVED.
+
+## 2026-09-11 19:57:09 UTC
+- CHANGED auth.hornbach.com/ root: now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend (x-powered-by: cidaas); chain: hornbach.de → 301 → www.hornbach.de → bot chal
+- CHANGED hornbach.com international TLDs (.de/.at/.nl/.ch) + login.hornbach.com/ ALL serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extractio
+- CHANGED probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-11 08:49), but KB confirms POST → 200 works across 14+ independent session
