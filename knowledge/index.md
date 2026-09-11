@@ -193,3 +193,35 @@
 - 2026-09-10 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 11th session 13:27Z; systemic and stable
 - 2026-09-10 REJECTED class OTHER @ auth.hornbach.com/ (root): root HTML is F5/Shape Security bot-challenge shell (_fs-ch-* prefix, Client Challenge title), NOT cidaas login UI — prior "3038-byte cidaas login UI" KB claim was stale; page rotated to challenge gate; no client_id/OIDC config extractable; Hypothesis #3 (65-conf) PARKED
 - 2026-09-10 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+- 2026-09-11 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+- 2026-09-11 ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+- 2026-09-11 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- 2026-09-11 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+- 2026-09-11 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+- 2026-09-11 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+- 2026-09-11 ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+- 2026-09-11 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- 2026-09-11 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+- 2026-09-11 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+- 2026-09-11 REJECTED class OTHER @ auth.hornbach.com/ (root): root HTML is F5/Shape Security bot-challenge shell (_fs-ch-* prefix, Client Challenge title), NOT cidaas login UI — prior "3038-byte cidaas login UI" KB claim was stale; page rotated to challenge gate; no client_id/OIDC config extractable; Hypothesis #3 (65-conf) PARKED
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+- 2026-09-11 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+- 2026-09-11 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- 2026-09-11 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+- 2026-09-11 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 13th session 09-11; body-presence sole gate; systemic and stable
+- 2026-09-11 ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (at/nl/ch) + de + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only after client_id validity is the correct future differential
+- 2026-09-11 REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy (invalid_client vs invalid_grant) is unactionable with zero candidate seed; enumeration-spirit out-of-scope — no client_id recovery source
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 `{"active":false}` unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+- 2026-09-11 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+- 2026-09-11 ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+- 2026-09-11 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- 2026-09-11 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+- 2026-09-11 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed

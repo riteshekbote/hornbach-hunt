@@ -422,3 +422,15 @@ www.hornbach.com
 - NEW `auth.hornbach.com/authz-srv/authz`: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enumeration REMOVED
 - CHANGED `auth.hornbach.com/.well-known/openid-configuration`: RE-CONFIRMED fully intact (06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot hypothesis
 - CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+
+## 2026-09-11 03:52:49 UTC
+- CHANGED `auth.hornbach.com/`: root is F5 Shape bot-challenge (not cidaas login UI) — `_fs-ch-*` assets, CSP, noscript fallback. 0 cidaas config exposed. Hypothesis #3 (root HTML client_id extraction) is dead 
+- NEW `hornbach.com/.de/.at/.nl/.ch` + `login.hornbach.com/` ALL serve identical 3038-byte F5 "Client Challenge" stub — international TLD estate adds NO client_id extraction bypass; last web-based cidaas cl
+- NEW `auth.hornbach.com/token-srv/token`: POST `grant_type=authorization_code` + bogus client → 400 `invalid_client` "unknown client" — confirms invalid_client-vs-invalid_grant differential exists ONLY in 
+- NEW `auth.hornbach.com/` root rotated to F5 Shape Security bot-challenge (`_fs-ch-*` assets, CSP, noscript fallback) — 0 cidaas config exposed; prior root HTML client_id extraction hypothesis dead (confir
+- CHANGED `probe-results.md` shows 25+ consecutive GET probes returning 404 for `token-srv/introspect` and `token-srv/revoke` (latest 2026-09-10 23:53), but KB confirms POST → 200 works across 12+ independent s
+- NEW `auth.hornbach.com/token-srv/introspect`: POST → 200 `{"active":false}` unauthenticated confirmed 12th session (2026-09-10 01:29Z); systemic and stable
+- NEW `auth.hornbach.com/token-srv/revoke`: POST → 200 OK unauthenticated confirmed 12th session; stable text/plain; parameter-sensitive 404 on GET/HEAD
+- NEW `auth.hornbach.com/authz-srv/authz`: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enumeration REMOVED
+- CHANGED `auth.hornbach.com/.well-known/openid-configuration`: RE-CONFIRMED fully intact (06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot hypothesis
+- CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)

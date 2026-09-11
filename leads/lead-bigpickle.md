@@ -2370,3 +2370,164 @@ testability: HUMAN_ONLY
 [RISK] hornbach: 50/100 — down 2 points. Root HTML extraction angle (hypothesis #3, 65-conf) is now DEAD: auth.hornbach.com serves F5 bot-challenge, not cidaas login UI. Unauthenticated token-management plane (85-conf, 12+ sessions) remains strongest defensible finding but is 100% PoC-gated on client_id. redirect_uri bypass (70) blocked on same artifact. Last viable path is Smarthome APK decompilation (HUMAN_ONLY). All web/repo/passive client_id sources now exhausted. Program finding ceiling without HUMAN step: 0 actionable PoCs.
 ## 2026-09-10 21:45:11 UTC [target] (model bigpickle)
 ## 2026-09-10 23:51:24 UTC [target] (model bigpickle)
+## 2026-09-11 03:52:40 UTC [target] (model bigpickle)
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] auth.hornbach.com root HTML page embeds cidaas client_id in JavaScript configuration
+class: OTHER
+asset: auth.hornbach.com/ (root page, 3038 bytes)
+confidence: 65
+reasoning: Root page returns 200 len=3038 (cidaas login UI) since 09-03; identical 3038 bytes on login.hornbach.com suggests shared cidaas-hosted login template; modern cidaas implementations embed client_id + redirect_uri in the page's JavaScript for the OIDC authorize redirect initiation; this page has NEVER been content-analyzed in any session despite being live since day 1; it is the cidaas login page that actually fires the OAuth start — it MUST contain the client_id to construct the /authz-srv/authz redirect; since the page is served unauthenticated from auth.hornbach.com, the client_id should be extractable from the raw HTML/JS
+evidence_needed: fetch auth.hornbach.com/ raw HTML → parse for client_id, redirect_uri, cidaas config objects (window.__config, cidaas.init, etc.)
+verify_steps: curl -s https://auth.hornbach.com/ | grep -oP '(client_id|ClientId|client-id)["\s:=]+["\x27]?([a-f0-9-]{20,})' — or parse full page for JS bundle URLs, then fetch those bundles for config extraction
+impact: client_id extraction → unblocks 85-conf introspect/revoke PoC AND 70-conf redirect_uri bypass; MEDIUM (enabler, not standalone finding)
+testability: PASSIVE
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — PoC-gated on client_id
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id
+[FINAL] 3. Root HTML client_id extraction (65, PASSIVE) — novel angle, may unblock both
+[NEXT] PROBE: GET https://auth.hornbach.com/ → save full HTML (3038 bytes) → grep for client_id / ClientId / client-id / cidaas config objects / JS bundle URLs; if JS bundles found, fetch them and grep for authz-srv/authz redirect construction or cidaas.init() call; this is the cidaas login page that fires the OAuth start — client_id must be present to construct the redirect; ≤1 request, read-only
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[RISK] hornbach: 52/100 — unchanged. Unauthenticated token-management plane bypass (introspect+revoke, RFC 7662/7009) remains the strongest defensible finding at 85-confidence over 12+ sessions but is 100% PoC-gated on a single HUMAN dependency (client_id via browser-capture or Smarthome APK). redirect_uri bypass (70) blocked on the same artifact. All web/repo/APK-mirror client_id sources exhausted/blocked. NEW ANGLE: auth.hornbach.com root page (3038-byte cidaas login UI) has NEVER been content-analyzed and may embed client_id in its JavaScript — a fully passive probe that could unblock both chains without HUMAN dependency.
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.30,attack_surface:9,business_value:8,tech_exposure:9,gate_ease:10,cloud_surface:7,freshness:5
+[PRIO] auth.hornbach.com/authz-srv/authz,7.40,attack_surface:8,business_value:9,tech_exposure:9,gate_ease:5,cloud_surface:7,freshness:5
+[PRIO] auth.hornbach.com/(root),6.50,attack_surface:6,business_value:7,tech_exposure:7,gate_ease:10,cloud_surface:6,freshness:9
+[PRIO] api.hornbach.de,5.50,attack_surface:5,business_value:7,tech_exposure:6,gate_ease:3,cloud_surface:5,freshness:4
+[PRIO] hornbach-mp.mirakl.net,5.00,attack_surface:5,business_value:6,tech_exposure:5,gate_ease:2,cloud_surface:5,freshness:3
+[HYP] Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 {"active":false} / 200 OK unauthenticated, stable 12+ sessions (latest 01:29Z 09-10); RFC 7662/7009 client-auth bypass; token issuance correctly client-gated (400 invalid_client) isolates flaw to management plane; empty-body rejects with named params proving param-routed real handler
+evidence_needed: valid access_token + client_id → introspect real claim set; revoke then re-introspect → active=false
+verify_steps: POST /token-srv/introspect token=<real> no-auth → claims; POST /token-srv/revoke token=<real>; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth authorization endpoint redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE — 302→AUTH10007 uniform gate re-confirmed this session; redirect_uri validation never testable behind client_id gate; cidaas historically regex allowlists; authorization_code flow advertised in discovery
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] auth.hornbach.com root HTML page embeds cidaas client_id in JavaScript configuration
+class: OTHER
+asset: auth.hornbach.com/ (root page, 3038 bytes)
+confidence: 65
+reasoning: Root page returns 200 len=3038 (cidaas login UI) since 09-03; identical 3038 bytes on login.hornbach.com suggests shared cidaas-hosted login template; modern cidaas implementations embed client_id + redirect_uri in the page's JavaScript for the OIDC authorize redirect initiation; this page has NEVER been content-analyzed in any session despite being live since day 1; it is the cidaas login page that actually fires the OAuth start — it MUST contain the client_id to construct the /authz-srv/authz redirect; since the page is served unauthenticated from auth.hornbach.com, the client_id should be extractable from the raw HTML/JS
+evidence_needed: fetch auth.hornbach.com/ raw HTML → parse for client_id, redirect_uri, cidaas config objects (window.__config, cidaas.init, etc.)
+verify_steps: curl -s https://auth.hornbach.com/ | grep -oP '(client_id|ClientId|client-id)["\s:=]+["\x27]?([a-f0-9-]{20,})' — or parse full page for JS bundle URLs, then fetch those bundles for config extraction
+impact: client_id extraction → unblocks 85-conf introspect/revoke PoC AND 70-conf redirect_uri bypass; MEDIUM (enabler, not standalone finding)
+testability: PASSIVE
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — PoC-gated on client_id
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id
+[FINAL] 3. Root HTML client_id extraction (65, PASSIVE) — novel angle, may unblock both
+[NEXT] PROBE: GET https://auth.hornbach.com/ → save full HTML (3038 bytes) → grep for client_id / ClientId / client-id / cidaas config objects / JS bundle URLs; if JS bundles found, fetch them and grep for authz-srv/authz redirect construction or cidaas.init() call; this is the cidaas login page that fires the OAuth start — client_id must be present to construct the redirect; ≤1 request, read-only
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[RISK] hornbach: 52/100 — unchanged. Unauthenticated token-management plane bypass (introspect+revoke, RFC 7662/7009) remains strongest defensible finding at 85-confidence over 12+ sessions but is 100% PoC-gated on a single HUMAN dependency (client_id via browser-capture or Smarthome APK). redirect_uri bypass (70) blocked on the same artifact. All web/repo/APK-mirror client_id sources exhausted/blocked. NEW ANGLE: auth.hornbach.com root page (3038-byte cidaas login UI) has NEVER been content-analyzed and may embed client_id in its JavaScript — a fully passive probe that could unblock both chains without HUMAN dependency.
+[CHANGED] `auth.hornbach.com/`: root is F5 Shape bot-challenge (not cidaas login UI) — `_fs-ch-*` assets, CSP, noscript fallback. 0 cidaas config exposed. Hypothesis #3 (root HTML client_id extraction) is dead on inspection.
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.30,attack_surface:9,business_value:8,tech_exposure:9,gate_ease:10,cloud_surface:7,freshness:5
+[PRIO] auth.hornbach.com/authz-srv/authz,7.40,attack_surface:8,business_value:9,tech_exposure:9,gate_ease:5,cloud_surface:7,freshness:5
+[PRIO] api.hornbach.de,5.50,attack_surface:5,business_value:7,tech_exposure:6,gate_ease:3,cloud_surface:5,freshness:4
+[PRIO] hornbach-mp.mirakl.net,5.00,attack_surface:5,business_value:6,tech_exposure:5,gate_ease:2,cloud_surface:5,freshness:3
+[PRIO] auth.hornbach.de,4.00,attack_surface:3,business_value:6,tech_exposure:5,gate_ease:1,cloud_surface:3,freshness:3
+[HYP] Unauthenticated token introspection/revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 {"active":false} / 200 OK unauthenticated, stable 12+ sessions (latest 01:29Z 09-10); RFC 7662/7009 client-auth bypass; token issuance correctly client-gated (400 invalid_client) isolates flaw to management plane; empty-body rejects with named params proving param-routed real handler
+evidence_needed: valid access_token + client_id → introspect real claim set; revoke then re-introspect → active=false
+verify_steps: POST /token-srv/introspect token=<real> no-auth → claims; POST /token-srv/revoke token=<real>; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth authorization endpoint redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE — 302→AUTH10007 uniform gate re-confirmed; redirect_uri validation never testable behind client_id gate; cidaas historically regex allowlists; authorization_code flow advertised in discovery
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] Smarthome APK contains cidaas client_id for hornbach.com tenant
+class: AUTH
+asset: de.hornbach.app.smarthome (APK)
+confidence: 60
+reasoning: Root HTML extraction FAILED — auth.hornbach.com serves F5 bot-challenge, no cidaas login UI; repo/public-web/APK-mirror client_id sources all exhausted; Smarthome app uses cidaas auth (PKCE S256 per Mirakl SSO precedent); APK binary MUST embed client_id to initiate OAuth flow; this is the last viable passive extraction path
+evidence_needed: decompile APK → grep assets/cidaas*, strings on lib/ or assets/ → extract client_id + redirect_uri
+verify_steps: Download APK from APKMirror/APKPure → unzip → strings -a *.so | grep -i 'client_id\|cidaas\|hornbach' → extract UUID-format client_id
+impact: client_id extraction → unblocks 85-conf introspect/revoke PoC AND 70-conf redirect_uri bypass — MEDIUM (enabler)
+testability: HUMAN_ONLY
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — PoC-gated on client_id
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id
+[FINAL] 3. Smarthome APK client_id extraction (60, HUMAN_ONLY) — unblocks both chains
+[PARKED] Root HTML client_id extraction: auth.hornbach.com root is F5 bot-challenge, not cidaas login UI; no OIDC config exposed
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas*.json`, `assets/config*.json`, `assets/*.properties`, and run `strings` on all `lib/` ELF binaries; grep for UUID-format client_id + `auth.hornbach.com` + `redirect_uri` + `cidaas` — this is the last viable passive client_id extraction path (root HTML extraction failed: F5 bot-challenge, not cidaas UI)
+[LEARN] REJECTED class OTHER @ auth.hornbach.com/ (root): root HTML is F5/Shape Security bot-challenge shell (_fs-ch-* prefix, Client Challenge title), NOT cidaas login UI — prior "3038-byte cidaas login UI" KB claim was stale; page rotated to challenge gate; no client_id/OIDC config extractable; Hypothesis #3 (65-conf) PARKED
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[RISK] hornbach: 50/100 — down 2 points. Root HTML extraction angle (hypothesis #3, 65-conf) is now DEAD: auth.hornbach.com serves F5 bot-challenge, not cidaas login UI. Unauthenticated token-management plane (85-conf, 12+ sessions) remains strongest defensible finding but is 100% PoC-gated on client_id. redirect_uri bypass (70) blocked on same artifact. Last viable path is Smarthome APK decompilation (HUMAN_ONLY). All web/repo/passive client_id sources now exhausted. Program finding ceiling without HUMAN step: 0 actionable PoCs.
+[NEW] `hornbach.com/.de/.at/.nl/.ch` + `login.hornbach.com/` ALL serve identical 3038-byte F5 "Client Challenge" stub — international TLD estate adds NO client_id extraction bypass; last web-based cidaas client_id path definitively closed
+[NEW] `auth.hornbach.com/token-srv/token`: POST `grant_type=authorization_code` + bogus client → 400 `invalid_client` "unknown client" — confirms invalid_client-vs-invalid_grant differential exists ONLY in theory; zero candidate seed makes it unactionable
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.30,attack_surface:9,business_value:8,tech_exposure:9,gate_ease:10,cloud_surface:7,freshness:4
+[PRIO] auth.hornbach.com/authz-srv/authz,7.40,attack_surface:8,business_value:9,tech_exposure:9,gate_ease:5,cloud_surface:7,freshness:5
+[PRIO] api.hornbach.de,5.50,attack_surface:5,business_value:7,tech_exposure:6,gate_ease:3,cloud_surface:5,freshness:4
+[PRIO] hornbach-mp.mirakl.net,5.00,attack_surface:5,business_value:6,tech_exposure:5,gate_ease:2,cloud_surface:5,freshness:3
+[PRIO] auth.hornbach.de,4.00,attack_surface:3,business_value:6,tech_exposure:5,gate_ease:1,cloud_surface:3,freshness:3
+[HYP] Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 {"active":false} / 200 OK unauthenticated, stable across 13 independent sessions (fresh confirm 09-11); RFC 7662/7009 client-auth bypass; token issuance correctly client-gated (400 invalid_client "unknown client" fresh) isolates flaw to management plane; body-presence is sole gate
+evidence_needed: valid access_token + client_id → introspect real claim set; revoke; re-introspect → active=false
+verify_steps: POST /token-srv/introspect token=<real> no-auth → claims; POST /token-srv/revoke token=<real>; POST re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth authorization endpoint redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE — 302→AUTH10007 uniform gate re-confirmed 13th session; cidaas error table confirms fired-after-client-validation codes AUTH10008/AUTH10009 (redirect_uri rejected ONLY post-valid-client_id) → differential testable once client_id known; cidaas historically regex allowlists
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid → 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] HORNBACH mobile app APK (retail or smarthome) embeds cidaas tenant client_id + redirect_uri for auth.hornbach.com
+class: AUTH
+asset: de.hornbach.* mobile apps (APK)
+confidence: 55
+reasoning: All 3038B web extraction paths now closed (de/at/nl/ch estate-wide F5 challenge); auth.hornbach.com root challenged; smarthome WEB estate uses ROC oauth2-cookie-1 (c0b6...), NOT cidaas, so only a mobile/binary client can carry a cidaas tenant client_id; cidaas case study confirms HORNBACH uses cidaas for customer identities across channels
+evidence_needed: decompile APK → assets/cidaas.xml, config JSON, strings on dex/so → UUID client_id + redirect_uri
+verify_steps: download APK (Play Store device capture or un-walled mirror) → unzip → grep assets/cidaas* and strings -a classes.dex lib/*.so for auth.hornbach.com, client_id, redirect_uri
+impact: client_id extraction unblocks 85-conf introspect/revoke PoC AND 70-conf redirect_uri bypass — MEDIUM (enabler)
+testability: HUMAN_ONLY
+[PARKED] Token-endpoint client_id oracle (invalid_client vs invalid_grant): differential logically confirmed today but zero candidate seed for a UUID-space ID; also enumeration-spirit REJECTED class per program rules — not actionable
+[PARKED] F5 client-challenge bypass / international TLD login-page client_id extraction: de/at/nl/ch all serve identical 3038B stub — estate-wide uniform challenge, no access point found
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — PoC-gated on client_id
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id + AUTH10008/10009 confirm
+[FINAL] 3. Mobile-APK cidaas client_id extraction (55, HUMAN_ONLY) — only remaining unblock path
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` AND the `de.hornbach.*`/`com.hornbach.*` retail app APK via browser-authenticated Play Store or un-walled mirror; unzip; grep `assets/cidaas*.xml`, `assets/config*.json`, `*.properties`, and `strings -a` on `classes*.dex` + `lib/*.so` for `auth.hornbach.com`, UUID-format `client_id`, `redirect_uri`; return client_id + sha256(any secret) + redirect_uri allowlist. This is the single last unblock for both FINAL hypotheses — all passive web/repo/oracle paths are closed (this session: de/at/nl/ch estate-wide F5 challenge confirmed).
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 13th session 09-11; body-presence sole gate; systemic and stable
+[LEARN] ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (at/nl/ch) + de + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only after client_id validity is the correct future differential
+[LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy (invalid_client vs invalid_grant) is unactionable with zero candidate seed; enumeration-spirit out-of-scope — no client_id recovery source
+[RISK] hornbach: 50/100 — estate-wide F5 challenge (de/at/nl/ch + login) closes the final passive client_id path; unauthenticated token-management plane (85-conf, RFC 7662/7009, 13 stable sessions) remains the single defensible finding but is 100% PoC-gated on a HUMAN mobile-APK extraction step; redirect_uri bypass (70) blocked on same artifact; discovery/status/authz gates re-verified stable this session; no anonymous PII reachable; program finding ceiling unchanged at 0 actionable PoCs without the HUMAN step.

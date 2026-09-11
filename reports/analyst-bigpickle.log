@@ -16811,3 +16811,493 @@ grep -iE "^(HTTP/|content-type:|www-auth:)" /tmp/hd | tr '\n' ' '; echo; head -c
 [93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
 [0m✗ [0mcurl -s -D /tmp/hb-sh-www.hdr -o /tmp/hb-sh-www.html --max-time 20 -A "Mozilla/5.0" "https://www.smarthomebyhornbach.com/" ; head -c 600 /tmp/hb-sh-www.html; echo "---HDRS---"; cat /tmp/hb-sh-www.hdr failed
 [91m[1mError: [0mThe user rejected permission to use this specific tool call.
+===== ANALYST bigpickle 2026-09-11 03:52:49 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt/
+total 312
+drwxr-xr-x 12 runner runner   4096 Sep 11 03:49 .
+drwxr-xr-x  3 runner runner   4096 Sep 11 03:48 ..
+drwxr-xr-x  7 runner runner   4096 Sep 11 03:49 .git
+drwxr-xr-x  3 runner runner   4096 Sep 11 03:48 .github
+-rw-r--r--  1 runner runner   1901 Sep 11 03:48 README.md
+-rw-r--r--  1 runner runner     32 Sep 11 03:49 analyst-out.txt
+-rw-r--r--  1 runner runner 107391 Sep 11 03:49 analyst-prompt.txt
+-rw-r--r--  1 runner runner 103463 Sep 11 03:49 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 11 03:48 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 11 03:48 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 11 03:48 leads
+-rw-r--r--  1 runner runner  15640 Sep 11 03:48 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 11 03:48 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 11 03:48 reports
+drwxr-xr-x  2 runner runner   4096 Sep 11 03:48 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep 11 03:48 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 11 03:48 scripts
+-rw-r--r--  1 runner runner     33 Sep 11 03:48 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 11 03:48 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 11 03:48 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 11 03:48 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 11 03:48 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 11 03:48 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 11 03:48 triage
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code} %{content_type} %{size_download}' 'https://auth.hornbach.com/.well-known/openid-configuration' 2>/dev/null
+200 application/json; charset=utf-8 3189
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code} %{content_type} %{size_download}' -X POST 'https://auth.hornbach.com/token-srv/introspect' 2>/dev/null
+400 application/json 119
+[0m
+[0m→ [0mRead probe-results.md
+[0m→ [0mRead scope.yml
+[0m→ [0mRead state_bigpickle.json
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt/leads/ /home/runner/work/hornbach-hunt/hornbach-hunt/knowledge/ /home/runner/work/hornbach-hunt/hornbach-hunt/recon-notes/ /home/runner/work/hornbach-hunt/hornbach-hunt/triage/ /home/runner/work/hornbach-hunt/hornbach-hunt/scripts/
+/home/runner/work/hornbach-hunt/hornbach-hunt/knowledge/:
+total 48
+drwxr-xr-x  2 runner runner  4096 Sep 11 03:48 .
+drwxr-xr-x 12 runner runner  4096 Sep 11 03:49 ..
+-rw-r--r--  1 runner runner 38683 Sep 11 03:48 index.md
+
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/:
+total 796
+drwxr-xr-x  2 runner runner   4096 Sep 11 03:48 .
+drwxr-xr-x 12 runner runner   4096 Sep 11 03:49 ..
+-rw-r--r--  1 runner runner 339782 Sep 11 03:48 lead-bigpickle.md
+-rw-r--r--  1 runner runner   2703 Sep 11 03:48 lead-laguna.md
+-rw-r--r--  1 runner runner   2650 Sep 11 03:48 lead-ling3.md
+-rw-r--r--  1 runner runner   2756 Sep 11 03:48 lead-longcat.md
+-rw-r--r--  1 runner runner     18 Sep 11 03:48 lead-mimo.md
+-rw-r--r--  1 runner runner 439482 Sep 11 03:48 lead-nemotron3.md
+-rw-r--r--  1 runner runner   7238 Sep 11 03:48 reposcan-hornbach.md
+
+/home/runner/work/hornbach-hunt/hornbach-hunt/recon-notes/:
+total 12
+drwxr-xr-x  2 runner runner 4096 Sep 11 03:48 .
+drwxr-xr-x 12 runner runner 4096 Sep 11 03:49 ..
+-rw-r--r--  1 runner runner  819 Sep 11 03:48 DEDICATED-DEEP.md
+
+/home/runner/work/hornbach-hunt/hornbach-hunt/scripts/:
+total 28
+drwxr-xr-x  2 runner runner  4096 Sep 11 03:48 .
+drwxr-xr-x 12 runner runner  4096 Sep 11 03:49 ..
+-rw-r--r--  1 runner runner 16987 Sep 11 03:48 sync-issues.py
+
+/home/runner/work/hornbach-hunt/hornbach-hunt/triage/:
+total 276
+drwxr-xr-x  2 runner runner  4096 Sep 11 03:48 .
+drwxr-xr-x 12 runner runner  4096 Sep 11 03:49 ..
+-rw-r--r--  1 runner runner     0 Sep 11 03:48 .gitkeep
+-rw-r--r--  1 runner runner   787 Sep 11 03:48 run-2026-09-02-21-36.md
+-rw-r--r--  1 runner runner   204 Sep 11 03:48 run-2026-09-02-23-32.md
+-rw-r--r--  1 runner runner   158 Sep 11 03:48 run-2026-09-03-01-25.md
+-rw-r--r--  1 runner runner   143 Sep 11 03:48 run-2026-09-03-06-28.md
+-rw-r--r--  1 runner runner   198 Sep 11 03:48 run-2026-09-03-11-41.md
+-rw-r--r--  1 runner runner   318 Sep 11 03:48 run-2026-09-03-15-39.md
+-rw-r--r--  1 runner runner  4193 Sep 11 03:48 run-2026-09-03-18-54.md
+-rw-r--r--  1 runner runner   149 Sep 11 03:48 run-2026-09-03-21-33.md
+-rw-r--r--  1 runner runner   240 Sep 11 03:48 run-2026-09-04-01-20.md
+-rw-r--r--  1 runner runner   906 Sep 11 03:48 run-2026-09-04-06-02.md
+-rw-r--r--  1 runner runner 14505 Sep 11 03:48 run-2026-09-04-11-25.md
+-rw-r--r--  1 runner runner   143 Sep 11 03:48 run-2026-09-04-15-05.md
+-rw-r--r--  1 runner runner   204 Sep 11 03:48 run-2026-09-04-18-28.md
+-rw-r--r--  1 runner runner   249 Sep 11 03:48 run-2026-09-04-21-01.md
+-rw-r--r--  1 runner runner   319 Sep 11 03:48 run-2026-09-04-23-04.md
+-rw-r--r--  1 runner runner   180 Sep 11 03:48 run-2026-09-05-01-01.md
+-rw-r--r--  1 runner runner   226 Sep 11 03:48 run-2026-09-05-05-48.md
+-rw-r--r--  1 runner runner   241 Sep 11 03:48 run-2026-09-05-09-50.md
+-rw-r--r--  1 runner runner   219 Sep 11 03:48 run-2026-09-05-13-12.md
+-rw-r--r--  1 runner runner   161 Sep 11 03:48 run-2026-09-05-16-06.md
+-rw-r--r--  1 runner runner   152 Sep 11 03:48 run-2026-09-05-18-21.md
+-rw-r--r--  1 runner runner   220 Sep 11 03:48 run-2026-09-05-20-41.md
+-rw-r--r--  1 runner runner   270 Sep 11 03:48 run-2026-09-05-22-35.md
+-rw-r--r--  1 runner runner   197 Sep 11 03:48 run-2026-09-06-00-11.md
+-rw-r--r--  1 runner runner   159 Sep 11 03:48 run-2026-09-06-04-44.md
+-rw-r--r--  1 runner runner   279 Sep 11 03:48 run-2026-09-06-09-07.md
+-rw-r--r--  1 runner runner   424 Sep 11 03:48 run-2026-09-06-12-54.md
+-rw-r--r--  1 runner runner   278 Sep 11 03:48 run-2026-09-06-15-56.md
+-rw-r--r--  1 runner runner   220 Sep 11 03:48 run-2026-09-06-18-00.md
+-rw-r--r--  1 runner runner   151 Sep 11 03:48 run-2026-09-06-20-27.md
+-rw-r--r--  1 runner runner   199 Sep 11 03:48 run-2026-09-06-22-18.md
+-rw-r--r--  1 runner runner   215 Sep 11 03:48 run-2026-09-07-00-03.md
+-rw-r--r--  1 runner runner   205 Sep 11 03:48 run-2026-09-07-04-48.md
+-rw-r--r--  1 runner runner   141 Sep 11 03:48 run-2026-09-07-09-53.md
+-rw-r--r--  1 runner runner   177 Sep 11 03:48 run-2026-09-07-15-27.md
+-rw-r--r--  1 runner runner   254 Sep 11 03:48 run-2026-09-07-19-22.md
+-rw-r--r--  1 runner runner   158 Sep 11 03:48 run-2026-09-07-22-15.md
+-rw-r--r--  1 runner runner   186 Sep 11 03:48 run-2026-09-08-00-27.md
+-rw-r--r--  1 runner runner   172 Sep 11 03:48 run-2026-09-08-05-09.md
+-rw-r--r--  1 runner runner  3036 Sep 11 03:48 run-2026-09-08-09-46.md
+-rw-r--r--  1 runner runner   236 Sep 11 03:48 run-2026-09-08-14-04.md
+-rw-r--r--  1 runner runner   218 Sep 11 03:48 run-2026-09-08-17-57.md
+-rw-r--r--  1 runner runner   536 Sep 11 03:48 run-2026-09-08-20-45.md
+-rw-r--r--  1 runner runner 11334 Sep 11 03:48 run-2026-09-08-23-08.md
+-rw-r--r--  1 runner runner   159 Sep 11 03:48 run-2026-09-09-01-16.md
+-rw-r--r--  1 runner runner   156 Sep 11 03:48 run-2026-09-09-06-02.md
+-rw-r--r--  1 runner runner   183 Sep 11 03:48 run-2026-09-09-11-29.md
+-rw-r--r--  1 runner runner   613 Sep 11 03:48 run-2026-09-09-15-18.md
+-rw-r--r--  1 runner runner   146 Sep 11 03:48 run-2026-09-09-18-40.md
+-rw-r--r--  1 runner runner   164 Sep 11 03:48 run-2026-09-09-21-28.md
+-rw-r--r--  1 runner runner   178 Sep 11 03:48 run-2026-09-09-23-29.md
+-rw-r--r--  1 runner runner   190 Sep 11 03:48 run-2026-09-10-01-25.md
+-rw-r--r--  1 runner runner   272 Sep 11 03:48 run-2026-09-10-06-37.md
+-rw-r--r--  1 runner runner   221 Sep 11 03:48 run-2026-09-10-11-47.md
+-rw-r--r--  1 runner runner  9869 Sep 11 03:48 run-2026-09-10-15-43.md
+-rw-r--r--  1 runner runner   156 Sep 11 03:48 run-2026-09-10-18-53.md
+-rw-r--r--  1 runner runner   196 Sep 11 03:48 run-2026-09-10-21-20.md
+-rw-r--r--  1 runner runner   217 Sep 11 03:48 run-2026-09-10-23-15.md
+-rw-r--r--  1 runner runner   370 Sep 11 03:48 run-2026-09-11-01-09.md
+[0m
+[0m$ [0mcurl -s 'https://auth.hornbach.com/.well-known/openid-configuration' 2>/dev/null | head -c 2000
+{"issuer":"https://auth.hornbach.com","authorization_endpoint":"https://auth.hornbach.com/authz-srv/authz","token_endpoint":"https://auth.hornbach.com/token-srv/token","userinfo_endpoint":"https://auth.hornbach.com/users-srv/userinfo","https://discovery.netid.de/properties/status_endpoint":"https://auth.hornbach.com/.well-known/status","jwks_uri":"https://auth.hornbach.com/.well-known/jwks.json","scopes_supported":["openid","profile","email","phone","address","offline_access","identities","roles","groups"],"response_types_supported":["code","token","id_token","code token","code id_token","token id_token","code token id_token"],"response_modes_supported":["query","fragment","form_post"],"subject_types_supported":["public"],"id_token_signing_alg_values_supported":["HS256","RS256"],"token_endpoint_auth_methods_supported":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"],"claims_supported":["aud","auth_time","created_at","email","email_verified","exp","family_name","given_name","iat","identities","iss","mobile_number","name","nickname","phone_number","picture","sub"],"token_endpoint_auth_signing_alg_values_supported":["HS256","RS256"],"check_session_iframe":"https://auth.hornbach.com/session/check_session","end_session_endpoint":"https://auth.hornbach.com/session/end_session","social_provider_token_resolver_endpoint":"https://auth.hornbach.com/login-srv/social/token","registration_endpoint":"https://auth.hornbach.com/apps-srv/clients/register","userinfo_signing_alg_values_supported":["HS256","RS256"],"userinfo_encryption_alg_values_supported":["RS256"],"userinfo_encryption_enc_values_supported":["A128CBC-HS256"],"id_token_encryption_alg_values_supported":["RS256"],"id_token_encryption_enc_values_supported":["A128CBC-HS256"],"display_values_supported":["page","popup"],"claim_types_supported":["normal"],"service_documentation":"https://docs.cidaas.de/","ui_locales_supported":["en-US","de-DE"],"introspection_endpoint":"https://auth.hornbach
+[0m
+[0m→ [0mRead triage/run-2026-09-11-01-09.md
+[0m→ [0mRead triage/run-2026-09-10-15-43.md
+[0m→ [0mRead triage/run-2026-09-10-23-15.md
+[0m
+[0m$ [0mtail -120 /home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] auth.hornbach.com root HTML page embeds cidaas client_id in JavaScript configuration
+class: OTHER
+asset: auth.hornbach.com/ (root page, 3038 bytes)
+confidence: 65
+reasoning: Root page returns 200 len=3038 (cidaas login UI) since 09-03; identical 3038 bytes on login.hornbach.com suggests shared cidaas-hosted login template; modern cidaas implementations embed client_id + redirect_uri in the page's JavaScript for the OIDC authorize redirect initiation; this page has NEVER been content-analyzed in any session despite being live since day 1; it is the cidaas login page that actually fires the OAuth start — it MUST contain the client_id to construct the /authz-srv/authz redirect; since the page is served unauthenticated from auth.hornbach.com, the client_id should be extractable from the raw HTML/JS
+evidence_needed: fetch auth.hornbach.com/ raw HTML → parse for client_id, redirect_uri, cidaas config objects (window.__config, cidaas.init, etc.)
+verify_steps: curl -s https://auth.hornbach.com/ | grep -oP '(client_id|ClientId|client-id)["\s:=]+["\x27]?([a-f0-9-]{20,})' — or parse full page for JS bundle URLs, then fetch those bundles for config extraction
+impact: client_id extraction → unblocks 85-conf introspect/revoke PoC AND 70-conf redirect_uri bypass; MEDIUM (enabler, not standalone finding)
+testability: PASSIVE
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — PoC-gated on client_id
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id
+[FINAL] 3. Root HTML client_id extraction (65, PASSIVE) — novel angle, may unblock both
+[NEXT] PROBE: GET https://auth.hornbach.com/ → save full HTML (3038 bytes) → grep for client_id / ClientId / client-id / cidaas config objects / JS bundle URLs; if JS bundles found, fetch them and grep for authz-srv/authz redirect construction or cidaas.init() call; this is the cidaas login page that fires the OAuth start — client_id must be present to construct the redirect; ≤1 request, read-only
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[RISK] hornbach: 52/100 — unchanged. Unauthenticated token-management plane bypass (introspect+revoke, RFC 7662/7009) remains the strongest defensible finding at 85-confidence over 12+ sessions but is 100% PoC-gated on a single HUMAN dependency (client_id via browser-capture or Smarthome APK). redirect_uri bypass (70) blocked on the same artifact. All web/repo/APK-mirror client_id sources exhausted/blocked. NEW ANGLE: auth.hornbach.com root page (3038-byte cidaas login UI) has NEVER been content-analyzed and may embed client_id in its JavaScript — a fully passive probe that could unblock both chains without HUMAN dependency.
+## 2026-09-10 11:52:29 UTC [target] (model bigpickle)
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.30,attack_surface:9,business_value:8,tech_exposure:9,gate_ease:10,cloud_surface:7,freshness:5
+[PRIO] auth.hornbach.com/authz-srv/authz,7.40,attack_surface:8,business_value:9,tech_exposure:9,gate_ease:5,cloud_surface:7,freshness:5
+[PRIO] auth.hornbach.com/(root),6.50,attack_surface:6,business_value:7,tech_exposure:7,gate_ease:10,cloud_surface:6,freshness:9
+[PRIO] api.hornbach.de,5.50,attack_surface:5,business_value:7,tech_exposure:6,gate_ease:3,cloud_surface:5,freshness:4
+[PRIO] hornbach-mp.mirakl.net,5.00,attack_surface:5,business_value:6,tech_exposure:5,gate_ease:2,cloud_surface:5,freshness:3
+[HYP] Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 {"active":false} / 200 OK unauthenticated, stable 12+ sessions (latest 01:29Z 09-10); RFC 7662/7009 client-auth bypass; token issuance correctly client-gated (400 invalid_client) isolates flaw to management plane; empty-body rejects with named params proving param-routed real handler
+evidence_needed: valid access_token + client_id → introspect real claim set; revoke then re-introspect → active=false
+verify_steps: POST /token-srv/introspect token=<real> no-auth → claims; POST /token-srv/revoke token=<real>; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth authorization endpoint redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE — 302→AUTH10007 uniform gate re-confirmed this session; redirect_uri validation never testable behind client_id gate; cidaas historically regex allowlists; authorization_code flow advertised in discovery
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] auth.hornbach.com root HTML page embeds cidaas client_id in JavaScript configuration
+class: OTHER
+asset: auth.hornbach.com/ (root page, 3038 bytes)
+confidence: 65
+reasoning: Root page returns 200 len=3038 (cidaas login UI) since 09-03; identical 3038 bytes on login.hornbach.com suggests shared cidaas-hosted login template; modern cidaas implementations embed client_id + redirect_uri in the page's JavaScript for the OIDC authorize redirect initiation; this page has NEVER been content-analyzed in any session despite being live since day 1; it is the cidaas login page that actually fires the OAuth start — it MUST contain the client_id to construct the /authz-srv/authz redirect; since the page is served unauthenticated from auth.hornbach.com, the client_id should be extractable from the raw HTML/JS
+evidence_needed: fetch auth.hornbach.com/ raw HTML → parse for client_id, redirect_uri, cidaas config objects (window.__config, cidaas.init, etc.)
+verify_steps: curl -s https://auth.hornbach.com/ | grep -oP '(client_id|ClientId|client-id)["\s:=]+["\x27]?([a-f0-9-]{20,})' — or parse full page for JS bundle URLs, then fetch those bundles for config extraction
+impact: client_id extraction → unblocks 85-conf introspect/revoke PoC AND 70-conf redirect_uri bypass; MEDIUM (enabler, not standalone finding)
+testability: PASSIVE
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — PoC-gated on client_id
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id
+[FINAL] 3. Root HTML client_id extraction (65, PASSIVE) — novel angle, may unblock both
+[NEXT] PROBE: GET https://auth.hornbach.com/ → save full HTML (3038 bytes) → grep for client_id / ClientId / client-id / cidaas config objects / JS bundle URLs; if JS bundles found, fetch them and grep for authz-srv/authz redirect construction or cidaas.init() call; this is the cidaas login page that fires the OAuth start — client_id must be present to construct the redirect; ≤1 request, read-only
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[RISK] hornbach: 52/100 — unchanged. Unauthenticated token-management plane bypass (introspect+revoke, RFC 7662/7009) remains strongest defensible finding at 85-confidence over 12+ sessions but is 100% PoC-gated on a single HUMAN dependency (client_id via browser-capture or Smarthome APK). redirect_uri bypass (70) blocked on the same artifact. All web/repo/APK-mirror client_id sources exhausted/blocked. NEW ANGLE: auth.hornbach.com root page (3038-byte cidaas login UI) has NEVER been content-analyzed and may embed client_id in its JavaScript — a fully passive probe that could unblock both chains without HUMAN dependency.
+## 2026-09-10 16:05:53 UTC [target] (model bigpickle)
+## 2026-09-10 19:10:09 UTC [target] (model bigpickle)
+[CHANGED] `auth.hornbach.com/`: root is F5 Shape bot-challenge (not cidaas login UI) — `_fs-ch-*` assets, CSP, noscript fallback. 0 cidaas config exposed. Hypothesis #3 (root HTML client_id extraction) is dead on inspection.
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.30,attack_surface:9,business_value:8,tech_exposure:9,gate_ease:10,cloud_surface:7,freshness:5
+[PRIO] auth.hornbach.com/authz-srv/authz,7.40,attack_surface:8,business_value:9,tech_exposure:9,gate_ease:5,cloud_surface:7,freshness:5
+[PRIO] api.hornbach.de,5.50,attack_surface:5,business_value:7,tech_exposure:6,gate_ease:3,cloud_surface:5,freshness:4
+[PRIO] hornbach-mp.mirakl.net,5.00,attack_surface:5,business_value:6,tech_exposure:5,gate_ease:2,cloud_surface:5,freshness:3
+[PRIO] auth.hornbach.de,4.00,attack_surface:3,business_value:6,tech_exposure:5,gate_ease:1,cloud_surface:3,freshness:3
+[HYP] Unauthenticated token introspection/revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 {"active":false} / 200 OK unauthenticated, stable 12+ sessions (latest 01:29Z 09-10); RFC 7662/7009 client-auth bypass; token issuance correctly client-gated (400 invalid_client) isolates flaw to management plane; empty-body rejects with named params proving param-routed real handler
+evidence_needed: valid access_token + client_id → introspect real claim set; revoke then re-introspect → active=false
+verify_steps: POST /token-srv/introspect token=<real> no-auth → claims; POST /token-srv/revoke token=<real>; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth authorization endpoint redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE — 302→AUTH10007 uniform gate re-confirmed; redirect_uri validation never testable behind client_id gate; cidaas historically regex allowlists; authorization_code flow advertised in discovery
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] Smarthome APK contains cidaas client_id for hornbach.com tenant
+class: AUTH
+asset: de.hornbach.app.smarthome (APK)
+confidence: 60
+reasoning: Root HTML extraction FAILED — auth.hornbach.com serves F5 bot-challenge, no cidaas login UI; repo/public-web/APK-mirror client_id sources all exhausted; Smarthome app uses cidaas auth (PKCE S256 per Mirakl SSO precedent); APK binary MUST embed client_id to initiate OAuth flow; this is the last viable passive extraction path
+evidence_needed: decompile APK → grep assets/cidaas*, strings on lib/ or assets/ → extract client_id + redirect_uri
+verify_steps: Download APK from APKMirror/APKPure → unzip → strings -a *.so | grep -i 'client_id\|cidaas\|hornbach' → extract UUID-format client_id
+impact: client_id extraction → unblocks 85-conf introspect/revoke PoC AND 70-conf redirect_uri bypass — MEDIUM (enabler)
+testability: HUMAN_ONLY
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — PoC-gated on client_id
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id
+[FINAL] 3. Smarthome APK client_id extraction (60, HUMAN_ONLY) — unblocks both chains
+[PARKED] Root HTML client_id extraction: auth.hornbach.com root is F5 bot-challenge, not cidaas login UI; no OIDC config exposed
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas*.json`, `assets/config*.json`, `assets/*.properties`, and run `strings` on all `lib/` ELF binaries; grep for UUID-format client_id + `auth.hornbach.com` + `redirect_uri` + `cidaas` — this is the last viable passive client_id extraction path (root HTML extraction failed: F5 bot-challenge, not cidaas UI)
+[LEARN] REJECTED class OTHER @ auth.hornbach.com/ (root): root HTML is F5/Shape Security bot-challenge shell (_fs-ch-* prefix, Client Challenge title), NOT cidaas login UI — prior "3038-byte cidaas login UI" KB claim was stale; page rotated to challenge gate; no client_id/OIDC config extractable; Hypothesis #3 (65-conf) PARKED
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/introspect: RE-CONFIRMED POST → 200 {"active":false} unauthenticated — 12th session 01:29Z 09-10; systemic and stable
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/revoke: RE-CONFIRMED POST → 200 OK unauthenticated — stable text/plain; parameter-sensitive 404 on GET/HEAD
+[LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[RISK] hornbach: 50/100 — down 2 points. Root HTML extraction angle (hypothesis #3, 65-conf) is now DEAD: auth.hornbach.com serves F5 bot-challenge, not cidaas login UI. Unauthenticated token-management plane (85-conf, 12+ sessions) remains strongest defensible finding but is 100% PoC-gated on client_id. redirect_uri bypass (70) blocked on same artifact. Last viable path is Smarthome APK decompilation (HUMAN_ONLY). All web/repo/passive client_id sources now exhausted. Program finding ceiling without HUMAN step: 0 actionable PoCs.
+## 2026-09-10 21:45:11 UTC [target] (model bigpickle)
+## 2026-09-10 23:51:24 UTC [target] (model bigpickle)
+[0m
+[0m$ [0mgrep -rn "smarthome" /home/runner/work/hornbach-hunt/hornbach-hunt/knowledge/index.md | tail -20
+167:- 2026-09-09 ACCEPTED class MISCONFIG @ smarthomebyhornbach.com: 09-09 scan — 5 live CDN SPA shells all common paths uniform 404 (215B), api-gw-evvr Zscaler edge TLS-fail, dev/docs-dev 404 roots; no anonymous API beyond SPA shells; hypothesis confidence 35→30.
+169:- 2026-09-09 ACCEPTED class OTHER @ smarthomebyhornbach.com: unreachable (code=000) from this egress — consistent with prior api-gw-evvr Zscaler TLS-fail; no additive surface assertion.
+[0m
+[0m$ [0mgrep -rniE "smarthome|apk|client.id|client_id" /home/runner/work/hornbach-hunt/hornbach-hunt/recon-notes/ /home/runner/work/hornbach-hunt/hornbach-hunt/inventory/ 2>/dev/null | head -40
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:48:- NEW auth.hornbach.com: OAuth authorize endpoint returns HTTP 404 (not 302) for test client_ids — suggests endpoint path may differ or requires valid registered client_id
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:62:- NEW auth.hornbach.com: OAuth authorize endpoint `/oauth2/authorize` returns HTTP 404 for guessed client_ids — endpoint path differs or requires valid registered client_id
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:99:- CHANGED auth.hornbach.com/authz-srv/authz: client_id=public now returns 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — confirms uniform invalid_client gate; previous 404 vs 302 variance is
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:101:- NEW auth.hornbach.com/authz-srv/authz: returns HTTP 200 with valid client_id=<found> (probe 2026-09-04 14:20/17:49) — authorization endpoint responds to valid client, not just invalid_client errors
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:110:- CHANGED auth.hornbach.com/authz-srv/authz: client_id=public returns 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — uniform invalid_client gate confirmed
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:111:- NEW auth.hornbach.com/authz-srv/authz: returns HTTP 200 with valid client_id=<found> — authorization endpoint responds to valid client (login/consent page)
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:120:- CHANGED auth.hornbach.com/authz-srv/authz: client_id=public returns 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — uniform invalid_client gate confirmed; previous variance was request-shap
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:121:- NEW auth.hornbach.com/authz-srv/authz: returns HTTP 200 with valid client_id=<found> — authorization endpoint responds to valid client (login/consent page)
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:129:- NEW auth.hornbach.com/authz-srv/authz: returns HTTP 200 with valid client_id=<found> — authorization endpoint responds to valid client (login/consent page)
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:130:- CHANGED auth.hornbach.com/authz-srv/authz: client_id=public returns uniform 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — client_id enumeration via status-code differential REMOVED
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:138:- NEW auth.hornbach.com/authz-srv/authz: returns HTTP 200 with valid client_id=<found> — authorization endpoint responds to valid client (login/consent page)
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:139:- CHANGED auth.hornbach.com/authz-srv/authz: client_id=public returns uniform 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — client_id enumeration via status-code differential REMOVED
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:145:- CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302->AUTH10007; valid client_id returns HTTP 200 login/consent page (per KB)
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:152:- CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302->AUTH10007; valid client_id returns HTTP 200 login/consent page
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:156:- CHANGED `auth.hornbach.com/authz-srv/authz?...client_id=<found>`: now returns 302 → AUTH10003 `invalid_request` instead of prior 200; the `<found>` literal is being rejected as an invalid client_id format (th
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:161:- CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302->AUTH10007; valid client_id returns HTTP 200 login/consent page
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:168:- CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302→AUTH10007; valid client_id returns HTTP 200 login/consent page (confirmed vi
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:176:- NEW auth.hornbach.com/authz-srv/authz: returns HTTP 200 with valid client_id=<found> — authorization endpoint responds to valid client (login/consent page)
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:177:- CHANGED auth.hornbach.com/authz-srv/authz: client_id=public returns uniform 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — client_id enumeration via status-code differential REMOVED
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:180:- CHANGED `auth.hornbach.com/authz-srv/authz?...client_id=<found>`: now returns 302 → AUTH10003 `invalid_request` instead of prior 200; the `<found>` literal is being rejected as an invalid client_id format (th
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:185:- CHANGED auth.hornbach.com/authz-srv/authz: Requires client_id as query param (not POST body); invalid client_id returns uniform 302→AUTH10007; valid client_id returns HTTP 200 login/consent page (confirmed vi
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:193:- CHANGED auth.hornbach.com/authz-srv/authz: client_id=`<found>` literal now returns 302→AUTH10003 `invalid_request` (parsing error) — `<found>` was KB redaction placeholder, not surface change
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:203:- CHANGED auth.hornbach.com/authz-srv/authz: client_id=`<found>` literal returns 302→AUTH10003 `invalid_request` (parsing error) — `<found>` was KB redaction placeholder, not surface change
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:211:- CHANGED auth.hornbach.com/authz-srv/authz: client_id=`<found>` literal returns 302→AUTH10003 `invalid_request` (parsing error) — `<found>` was KB redaction placeholder, not surface change
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:217:- CHANGED auth.hornbach.com/authz-srv/authz: client_id=`<found>` literal returns 302→AUTH10003 `invalid_request` (parsing error) — `<found>` was KB redaction placeholder, not surface change
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:258:- CHANGED auth.hornbach.com/authz-srv/authz: probe-results.md shows 200 responses with `<valid_client_id>` placeholder; KB notes router-level deprecation signal (404 at 16:58Z 2026-09-06) but OIDC discovery sti
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:282:- CHANGED auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z 2026-09-07 — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:58 deprecation/404 flag as transient shared-routing 
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:288:- CHANGED auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z 2026-09-07 — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:58 deprecation/404 flag as transient shared-routing 
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:295:- NEW auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z — 302→AUTH10007 invalid_client on dummy client_id; deprecation flag rejected
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:300:- CHANGED auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:13Z 2026-09-07 — 302→AUTH10007 invalid_client on dummy client_id; REJECTS the 2026-09-06-16:58 deprecation/404 flag as transient shared-routing 
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:307:- NEW auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE at 18:13Z 2026-09-07 — 302→AUTH10007 invalid_client on dummy client_id; rejects 2026-09-06 deprecation flag as transient routing noise
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:323:- NEW auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 13:27Z 2026-09-08 — 302→AUTH10007 invalid_client on dummy client_id; uniform gate, client_id enumeration REMOVED
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:326:- CHANGED hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source f
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:333:- NEW auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 13:27Z 2026-09-08 — 302→AUTH10007 invalid_client on dummy client_id; uniform gate, client_id enumeration REMOVED (KB)
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:336:- CHANGED hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source f
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:348:- NEW auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE at 13:27Z 2026-09-08 — 302→AUTH10007 on dummy client_id; uniform gate, client_id enum REMOVED
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:349:- CHANGED No new assets discovered; attack surface stable; only gate remains valid client_id extraction from mobile app
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:354:- CHANGED No new assets discovered since 2026-09-08; attack surface stable; only gate remains valid client_id extraction from mobile app (de.hornbach.app.smarthome)
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:355:- CHANGED auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE at 13:27Z 2026-09-08 — 302→AUTH10007 on dummy client_id; uniform gate, client_id enum REMOVED
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory/hornbach.md:360:- CHANGED No new assets discovered since 2026-09-08; attack surface stable; only gate remains valid client_id extraction from mobile app (de.hornbach.app.smarthome)
+[0m
+[0m→ [0mRead inventory/hornbach.md
+[0m
+[0m$ [0mgrep -rniE "smarthomebyhornbach|smarthome" /home/runner/work/hornbach-hunt/hornbach-hunt/leads/ /home/runner/work/hornbach-hunt/hornbach-hunt/recon-notes/ 2>/dev/null | grep -viE "hornbach\.app\.smarthome|_fs-ch" | head -30
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:579:[RISK] hornbach: **53/100** — unauthenticated token-management plane bypass (introspect+revocation) re-confirmed at 80 confidence, 6th session, POST-only body-gated; systemic cidaas tenant misconfig, strongest defensible finding; token issuance correctly isolated (400 invalid_client); all escalation chains gated on client_id acquisition (main app retired/PWA, APK mirrors bot-walled, Smarthome app is alternative extraction path); redirect_uri bypass 55-confidence but blocked; API surfaces (SAP APIM, Mirakl) gated and anonymous surface exhausted; no anonymous PII reachable; critical path remains client_id, then real-token PoC.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:900:[RISK] hornbach: **53/100** — unauthenticated token-management plane bypass (introspect+revocation) re-confirmed at 80 confidence, 6th session, POST-only body-gated; systemic cidaas tenant misconfig, strongest defensible finding; token issuance correctly isolated (400 invalid_client); all escalation chains gated on client_id acquisition (main app retired/PWA, APK mirrors bot-walled, Smarthome app is alternative extraction path); redirect_uri bypass 55-confidence but blocked; API surfaces (SAP APIM, Mirakl) gated and anonymous surface exhausted; no anonymous PII reachable; critical path remains client_id, then real-token PoC.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:934:[HYP] Cross-check: Hornbach Smarthome app leaks cidaas client_id + redirect_uri scheme
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:962:[PARKED] redirect_uri validation bypass (55) — needs client_id; Smarthome APK is cleanest path.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:971:[RISK] hornbach: 55/100 — unauthenticated token-management plane bypass (introspect+revoke) persists at 85-confidence across 8+ sessions; redirect_uri bypass gated on Smarthome-APK client_id extraction; Mirakl surfaces gated; no new anonymous surface; main escalation remaining is client-side (APK) not server-side.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1211:[HYP] Cross-check: Hornbach Smarthome app leaks cidaas client_id + redirect_uri scheme
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1239:[PARKED] redirect_uri validation bypass (55) — needs client_id; Smarthome APK is cleanest path.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1248:[RISK] hornbach: 55/100 — unauthenticated token-management plane bypass (introspect+revoke) persists at 85-confidence across 8+ sessions; redirect_uri bypass gated on Smarthome-APK client_id extraction; Mirakl surfaces gated; no new anonymous surface; main escalation remaining is client-side (APK) not server-side.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1303:evidence_needed: valid client_id (+secret for confidential clients) from Smarthome APK, not obtainable anonymously.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1316:[PARKED] token-srv introspect/revoke PoC (85) — survives as FINAL but is HUMAN_ONLY/AUTH_HELPED: gated on real token + client_id from Smarthome APK; no anonymous advance remains.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1323:[RISK] hornbach: 55/100 — unauthenticated token-management plane (introspect+revoke) persists at 85-conf across 8+ sessions, now precisely isolated (token plane is client-gated) which strengthens precision but keeps the PoC gated on client-side Smarthome-APK client_id/token extraction; api.hornbach.de SAP gateway surface unchanged (no anonymous backend route beyond known leak); metadata fully intact (no rot); all remaining server-side escalation blocked on client-side APK extraction rather than any new server-side surface.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1375:[RISK] hornbach: 55/100 — `api` target fully re-verified this session: SAP APIM gateway unchanged, no new anonymous route, Host/XFH SSRF vector eliminated (503-only), reflecting only descriptive localhost:8080/XFH headers (REJECTED class); the 85-conf unauthenticated token-management plane (introspect+revoke) remains the strongest finding but stays PoC-gated on client-side Smarthome-APK client_id/token extraction; no anonymous PII reachable; all server-side escalation blocked on client-side acquisition rather than any new server-side surface.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1385:evidence_needed: real token + client_id from Smarthome APK (assets/cidaas.xml) to demonstrate active-token metadata disclosure + silent session revocation
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1415:[RISK] hornbach: 52/100 — api.hornbach.de anonymous surface definitively exhausted (20+ paths, all 404; SSRF vector eliminated); unauthenticated token-management plane (introspect+revoke) remains strongest finding at 85-conf but is fully gated on client-side Smarthome-APK client_id extraction; no anonymous PII reachable; all server-side escalation blocked on APK data acquisition; remaining attack surface (auth.hornbach.de Citrix, Mirakl marketplace) either auth-gated or at low confidence; program risk is moderate — strong systemic auth finding exists but full PoC requires human APK analysis step.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1422:evidence_needed: real token + client_id from Smarthome APK (assets/cidaas.xml) to show active-token metadata disclosure + silent revocation
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1445:[RISK] hornbach: 52/100 — NO_DELTA across all known surfaces: introspect+revoke re-confirmed (9th session) as the single systemic server-side flaw but fully PoC-gated on Smarthome-APK client-side extraction; userinfo 401 and Mirakl 401 boundaries confirm no new anonymous reach; token plane/client gate isolates the flaw precisely (strengthens reporting, does not escalate impact); api.hornbach.de and auth.hornbach.de surfaces unchanged; all escalation forked on a single human APK-analysis dependency. Moderate program risk — persistent strong finding, unchanged program surface.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1464:evidence_needed: real access_token + client_id (Smarthome APK `assets/cidaas.xml`) → introspect active token for sub/email/scopes/exp, revoke, re-introspect active=false
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1487:[RISK] hornbach: 52/100 — NO_DELTA on every probed surface this session (api root/healthcheck, auth status, Nitro/logon, cidaas); strongest finding (unauth introspect/revoke, 85-conf) persists 9+ sessions but is fully PoC-gated on a single human Smarthome-APK client_id extraction; NetScaler nitro management surface now formally closed (last secondary lead debunked); token-plane isolation strengthens reporting without escalating impact; no anonymous PII reachable; moderate program risk with unchanged program surface.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1498:evidence_needed: real access_token + client_id (Smarthome APK `assets/cidaas.xml`) → introspect active token for sub/email/scopes/exp, revoke, re-introspect active=false
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1540:evidence_needed: real access_token + client_id (Smarthome APK `assets/cidaas.xml`) → introspect active token for sub/email/scopes/exp, revoke, re-introspect active=false
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1576:evidence_needed: real access_token + client_id (Smarthome APK `assets/cidaas.xml`) → introspect active token for sub/email/scopes/exp, revoke, re-introspect active=false
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1630:evidence_needed: real access_token + client_id (Smarthome APK `assets/cidaas.xml`) → introspect active token for sub/email/scopes/exp, revoke, re-introspect active=false, then hit userinfo with revoked token
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1661:evidence_needed: real access_token + client_id (Smarthome APK `assets/cidaas.xml`) → introspect active token for sub/email/scopes/exp, revoke, re-introspect active=false, then hit userinfo with revoked token
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1953:asset: smarthomebyhornbach.com (www + prod/dev + api-client/api-phone)
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:1957:verify_steps: GET api-client.dev.smarthomebyhornbach.com/api/public/hornbach/glient/ → done, 401 (same as prod); GET docs-dev.smarthomebyhornbach.com/glient/metadata → 404; compare known app restApiUrl routes on prod vs dev for response differentials only
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:2054:[HYP] smarthomebyhornbach.com dev/demo/management services expose unauthenticated or weakly-gated ROC API surface
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:2056:asset: mgmt-dev.smarthomebyhornbach.com
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:2082:[HYP] smarthomebyhornbach.com dev/demo infrastructure exposes unauthenticated API/config surface
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:2084:asset: mgmt-dev.smarthomebyhornbach.com
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:2088:verify_steps: CT-log enum *.smarthomebyhornbach.com → DNS resolve → HTTP GET/HEAD /config, /api, /health on live dev hosts
+[0m
+[0m→ [0mRead recon-notes/DEDICATED-DEEP.md
+[0m→ [0mRead leads/lead-bigpickle.md[90m [offset=1930, limit=160][0m
+[0m
+[0m$ [0mgrep -niE "client_id|client-id|clientid|cidaas" /home/runner/work/hornbach-hunt/hornbach-hunt/knowledge/index.md | grep -viE "invalid_client|AUTH10007|AUTON|redacted|placeholder|enum|registration|register" | head -30
+3:- 2026-09-03 ACCEPTED class OATH: third-party IdP (cidaas) integration on auth.hornbach.com creates OAuth/OIDC attack surface worth investigating
+9:- 2026-09-03 ACCEPTED class OATH: Authorization endpoint confirmed live at authz-srv/authz with verbose error messages; redirect_uri validation testing requires valid client_id discovery first
+11:- 2026-09-03 ACCEPTED class OATH: Authorization endpoint confirmed live at authz-srv/authz with verbose error messages; redirect_uri validation testing requires valid client_id discovery first.
+13:- 2026-09-04 ACCEPTED class AUTH @ auth.hornbach.de: separate Citrix NetScaler AAA VPN Gateway surface exists on hornbach.de, distinct from cidaas .com — legacy employee access infra in-scope
+17:- 2026-09-04 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
+41:- 2026-09-05 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
+59:- 2026-09-06 REJECTED class OTHER @ auth.hornbach.com/-: metadata endpoints rot suspected → re-fetch of 7 known paths returned 404/302 across [16:52–17:0x], but token-srv/introspect POST returned `{"active":false}` at 16:52. This suggests cidaas router did not globally drop /authz-srv but may be deprecating /authz-srv/authz explicitly. See `/tmp/hb-metadata-checks.txt`.
+61:- 2026-09-06 REJECTED class OTHER @ auth.hornbach.com: no access-token-leak in `cid-login` (302, no fragment to reflect), but Rudderstack CONFIG endpoint leaked cidaas account config (base URL, endpoints incl. introspect/revoke, mappings) — NO_INFO.
+70:- 2026-09-06 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
+98:- 2026-09-07 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: authorization endpoint live with verbose error messages; redirect_uri validation testing requires valid client_id
+144:- 2026-09-08 ACCEPTED class OTHER @ hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source for auth.hornbach.com tenant
+155:- 2026-09-09 ACCEPTED class OTHER @ hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source for auth.hornbach.com tenant
+170:- 2026-09-09 REJECTED class OTHER @ github.com/hornbach: 0 public repos; public-repo client_id grep exhausted (KB 09-09 02:33Z).
+176:- 2026-09-10 ACCEPTED class OTHER @ hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source for auth.hornbach.com tenant
+184:- 2026-09-10 ACCEPTED class OTHER @ hornbach-mp.mirakl.net: root→/login/oauth2/mirakl-sso→login.mirakl.net (platform IdP, client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — Mirakl federates OUTSIDE cidaas, not a client_id source for auth.hornbach.com tenant
+194:- 2026-09-10 REJECTED class OTHER @ auth.hornbach.com/ (root): root HTML is F5/Shape Security bot-challenge shell (_fs-ch-* prefix, Client Challenge title), NOT cidaas login UI — prior "3038-byte cidaas login UI" KB claim was stale; page rotated to challenge gate; no client_id/OIDC config extractable; Hypothesis #3 (65-conf) PARKED
+[0m
+[0m$ [0mcurl -s -o /dev/null -D - -L --max-redirs 3 --max-time 20 'https://login.hornbach.com/' 2>/dev/null | grep -iE '^(HTTP|location|server|cf-ray)|via:' | head -30
+HTTP/2 302 
+server: Varnish
+location: https://www.hornbach.de/customer
+HTTP/2 200
+[0m
+[0m$ [0mcurl -s -L --max-redirs 3 --max-time 25 'https://login.hornbach.com/' 2>/dev/null > /tmp/hb-customer.html; wc -c /tmp/hb-customer.html; grep -oiE '(auth[a-z]*\.hornbach\.com[a-z0-9/_-]*)[^"'"'"'<> ]*|client[_]?id[=:"'"'"' ]{0,3}[a-zA-Z0-9._-]{8,60}|cidaas' /tmp/hb-customer.html | sort -u | head -40
+3038 /tmp/hb-customer.html
+[0m
+The customer portal is the same 3038-byte bot-challenge stub. Let me try a passive web-source angle for the cidaas client_id that hasn't been covered (broad leak search, not repo-grep).
+[0m◈ [0mParallel Web Search ""auth.hornbach.com" client_id cidaas redirect_uri"
+[0m◈ [0mParallel Web Search ""hornbach-prod.cidaas.eu" OR "auth.hornbach.com" config client_id"
+[0m
+[0m$ [0mgrep -rnoE 'client_id[=?&:" ]{0,4}[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}|[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}' /home/runner/work/hornbach-hunt/hornbach-hunt/lead*/lead*bgpickle.md /home/runner/work/hornbach-hunt/hornbach-hunt/lead*/lead-nemotron*.md /home/runner/work/hornbach-hunt/hornbach-hunt/probe-results.md 2>/dev/null | grep -viE 'e9|0-0-0-0|00000000-0000|UNPB4Kb|39a6af|docs|example' | sort -u | head -40
+(no output)
+[0m
+[0m$ [0mgrep -rniE "found_client|<found>|valid_client|client_id ?= ?[0-9a-z]{10,40}" /home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md /home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-nemotron3.md 2>/dev/null | head -20
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:21:[CHANGED] auth.hornbach.com: Authorization endpoint `authz-srv/authz` confirmed live — returns 302 to error page with `invalid_client` + verbose error_description + error_hint
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:46:verify_steps: 1) Inspect www.hornbach.de/customer/login page source and JS bundles for client_id values; 2) curl -s -D- "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid" --max-redirs 0; 3) If redirected to login page (not error), test redirect_uri variations
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:55:verify_steps: curl -s -X POST https://auth.hornbach.com/authz-srv/device/authz -H "Content-Type: application/json" -d '{"client_id":"<valid_client_id>","scope":"openid"}'; check response for user_code, verification_uri, device_code
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:244:[CHANGED] auth.hornbach.com/authz-srv/authz: client_id=public now returns 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — confirms uniform invalid_client gate; previous 404 vs 302 variance is request-shape dependent, not client enumeration signal
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:344:[NEW] auth.hornbach.com/authz-srv/authz: returns HTTP 200 with valid client_id=<found> — authorization endpoint responds to valid client (login/consent page)
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:345:[CHANGED] auth.hornbach.com/authz-srv/authz: client_id=public returns uniform 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — client_id enumeration via status-code differential REMOVED
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:368:verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:478:reasoning: Fresh probes: POST token-srv/introspect with `token=fake` + ZERO client auth → 200 `{"active":false}`; POST token-srv/revoke same → 200 `OK`. Metadata advertises introspection/revocation_endpoint_auth_methods_supported=[client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt] but router accepts zero auth. token-srv/token (issuance) DOES require client auth (400 invalid_client) → bypass is confined to token-*management* plane. GET returns 404 (method-gated), POST reaches handler — this resolves the longstanding "404 vs 200" contradiction in the KB.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:508:reasoning: POST introspect `token=fake` as form OR JSON → 200 `{"active":false}`; POST revoke → 200 `OK`; empty body → 400 `unauthorized_client`; token-srv/token issuance → 400 `invalid_client` (gated). Metadata advertises introspection/revocation auth_methods=[client_secret_basic,post,jwt,private_key_jwt] but router enforces none — body-presence is the sole gate. Stable ≥4 sessions (09-04 14:20/19:53/22:16, 09-05 00:12/08:45/12:0x).
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:510:verify_steps: (DONE) POST form + JSON fake token → 200 both; token/token → 400 invalid_client; empty body → 400. NEXT (client_id+token): POST `token=<real>` to introspect no-auth → claim set; POST revoke; re-introspect → active=false
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:532:[RISK] hornbach: 52/100 — token-management-plane no-auth introspect+revoke (200/200) re-confirmed this session with the new isolation fact (issuance 400 invalid_client) making it the single most defensible systemic finding (RFC 7662/7009); request-shape fully resolved (JSON+form, body-presence gate); new infra intel `sapigwprd02` on api.hornbach.de healthcheck; health-srv/metrics-srv 403-gated (no surface); SCC/redirect_uri/Mirakl chains all still client_id-gated; APK extraction path degraded (main app retired/PWA; mirrors bot-walled) pushing client_id to HUMAN browser capture; no anonymous PII reachable; critical path remains client_id acquisition, then real-token introspect/revoke PoC.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:534:[CHANGED] `auth.hornbach.com/authz-srv/authz?...client_id=<found>`: now returns 302 → AUTH10003 `invalid_request` instead of prior 200; the `<found>` literal is being rejected as an invalid client_id format (the real client_id was redacted in KB; this is a parsing artefact, not a surface change)
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:544:reasoning: POST introspect `token=fake` form → 200 `{"active":false}` (zero client auth); POST revoke same → 200 `OK`; empty body → 400 `unauthorized_client`; GET → 404 (method-gated). token-srv/token issuance → 400 `invalid_client` (correctly gated). Metadata lists auth_methods=[client_secret_basic,post,jwt,private_key_jwt] but router ignores all — body-presence is sole gate. Stable ≥5 sessions across 2 days (09-04 14:20/19:53/22:16, 09-05 00:12/08:45/12:18, 09-05 15:22 re-confirmed this run). GET-returning-404 in probes was a methodology artefact (all historical probes used GET).
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:553:reasoning: Endpoint live; authz-srv/authz with `client_id=<found>` historically returned 200 (login/consent page), indicating a valid client_id was previously known but redacted in KB. Invalid client_ids return uniform 302→AUTH10007/AUTH10003. redirect_uri=evil.com was appended in prior probes but response body was never captured (len=?). cidaas historically uses regex/wildcard allowlists for redirect_uri; all impact chains (code theft → token → introspect/revoke abuse) pivot through this endpoint. The `<found>` literal now returns AUTH10003 (parsing error, not client rejection).
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:567:[HYP] Unauthenticated token-management plane bypass: confidence 80 → **[FINAL]**. Survives self-critique: stable 5+ sessions, method-shape fully resolved (POST-only, body-presence gate), issuance correctly isolated (400 invalid_client), no REJECTED class, concrete verify_steps. This is the single strongest defensible finding.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:578:[LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: `client_id=<found>` (literal string) now returns 302→AUTH10003 `invalid_request` (parsing error) — the `<found>` marker in KB was a redacted placeholder for a real client_id; this is not a surface change
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:579:[RISK] hornbach: **53/100** — unauthenticated token-management plane bypass (introspect+revocation) re-confirmed at 80 confidence, 6th session, POST-only body-gated; systemic cidaas tenant misconfig, strongest defensible finding; token issuance correctly isolated (400 invalid_client); all escalation chains gated on client_id acquisition (main app retired/PWA, APK mirrors bot-walled, Smarthome app is alternative extraction path); redirect_uri bypass 55-confidence but blocked; API surfaces (SAP APIM, Mirakl) gated and anonymous surface exhausted; no anonymous PII reachable; critical path remains client_id, then real-token PoC.
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:667:[NEW] auth.hornbach.com/authz-srv/authz: returns HTTP 200 with valid client_id=<found> — authorization endpoint responds to valid client (login/consent page)
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:668:[CHANGED] auth.hornbach.com/authz-srv/authz: client_id=public returns uniform 302 to /identity/error?error=invalid_client&error_code=AUTH10007 — client_id enumeration via status-code differential REMOVED
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads/lead-bigpickle.md:691:verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
+[0m
+The cidaas error-code doc confirms AUTH10009 = "redirect_uri not allowed by app configuration" (fired only AFTER a client_id validates) — the exact differential needed post-client_id. Before more probing, let me check whether any valid client_id ever surfaced unredacted in repo logs.
+No unredacted client_id exists in repo logs — confirmed redacted as `<found>` everywhere. Testing whether HORNBACH's international TLD estate shares the bot-wall or exposes the cidaas login flow (uncharted angle).
+[0m$ [0mfor h in www.hornbach.at www.hornbach.nl www.hornbach.ch; do size=$(curl -s -L --max-redirs 2 --max-time 20 "https://$h/" -o /tmp/hb-$h.html -w '%{http_code}' 2>/dev/null); echo "$h status=$size bytes=$(wc -c < /tmp/hb-$h.html 2>/dev/null) title=$(grep -oiE '<title>[^<]*' /tmp/hb-$h.html 2>/dev/null | head -c 80)"; done
+www.hornbach.at status=200 bytes=3038 title=<title>Client Challenge
+www.hornbach.nl status=200 bytes=3038 title=<title>Client Challenge
+www.hornbach.ch status=200 bytes=3038 title=<title>Client Challenge
+[0m
+Entire web estate (including international TLDs) sits behind the same F5 "Client Challenge" — client_id extraction via any hornbach.com/.de/.at/.nl/.ch web property is closed. Let me refresh the token-plane gates for this session.
+[0m$ [0mecho "=== introspect ==="; curl -s -X POST 'https://auth.hornbach.com/token-srv/introspect' -H 'Content-Type: application/x-www-form-urlencoded' -d 'token=fake' -w '\nHTTP %{http_code}\n' 2>/dev/null; sleep 1; echo "=== revoke ==="; curl -s -X POST 'https://auth.hornbach.com/token-srv/revoke' -H 'Content-Type: application/x-www-form-urlencoded' -d 'token=fake' -w '\nHTTP %{http_code}\n' 2>/dev/null
+=== introspect ===
+{"active":false}
+HTTP 200
+=== revoke ===
+OK
+HTTP 200
+[0m
+[0m$ [0mecho "=== authz dummy ==="; curl -s -o /dev/null -D - --max-redirs 0 'https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=nonexistent-bb&redirect_uri=https%3A%2F%2Fevil.example&scope=openid' 2>/dev/null | grep -iE '^(HTTP|location)'; sleep 1; echo "=== token endpoint oracle test ==="; curl -s -X POST 'https://auth.hornbach.com/token-srv/token' -H 'Content-Type: application/x-www-form-urlencoded' --data 'grant_type=authorization_code&code=fakecode123&client_id=nonexistent-bb&redirect_uri=https%3A%2F%2Fevil.example' -w '\nHTTP %{http_code}\n' 2>/dev/null
+=== authz dummy ===
+HTTP/2 302 
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+=== token endpoint oracle test ===
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+HTTP 400
+[0m
+All gates refreshed live this session. Compiling the structured analysis.
+
+STEP 1 — DELTA
+[NEW] `hornbach.com/.de/.at/.nl/.ch` + `login.hornbach.com/` ALL serve identical 3038-byte F5 "Client Challenge" stub — international TLD estate adds NO client_id extraction bypass; last web-based cidaas client_id path definitively closed
+[NEW] `auth.hornbach.com/token-srv/token`: POST `grant_type=authorization_code` + bogus client → 400 `invalid_client` "unknown client" — confirms invalid_client-vs-invalid_grant differential exists ONLY in theory; zero candidate seed makes it unactionable
+[CONFIRMED] `token-srv/introspect` POST→200 `{"active":false}` and `token-srv/revoke` POST→200 `OK` unauthenticated, 13th session (fresh 09-11), `authz-srv/authz` uniform 302→AUTH10007 on invalid client
+
+STEP 2 — PRIORITIZE
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.30,attack_surface:9,business_value:8,tech_exposure:9,gate_ease:10,cloud_surface:7,freshness:4
+[PRIO] auth.hornbach.com/authz-srv/authz,7.40,attack_surface:8,business_value:9,tech_exposure:9,gate_ease:5,cloud_surface:7,freshness:5
+[PRIO] api.hornbach.de,5.50,attack_surface:5,business_value:7,tech_exposure:6,gate_ease:3,cloud_surface:5,freshness:4
+[PRIO] hornbach-mp.mirakl.net,5.00,attack_surface:5,business_value:6,tech_exposure:5,gate_ease:2,cloud_surface:5,freshness:3
+[PRIO] auth.hornbach.de,4.00,attack_surface:3,business_value:6,tech_exposure:5,gate_ease:1,cloud_surface:3,freshness:3
+
+STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 {"active":false} / 200 OK unauthenticated, stable across 13 independent sessions (fresh confirm 09-11); RFC 7662/7009 client-auth bypass; token issuance correctly client-gated (400 invalid_client "unknown client" fresh) isolates flaw to management plane; body-presence is sole gate
+evidence_needed: valid access_token + client_id → introspect real claim set; revoke; re-introspect → active=false
+verify_steps: POST /token-srv/introspect token=<real> no-auth → claims; POST /token-srv/revoke token=<real>; POST re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth authorization endpoint redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE — 302→AUTH10007 uniform gate re-confirmed 13th session; cidaas error table confirms fired-after-client-validation codes AUTH10008/AUTH10009 (redirect_uri rejected ONLY post-valid-client_id) → differential testable once client_id known; cidaas historically regex allowlists
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid → 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] HORNBACH mobile app APK (retail or smarthome) embeds cidaas tenant client_id + redirect_uri for auth.hornbach.com
+class: AUTH
+asset: de.hornbach.* mobile apps (APK)
+confidence: 55
+reasoning: All 3038B web extraction paths now closed (de/at/nl/ch estate-wide F5 challenge); auth.hornbach.com root challenged; smarthome WEB estate uses ROC oauth2-cookie-1 (c0b6...), NOT cidaas, so only a mobile/binary client can carry a cidaas tenant client_id; cidaas case study confirms HORNBACH uses cidaas for customer identities across channels
+evidence_needed: decompile APK → assets/cidaas.xml, config JSON, strings on dex/so → UUID client_id + redirect_uri
+verify_steps: download APK (Play Store device capture or un-walled mirror) → unzip → grep assets/cidaas* and strings -a classes.dex lib/*.so for auth.hornbach.com, client_id, redirect_uri
+impact: client_id extraction unblocks 85-conf introspect/revoke PoC AND 70-conf redirect_uri bypass — MEDIUM (enabler)
+testability: HUMAN_ONLY
+
+STEP 4 — SELF-CRITIQUE
+[PARKED] Token-endpoint client_id oracle (invalid_client vs invalid_grant): differential logically confirmed today but zero candidate seed for a UUID-space ID; also enumeration-spirit REJECTED class per program rules — not actionable
+[PARKED] F5 client-challenge bypass / international TLD login-page client_id extraction: de/at/nl/ch all serve identical 3038B stub — estate-wide uniform challenge, no access point found
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — PoC-gated on client_id
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id + AUTH10008/10009 confirm
+[FINAL] 3. Mobile-APK cidaas client_id extraction (55, HUMAN_ONLY) — only remaining unblock path
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` AND the `de.hornbach.*`/`com.hornbach.*` retail app APK via browser-authenticated Play Store or un-walled mirror; unzip; grep `assets/cidaas*.xml`, `assets/config*.json`, `*.properties`, and `strings -a` on `classes*.dex` + `lib/*.so` for `auth.hornbach.com`, UUID-format `client_id`, `redirect_uri`; return client_id + sha256(any secret) + redirect_uri allowlist. This is the single last unblock for both FINAL hypotheses — all passive web/repo/oracle paths are closed (this session: de/at/nl/ch estate-wide F5 challenge confirmed).
+
+STEP 6 — LEARNING
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 13th session 09-11; body-presence sole gate; systemic and stable
+[LEARN] ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (at/nl/ch) + de + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only after client_id validity is the correct future differential
+[LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy (invalid_client vs invalid_grant) is unactionable with zero candidate seed; enumeration-spirit out-of-scope — no client_id recovery source
+
+STEP 7 — RISK
+[RISK] hornbach: 50/100 — estate-wide F5 challenge (de/at/nl/ch + login) closes the final passive client_id path; unauthenticated token-management plane (85-conf, RFC 7662/7009, 13 stable sessions) remains the single defensible finding but is 100% PoC-gated on a HUMAN mobile-APK extraction step; redirect_uri bypass (70) blocked on same artifact; discovery/status/authz gates re-verified stable this session; no anonymous PII reachable; program finding ceiling unchanged at 0 actionable PoCs without the HUMAN step.
