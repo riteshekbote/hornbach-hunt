@@ -17452,3 +17452,444 @@ testability: HUMAN_ONLY
 ## STEP 7 — RISK
 
 [RISK] hornbach: 50/100 — unchanged. Unauthenticated token-management plane bypass (introspect+revoke, RFC 7662/7009) remains strongest defensible finding at 85-confidence over 14 sessions (fresh 08:47Z 09-11) but is 100% PoC-gated on a single HUMAN dependency (client_id via Smarthome APK decompilation). redirect_uri bypass (70) blocked on same artifact. auth.hornbach.com root now 302→hornbach.de (was 200), further closing web extraction paths. All web/repo/passive client_id sources exhausted. Program finding ceiling without HUMAN step: 0 actionable PoCs.
+===== ANALYST bigpickle 2026-09-11 13:35:17 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /tmp/ 2>/dev/null | grep -E "hb|hornbach|probe|lead" | tail -20
+(no output)
+[0m
+[0m✱ [0mGlob "**/lead*.txt"[90m 0 matches[0m
+[0m✱ [0mGlob "**/hypotheses*.txt"[90m 5 matches[0m
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m✱ [0mGlob "**/lead_bigpickle.txt"[90m 0 matches[0m
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt/ /home/runner/work/hornbach-hunt/hornbach-hunt/reports/ 2>/dev/null
+/home/runner/work/hornbach-hunt/hornbach-hunt/:
+total 328
+drwxr-xr-x 12 runner runner   4096 Sep 11 13:23 .
+drwxr-xr-x  3 runner runner   4096 Sep 11 13:23 ..
+drwxr-xr-x  7 runner runner   4096 Sep 11 13:23 .git
+drwxr-xr-x  3 runner runner   4096 Sep 11 13:23 .github
+-rw-r--r--  1 runner runner   1901 Sep 11 13:23 README.md
+-rw-r--r--  1 runner runner    348 Sep 11 13:23 analyst-out.txt
+-rw-r--r--  1 runner runner 118259 Sep 11 13:23 analyst-prompt.txt
+-rw-r--r--  1 runner runner 114331 Sep 11 13:23 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 11 13:23 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 11 13:23 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 11 13:23 leads
+-rw-r--r--  1 runner runner  16371 Sep 11 13:23 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 11 13:23 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 11 13:23 reports
+drwxr-xr-x  2 runner runner   4096 Sep 11 13:23 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep 11 13:23 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 11 13:23 scripts
+-rw-r--r--  1 runner runner     33 Sep 11 13:23 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 11 13:23 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 11 13:23 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 11 13:23 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 11 13:23 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 11 13:23 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 11 13:23 triage
+
+/home/runner/work/hornbach-hunt/hornbach-hunt/reports/:
+total 2308
+drwxr-xr-x  2 runner runner    4096 Sep 11 13:23 .
+drwxr-xr-x 12 runner runner    4096 Sep 11 13:23 ..
+-rw-r--r--  1 runner runner 1361693 Sep 11 13:23 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   11935 Sep 11 13:23 analyst-laguna.log
+-rw-r--r--  1 runner runner   11880 Sep 11 13:23 analyst-ling3.log
+-rw-r--r--  1 runner runner   11990 Sep 11 13:23 analyst-longcat.log
+-rw-r--r--  1 runner runner  744819 Sep 11 13:23 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    7346 Sep 11 13:23 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 11 13:23 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 11 13:23 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 11 13:23 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    9184 Sep 11 13:23 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  166616 Sep 11 13:23 hypotheses.md
+-rw-r--r--  1 runner runner    4817 Sep 11 13:23 valid-bugs.md
+[0m
+[0m✱ [0mGlob "**/probe-results.md"[90m 1 match[0m
+[0m→ [0mRead probe-results.md
+[0m→ [0mRead reports/hypotheses-nemotron3.txt
+[0m
+[0m$ [0mcat /home/runner/work/hornbach-hunt/hornbach-hunt/state_bigpickle.json; echo "---"; curl -s -o /dev/null -w "%{http_code} %{size_download}B %{time_total}s\n" --max-time 15 https://apkpure.com 2>&1 | tail -2
+{"phase": "POC", "target": "api"}---
+403 5381B 0.132572s
+[0m
+[0m$ [0mwhich unzip strings python3 curl wget 2>&1; echo "---"; curl -s -o /dev/null -w "d.apkpure: %{http_code} %{size_download}B\n" --max-time 20 -L "https://d.apkpure.com/b/APK/de.hornbach.app.smarthome?version=latest" 2>&1 | tail -1
+/usr/bin/unzip
+/usr/bin/strings
+/usr/bin/python3
+/usr/bin/curl
+/usr/bin/wget
+---
+d.apkpure: 403 5536B
+[0m
+[0m◈ [0mParallel Web Search "de.hornbach.app.smarthome APK download direct link"
+[0m
+[0m$ [0mcurl -s --max-time 20 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36" "https://de-hornbach-app-smarthome.en.uptodown.com/android/download" -o /tmp/utd.html -w "status=%{http_code} size=%{size_download}\n"; grep -oE 'https?://[^"'\'' ]+\.(apk|xapk)[^"'\'' ]*' /tmp/utd.html | head -5; grep -oE 'data-url="[^"]+"' /tmp/utd.html | head -5
+status=410 size=114
+[0m
+[0m◈ [0mParallel Web Search ""de.hornbach.app.smarthome" APK download site:apkpure.com OR site:apkmirror.com OR site:apkcombo.com OR site:androidapksfree.com"
+[0m
+[0m$ [0mcurl -s --max-time 20 -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36" -H "Referer: https://apkpure.com/" "https://apkpure.com/de.hornbach.app.smarthome" -o /tmp/apkpure.html -w "apkpure status=%{http_code} size=%{size_download}\n"; grep -oiE 'version.{0,40}' /tmp/apkpure.html | head -8
+apkpure status=403 size=5669
+[0m
+[0m$ [0mUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+echo "=== apkcombo page ==="
+curl -s --max-time 20 -A "$UA" "https://apkcombo.com/de.hornbach.app.smarthome/" -o /tmp/kc.html -w "status=%{http_code} size=%{size_download}\n"
+grep -oE 'download/apk|apkcombo.com/[a-z0-9-]+/de.hornbach.app.smarthome/download[^"'\'' ]*' /tmp/kc.html | head -5
+echo "=== apkfab ==="
+curl -s --max-time 20 -A "$UA" "https://apkfab.com/de.hornbach.app.smarthome" -o /tmp/af.html -w "status=%{http_code} size=%{size_download}\n"
+grep -oE 'https?://[^"'\'' ]+\.(apk|xapk)[^"'\'' ]*' /tmp/af.html | head -5
+=== apkcombo page ===
+status=200 size=147270
+=== apkfab ===
+status=403 size=5668
+[0m
+[0m$ [0mgrep -oE 'href="[^"]+"' /tmp/kc.html | grep -iE 'download|apk' | head -20; echo "---version---"; grep -oiE 'version[^<>]{0,60}' /tmp/kc.html | head -10
+href="//imgrs.apkcombo.org"
+href="/static/svg/apkcombo-icon.svg"
+href="https://apkcombo.com/de.hornbach.app.smarthome/"
+href="https://apkcombo.com/"
+href="https://apkcombo.com/"
+href="https://apkcombo.com/pt/"
+href="https://apkcombo.com/es/"
+href="https://apkcombo.com/id/"
+href="https://apkcombo.com/ru/"
+href="https://apkcombo.com/vi/"
+href="https://apkcombo.com/th/"
+href="https://apkcombo.com/ar/"
+href="https://apkcombo.com/tr/"
+href="https://apkcombo.com/it/"
+href="https://apkcombo.com/fr/"
+href="https://apkcombo.com/de/"
+href="https://apkcombo.com/ko/"
+href="https://apkcombo.com/ja/"
+href="https://apkcombo.com/nl/"
+href="https://apkcombo.com/pl/"
+---version---
+Version, Old Versions, Android Tablet, Android Smart TV, Android We
+Version, Old Versions, Android Tablet, Android Smart TV, Android We
+versions li{margin:0;padding:0;border:0;list-style:none}.ver-item{v
+version{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;c
+versions li{width:33%}ul.versions{max-height:unset}}@media screen a
+Version
+[0m
+[0m$ [0mgrep -oiE '.<[^>]*de\.hornbach\.app\.smarthome[^>]*>' /tmp/kc.html | head -20; echo "===dl api refs==="; grep -oiE '(cdn|download|api|ert)[.-][a-z0-9.-]*apkcombo[a-z0-9./-]*' /tmp/kc.html | sort -u | head; echo "===app id / ver==="; grep -oiE '"appid"[^,}]{0,60}|"version"[^,}]{0,40}|data-[a-z]+="[^"]*"' /tmp/kc.html | head -20
+<link rel="canonical" href="https://apkcombo.com/de.hornbach.app.smarthome/"/>
+===dl api refs===
+===app id / ver===
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+data-theme="light"
+[0m
+[0m$ [0mUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+curl -s --max-time 25 -A "$UA" -H "Referer: https://apkcombo.com/de.hornbach.app.smarthome/" "https://apkcombo.com/de.hornbach.app.smarthome/download/apk" -o /tmp/kc-dl.html -w "status=%{http_code} size=%{size_download}\n"
+grep -oiE 'https?://[^"'\'' ]+(\.apk|xapk|download|apkcombo)[^"'\'' ]*' /tmp/kc-dl.html | head -20
+echo "===js refs==="
+grep -oiE 'src="[^"]+\.js[^"]*"' /tmp/kc-dl.html | head -10
+status=301 size=76
+===js refs===
+[0m
+[0m$ [0mUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+curl -s --max-time 25 -A "$UA" -L "https://apkcombo.com/de.hornbach.app.smarthome/download/apk" -o /tmp/kc-dl2.html -w "final=%{url_effective} status=%{http_code} size=%{size_download}\n"
+grep -oiE 'https?://[^"'\'' ]+(\.apk|xapk|apkcombo|cert)[^"'\'' ]*' /tmp/kc-dl2.html | head -20
+final=https://apkcombo.com/de.hornbach.app.smarthome/apk status=404 size=76031
+https://cdn.jsdelivr.net/gh/apkcombo/cdn@master/screenshots/apkcombo_1350x650.png
+https://imgrs.apkcombo.com/4a4yj0Ube-uzS5a852B-MwfHLoXxV8mR3_zOZ7URiqo/rs:fit:100:0:0/g:sm/Y29tLmFwa2NvbWJvLmFwcC9pY29uLnBuZw.png
+https://imgrs.apkcombo.com/TRcz33r2DNH_2M0wIShXb0HzvMD68Xtrc95QhuwMZHg/rs:fit:200:0:0/g:sm/Y29tLmFwa2NvbWJvLmFwcC9pY29uLnBuZw.png
+https://imgrs.apkcombo.com/XsnZuBasimWa3m-4CozjmaCQqk4VWd4WrBlwCzfaB5o/rs:fit:100:0:0/g:sm/Y29tLmFuZHJvaWQudmVuZGluZy9pY29uLnBuZw.png
+https://imgrs.apkcombo.com/b59hrAZbzanui_OwVtuTcs-UPGBAmFTqFxqoL4ILWKQ/rs:fit:200:0:0/g:sm/Y29tLmFuZHJvaWQudmVuZGluZy9pY29uLnBuZw.png
+https://soundinstants.com?utm_source=apkcombo
+https://gifvibe.com?utm_source=apkcombo
+https://cdn.jsdelivr.net/gh/apkcombo/cdn@master/i./re/v2/icon-128.png
+https://www.facebook.com/apkcombo
+https://twitter.com/apkcombo
+[0m
+[0m◈ [0mParallel Web Search ""de.hornbach" app APK apkmirror OR apkpure OR androidapksfree store apk download"
+[0m
+[0m$ [0mUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+curl -s --max-time 20 -A "$UA" "https://apkcombo.com/de.hornbach/" -o /tmp/kc-retail.html -w "apkcombo retail status=%{http_code} size=%{size_download}\n"
+grep -oiE 'de\.hornbach[^"'\''<> ]*' /tmp/kc-retail.html | sort -u | head -10
+apkcombo retail status=200 size=147016
+de.hornbach/
+[0m
+[0m$ [0mUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+for u in "https://de-hornbach.en.uptodown.com/android" "https://de-hornbach-app.en.uptodown.com/android/download"; do
+  echo "=== $u ==="
+  curl -s --max-time 20 -A "$UA" "$u" -o /tmp/utd2.html -w "status=%{http_code} size=%{size_download}\n"
+  grep -oiE 'dw\.uptodown\.com/[^"'\'' ]+' /tmp/utd2.html | head -3
+  grep -oiE 'data-url="[^"]+"' /tmp/utd2.html | head -3
+done
+=== https://de-hornbach.en.uptodown.com/android ===
+status=404 size=83
+=== https://de-hornbach-app.en.uptodown.com/android/download ===
+status=404 size=83
+[0m
+[0m$ [0mUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+echo "=== apkcombo /de.hornbach/ title & canonical ==="
+grep -oiE '<title>[^<]*</title>|rel="canonical" href="[^"]*"' /tmp/kc-retail.html | head -5
+echo "=== try apkcombo search api ==="
+curl -s --max-time 20 -A "$UA" "https://apkcombo.com/de.hornbach/download/apk?referrer=detail" -L -o /tmp/kc-r2.html -w "dl status=%{http_code} size=%{size_download} final=%{url_effective}\n"
+grep -oiE '"name":"de\.hornbach[^,}]{0,80}|download[^"'\''<> ]*\.(apk|xapk)[^"'\''<> ]*' /tmp/kc-r2.html | head
+=== apkcombo /de.hornbach/ title & canonical ===
+<title>⚡ APKCombo - #1 APK Downloader</title>
+rel="canonical" href="https://apkcombo.com/de.hornbach/"
+=== try apkcombo search api ===
+dl status=404 size=76069 final=https://apkcombo.com/de.hornbach/apk?referrer=detail
+[0m
+[0m◈ [0mParallel Web Search ""auth.hornbach.com" client_id OAuth OR cidaas"
+[0m◈ [0mParallel Web Search "HORNBACH app cidaas oauth client"
+[0m
+[0m$ [0mfor h in app.hornbach.de apps.hornbach.de m.hornbach.de mobile.hornbach.de api.hornbach.de www.hornbach.de; do
+  ip=$(getent hosts $h 2>/dev/null | head -1 | awk '{print $1}')
+  echo "$h -> ${ip:-NXDOMAIN}"
+done
+app.hornbach.de -> NXDOMAIN
+apps.hornbach.de -> NXDOMAIN
+m.hornbach.de -> NXDOMAIN
+mobile.hornbach.de -> NXDOMAIN
+api.hornbach.de -> 91.240.77.159
+www.hornbach.de -> 146.75.29.91
+[0m
+[0m$ [0mUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+for u in "https://apk.support/download-app/de.hornbach" "https://apk.support/de.hornbach" "https://apk.support/app/de.hornbach"; do
+  echo "=== $u ==="
+  curl -s --max-time 20 -A "$UA" -L "$u" -o /tmp/aps.html -w "status=%{http_code} size=%{size_download}\n"
+  grep -oiE 'apk>[^<]{0,60}|download[^"'\'' ]+\.apk|direct[^"'\'' ]*\.apk' /tmp/aps.html | head -3
+done
+=== https://apk.support/download-app/de.hornbach ===
+status=403 size=5687
+=== https://apk.support/de.hornbach ===
+status=403 size=5627
+=== https://apk.support/app/de.hornbach ===
+status=403 size=5639
+[0m
+[0m✗ [0mWebFetch https://apkpure.com/de.hornbach failed
+[91m[1mError: [0mStatusCode: non 2xx status code (404 GET https://apkpure.com/de.hornbach)
+[0m✗ [0mWebFetch https://hornbach.de.softonic.com/android/versions failed
+[91m[1mError: [0mStatusCode: non 2xx status code (406 GET https://hornbach.de.softonic.com/android/versions)
+[0m✗ [0mWebFetch https://apkcombo.com/hornbach/de.hornbach/ failed
+[91m[1mError: [0mStatusCode: non 2xx status code (410 GET https://apkcombo.com/hornbach/de.hornbach/)
+[0m◈ [0mParallel Web Search ""de.hornbach" apk xapk 10.4.0 OR 9.89 download upload apkpure uptodown androidapksfree"
+[0m
+[0m$ [0mUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+curl -s --max-time 25 -A "$UA" -H "Accept: text/html,application/xhtml+xml" -H "Accept-Language: en-US,en;q=0.9" -c /tmp/sw.cookies "https://hornbach.de.softonic.com/android" -o /tmp/sw.html -w "main status=%{http_code} size=%{size_download}\n"
+grep -oiE 'https?://[^"'\'' ]+\.(apk|xapk|zip)[^"'\'' ]*|cdn[^"'\'' ]+\.(apk|xapk)' /tmp/sw.html | head
+echo "=== download page ==="
+curl -s --max-time 25 -A "$UA" -H "Accept: text/html" -b /tmp/sw.cookies -c /tmp/sw.cookies "https://hornbach.de.softonic.com/android/download" -o /tmp/swdl.html -w "dl status=%{http_code} size=%{size_download}\n"
+grep -oiE 'https?://[^"'\'' ]+\.(apk|xapk|zip)[^"'\'' ]*|data-[a-z-]+="[^"]*"' /tmp/swdl.html | head -10
+grep -oiE 'fileUrl[^,;]{0,120}|downloadUrl[^,;]{0,120}' /tmp/swdl.html | head
+main status=412 size=0
+=== download page ===
+dl status=412 size=0
+[0m
+[0m$ [0mfor h in service.hornbach.de services.hornbach.de shop.hornbach.de bff.hornbach.de bff.hornbach.com mci.hornbach.de mci.hornbach.com commerce.hornbach.de gateway.hornbach.de gatewayapi.hornbach.de id.hornbach.de sso.hornbach.de account.hornbach.de accounts.hornbach.de me.hornbach.de mein.hornbach.de konto.hornbach.de customer.hornbach.de app.hornbach.com m.hornbach.com mobile.hornbach.com identity.hornbach.de cidaas.hornbach.de auth2.hornbach.de oauth.hornbach.de token.hornbach.de cdn.hornbach.de static.hornbach.de assets.hornbach.de api.hornbach.com; do
+  ip=$(getent hosts $h 2>/dev/null | head -1 | awk '{print $1}')
+  [ -n "$ip" ] && echo "RESOLVES: $h -> $ip"
+done
+echo "done"
+RESOLVES: cdn.hornbach.de -> 146.75.29.91
+done
+[0m
+[0m$ [0mUA_M="Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
+for p in "/mobile/" "/mobile/config.json" "/mobile/api/config" "/mobile-app-config.json" "/config/mobile.json" "/api/config" "/app/config.json"; do
+  printf "%-28s " "$p"
+  curl -s --max-time 12 -A "$UA_M" -H "Accept: application/json" -o /tmp/p.json -w "GET %{http_code} %{size_download}B ct=%{content_type}\n" "https://www.hornbach.de$p"
+  head -c 220 /tmp/p.json 2>/dev/null | tr -d '\n' ; echo
+  sleep 1
+done
+/mobile/                     GET 200 3038B ct=text/html; charset=utf-8
+<!DOCTYPE html><html lang="en">  <head>    <meta      http-equiv="Content-Security-Policy"      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-
+/mobile/config.json          GET 200 3038B ct=text/html; charset=utf-8
+<!DOCTYPE html><html lang="en">  <head>    <meta      http-equiv="Content-Security-Policy"      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-
+/mobile/api/config           GET 200 3038B ct=text/html; charset=utf-8
+<!DOCTYPE html><html lang="en">  <head>    <meta      http-equiv="Content-Security-Policy"      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-
+/mobile-app-config.json      GET 200 3038B ct=text/html; charset=utf-8
+<!DOCTYPE html><html lang="en">  <head>    <meta      http-equiv="Content-Security-Policy"      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-
+/config/mobile.json          GET 200 3038B ct=text/html; charset=utf-8
+<!DOCTYPE html><html lang="en">  <head>    <meta      http-equiv="Content-Security-Policy"      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-
+/api/config                  GET 200 3038B ct=text/html; charset=utf-8
+<!DOCTYPE html><html lang="en">  <head>    <meta      http-equiv="Content-Security-Policy"      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-
+/app/config.json             GET 200 3038B ct=text/html; charset=utf-8
+<!DOCTYPE html><html lang="en">  <head>    <meta      http-equiv="Content-Security-Policy"      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-
+[0m
+[0m$ [0mcurl -s --max-time 12 "https://www.hornbach.de/api/config" -o /tmp/shell.html -w "status=%{http_code} len=%{size_download} server=%{header_json}\n" 2>/dev/null | head -c 300
+echo "---title/script refs---"
+grep -oiE '<title>[^<]*</title>|_fs[^"'\'' ]{0,40}|src="[^"]+"' /tmp/shell.html | head -15
+echo "---full body (first 1200)---"
+head -c 1200 /tmp/shell.html
+status=200 len=3038 server={"set-cookie":["_fs_ch_st_FSBmUei20MqUiJb9=AfapP2ZyMMzR95TTTCJqp9SIvlUtkehEktOpyIPtcCoB-_u0JgMbuWRKVCSjrOw6sut0K-nuVQBAWPokUzlvA3dqu-ycMp-dZ0o1zKJZvm4q1JNAKGBLjaw_q68vEsrdb8n6pQxCbnVkn84vTzLpfHqVLW8eLiE6n766bG8UTPQ9FtbjFhcp5CevLtGuK1ENuSchaiiKkYT1wW24ybwEkdi5Tf3PVAd4cZPuVM---title/script refs---
+_fs-ch-1T1wmsGaOgGaSxcX/assets/inter-var.wo
+_fs-ch-1T1wmsGaOgGaSxcX/assets/styles.css
+<title>Client Challenge</title>
+src="/_fs-ch-1T1wmsGaOgGaSxcX/assets/errorIcon.svg"
+_fs-ch-1T1wmsGaOgGaSxcX/errors.js
+_fs-ch-1T1wmsGaOgGaSxcX/script.js?reload=tr
+---full body (first 1200)---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; media-src 'self' data:; object-src 'none'; style-src 'self' 'sha256-o4vzfmmUENEg4chMjjRP9EuW9ucGnGIGVdbl8d0SHQQ='; script-src 'self' 'sha256-a9bHdQGvRzDwDVzx8m+Rzw+0FHZad8L0zjtBwkxOIz4=';"
+    />
+    <link
+      href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/inter-var.woff2"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link href="/_fs-ch-1T1wmsGaOgGaSxcX/assets/styles.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Client Challenge</title>
+    <style>
+      #loading-error {
+        font-size: 16px;
+        font-family: 'Inter', sans-serif;
+        margin-top: 10px;
+        margin-left: 10px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div class="noscript-container">
+        <div class="noscript-content">
+          <img
+            src="/_fs-ch-1T1wmsGaOgGaSxcX/assets/errorIcon.svg"
+            alt=""
+            role="presentation"
+            class="error-icon"
+          />
+          <span clas
+[0m
+[0m$ [0mcurl -s --max-time 20 "https://ws75.aptoide.com/api/7/apps/search?query=de.hornbach&limit=5" -o /tmp/apt.json -w "aptoide status=%{http_code} size=%{size_download}\n"
+python3 - <<'EOF'
+import json
+try:
+    d=json.load(open('/tmp/apt.json'))
+    dl=d.get('datalist')
+    nodes=dl.get('list',[]) if dl else []
+    print("results:",len(nodes))
+    for n in nodes[:6]:
+        print("-", n.get('name'), n.get('package'), n.get('file',{}).get('versionName'), n.get('size'))
+        f=n.get('file',{})
+        for k in ('path','url','resourcePath'):
+            if f.get(k): print("   ",k,"=",str(f.get(k))[:120])
+except Exception as e:
+    print("ERR",e)
+    print(open('/tmp/apt.json').read()[:300])
+EOF
+aptoide status=200 size=3160
+results: 2
+- Dolphin Evolution -Sea Clicker com.ns.dolphinevolution None 34678648
+    path = https://pool.apk.aptoide.com/catappult/com-ns-dolphinevolution-3-71880472-aca6c0b262de533aeadbd0b23afa061a.apk
+- Dots eXtreme com.starwind.dotsxtreme None 8474516
+    path = https://pool.apk.aptoide.com/catappult/com-starwind-dotsxtreme-1000008-56806888-edb667c7dfc60caf736dbc5018a22cdb.apk
+[0m
+[0m$ [0mfor u in \
+ "https://ws75.aptoide.com/api/7/apps/get_apps_by_package?package_name=de.hornbach" \
+ "https://ws75.aptoide.com/api/7/apps/search?query=HORNBACH&store_user=false&limit=8" \
+ "https://ws75.aptoide.com/api/7/apps/search?query=hornbach&limit=10" ; do
+  echo "=== $u ==="
+  curl -s --max-time 20 "$u" -o /tmp/apt2.json -w "status=%{http_code} size=%{size_download}\n"
+  python3 - <<'EOF'
+import json
+try:
+    d=json.load(open('/tmp/apt2.json'))
+    dl=d.get('datalist',{})
+    nodes=dl.get('list',[])
+    print("count:",len(nodes))
+    for n in nodes[:10]:
+        p=n.get('package'); nm=n.get('name')
+        f=n.get('file',{})
+        path=f.get('path','')
+        if 'hornbach' in (p+' '+nm).lower() or path:
+            print(" ",p,nm,f.get('versionName'),path[:130])
+except Exception as e:
+    print("ERR",e, open('/tmp/apt2.json').read()[:200])
+EOF
+done
+=== https://ws75.aptoide.com/api/7/apps/get_apps_by_package?package_name=de.hornbach ===
+status=404 size=84
+ERR Expecting value: line 1 column 1 (char 0) URI "/api/7/apps/get_apps_by_package?package_name=de.hornbach&country=US" not found.
+=== https://ws75.aptoide.com/api/7/apps/search?query=HORNBACH&store_user=false&limit=8 ===
+status=200 size=7598
+count: 5
+  klb.stadium.air.horn.vuvuzela Air horn funny sounds prank None https://pool.apk.aptoide.com/catappult/klb-stadium-air-horn-vuvuzela-15-63645583-6a1ff910bd168c73ae7716f829328476.apk
+  com.progimax.airhorn.free Stadium Horn None https://pool.apk.aptoide.com/appupdater/com-progimax-airhorn-free-31-76326595-ba0bba54116cb1c7eda052b24a27d69c.apk
+  com.revoapps.loudairhorn LOUD Air Horn None https://pool.apk.aptoide.com/catappult/com-revoapps-loudairhorn-1-54276708-2490db30336b6124e90ddd924be4bb10.apk
+  com.zypong.dorfgolfing Mini golf None https://pool.apk.aptoide.com/catappult/com-zypong-dorfgolfing-126-71955858-ee5a0c3eb28a2bb0dd939b6ca6c8658d.apk
+  pt.jmdev.big_buzinas Big Air Horn None https://pool.apk.aptoide.com/appupdater/pt-jmdev-big-buzinas-43-71597169-08ced9d775d6ec24b4e7cb18f03128ed.apk
+=== https://ws75.aptoide.com/api/7/apps/search?query=hornbach&limit=10 ===
+status=200 size=9129
+count: 6
+  klb.stadium.air.horn.vuvuzela Air horn funny sounds prank None https://pool.apk.aptoide.com/catappult/klb-stadium-air-horn-vuvuzela-15-63645583-6a1ff910bd168c73ae7716f829328476.apk
+  com.progimax.airhorn.free Stadium Horn None https://pool.apk.aptoide.com/appupdater/com-progimax-airhorn-free-31-76326595-ba0bba54116cb1c7eda052b24a27d69c.apk
+  com.revoapps.loudairhorn LOUD Air Horn None https://pool.apk.aptoide.com/catappult/com-revoapps-loudairhorn-1-54276708-2490db30336b6124e90ddd924be4bb10.apk
+  com.zypong.dorfgolfing Mini golf None https://pool.apk.aptoide.com/catappult/com-zypong-dorfgolfing-126-71955858-ee5a0c3eb28a2bb0dd939b6ca6c8658d.apk
+  pt.jmdev.big_buzinas Big Air Horn None https://pool.apk.aptoide.com/appupdater/pt-jmdev-big-buzinas-43-71597169-08ced9d775d6ec24b4e7cb18f03128ed.apk
+  com.wriggs12.Air_Horn Air Horn None https://pool.apk.aptoide.com/catappult/com-wriggs12-air-horn-1-51342251-b58c3bc9466f8791f79c4c6d46611f93.apk
+[0m
+[0m$ [0mUA_M="Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
+echo "== cdn.hornbach.de APK candidates =="
+for p in "/apk/de.hornbach.apk" "/app/hornbach.apk" "/downloads/hornbach.apk" "/android/hornbach.apk" "/de.hornbach.apk" "/mobile/hornbach.apk"; do
+  printf "%-28s " "$p"
+  curl -s --max-time 10 -o /dev/null -w "HEAD %{http_code} %{size_download}B\n" -I "https://cdn.hornbach.de$p"
+  sleep 0.7
+done
+echo "== cidaas admin paths (GET/HEAD) =="
+for p in "/apps-srv/clients" "/apps-srv/clients/search" "/meta-srv/tenants" "/login-srv/clients" "/apps-srv/apps"; do
+  printf "%-28s " "$p"
+  curl -s --max-time 10 -o /dev/null -w "GET %{http_code} %{size_download}B\n" "https://auth.hornbach.com$p"
+  sleep 0.7
+done
+== cdn.hornbach.de APK candidates ==
+/apk/de.hornbach.apk         HEAD 404 0B
+/app/hornbach.apk            HEAD 404 0B
+/downloads/hornbach.apk      HEAD 404 0B
+/android/hornbach.apk        HEAD 404 0B
+/de.hornbach.apk             HEAD 404 0B
+/mobile/hornbach.apk         HEAD 404 0B
+== cidaas admin paths (GET/HEAD) ==
+/apps-srv/clients            GET 401 66B
+/apps-srv/clients/search     GET 401 66B
+/meta-srv/tenants            GET 404 28B
+/login-srv/clients           GET 404 156B
+/apps-srv/apps               GET 404 25B
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mecho "== body of /apps-srv/clients =="
+curl -s --max-time 10 -D /tmp/h1.txt "https://auth.hornbach.com/apps-srv/clients" -o /tmp/b1.txt -w "final=%{http_code}\n"
+grep -iE "^(www-authenticate|content-type|server|x-powered-by|x-frame):" /tmp/h1.txt
+echo "--- body ---"; cat /tmp/b1.txt; echo
+sleep 1
+echo "== compare token-srv 404 body =="
+curl -s --max-time 10 "https://auth.hornbach.com/token-srv/bogusroute" -o /tmp/b2.txt -w "status=%{http_code}\n"; cat /tmp/b2.txt; echo
+sleep 1
+echo "== search body =="
+curl -s --max-time 10 -D /tmp/h2.txt "https://auth.hornbach.com/apps-srv/clients/search" -o /tmp/b3.txt -w "final=%{http_code}\n"
+grep -iE "^(www-authenticate|content-type)" /tmp/h2.txt; echo "--- body ---"; cat /tmp/b3.txt; echo failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

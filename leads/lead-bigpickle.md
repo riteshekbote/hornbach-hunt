@@ -2583,3 +2583,4 @@ testability: HUMAN_ONLY
 [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 [LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
 [RISK] hornbach: 50/100 — unchanged. Unauthenticated token-management plane bypass (introspect+revoke, RFC 7662/7009) remains strongest defensible finding at 85-confidence over 14 sessions (fresh 08:47Z 09-11) but is 100% PoC-gated on a single HUMAN dependency (client_id via Smarthome APK decompilation). redirect_uri bypass (70) blocked on same artifact. auth.hornbach.com root now 302→hornbach.de (was 200), further closing web extraction paths. All web/repo/passive client_id sources exhausted. Program finding ceiling without HUMAN step: 0 actionable PoCs.
+## 2026-09-11 13:31:54 UTC [target] (model bigpickle)
