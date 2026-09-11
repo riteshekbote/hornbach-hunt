@@ -1,1 +1,45 @@
-## 2026-09-11 13:31:54 UTC [target] (model bigpickle)
+## 2026-09-11 17:15:38 UTC [target] (model bigpickle)
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.30,"attack_surface=9,business_value=8,tech_exposure=9,gate_ease=10,cloud_surface=7,freshness=4"
+[PRIO] auth.hornbach.com/authz-srv/authz,7.40,"attack_surface=8,business_value=9,tech_exposure=9,gate_ease=5,cloud_surface=7,freshness=5"
+[PRIO] hornbach-mp.mirakl.net/api/*,5.00,"attack_surface=5,business_value=6,tech_exposure=5,gate_ease=2,cloud_surface=5,freshness=3"
+[PRIO] api.hornbach.de,4.50,"attack_surface=4,business_value=7,tech_exposure=5,gate_ease=2,cloud_surface=4,freshness=3"
+[HYP] Unauthenticated token introspection/revocation enables claim-set disclosure + silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: POST → 200 {"active":false} / 200 OK unauthenticated, stable across 14+ independent sessions (fresh confirm prior session 08:47Z 09-11); RFC 7662/7009 client-auth bypass; token issuance correctly client-gated (400 invalid_client confirmed); body-presence is sole gate
+evidence_needed: valid access_token + client_id → introspect real claim set; revoke; re-introspect → active=false
+verify_steps: POST /token-srv/introspect token=<real> no-auth → claims; POST /token-srv/revoke token=<real>; POST re-introspect → active=false; GET /users-srv/userinfo with revoked bearer → 401
+impact: active-token metadata disclosure + silent revocation → forced re-auth/interception → ATO chain — MEDIUM-HIGH
+testability: AUTH_HELPED
+[HYP] OAuth authorization endpoint redirect_uri bypass via regex/path weakness
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: endpoint LIVE — 302→AUTH10007 uniform gate; cidaas error table confirms AUTH10008/AUTH10009 fired after valid client_id → redirect_uri validation testable with known client_id; cidaas historically regex allowlists
+evidence_needed: real client_id → redirect_uri variants (hornbach.de.evil.com, @-trick, /..;/, tab-newline)
+verify_steps: --max-redirs 0 GET authz-srv/authz?response_type=code&client_id=<real>&redirect_uri=<variant>&scope=openid → 302-to-evil = code theft
+impact: authorization-code theft → ATO — HIGH
+testability: AUTH_HELPED
+[HYP] HORNBACH mobile app APK embeds cidaas tenant client_id + redirect_uri for auth.hornbach.com
+class: AUTH
+asset: de.hornbach.app.smarthome APK
+confidence: 55
+reasoning: All 3038B web extraction paths closed (estate-wide F5 challenge; auth.hornbach.com root now 302→hornbach.de); smarthome WEB estate uses ROC oauth2-cookie-1 NOT cidaas; mobile/binary client is sole remaining source of a cidaas client_id
+evidence_needed: decompile APK → assets/cidaas.xml, config JSON, strings on dex/so → UUID client_id + redirect_uri
+verify_steps: download APK → unzip → grep assets/cidaas* and strings -a classes.dex lib/*.so for auth.hornbach.com, client_id, redirect_uri
+impact: client_id extraction unblocks 85-conf introspect/revoke PoC AND 70-conf redirect_uri bypass — MEDIUM (enabler)
+testability: HUMAN_ONLY
+[PARKED] api.hornbach.de undocumented-route discovery: 15+ sessions exhausted 47+ paths (root, health, api/v1|v2, graphql, openapi, swagger, api-docs, sap/*, odata, actuator, iFlow, integration, monitoring, /sap/bc/ping, /sap/wdisp/admin/...); uniform 404; sapigwprd02 backend routes exactly 1 path (/healthcheck) to localhost:8080; Host/XFH tampering rejected 2026-09-06. Anonymous surface breadth definitively exhausted — marginal probe yield zero.
+[PARKED] api.hornbach.de SSRF via Host-header routing: Host→503, default Host→localhost:8080 only; no cross-backend vector; REJECTED class 2026-09-06, re-verified this session.
+[FINAL] 1. Unauthenticated introspect/revoke (85, AUTH_HELPED) — 14+ session stability, PoC-gated on client_id
+[FINAL] 2. redirect_uri bypass (70, AUTH_HELPED) — gated on client_id + AUTH10008/10009 confirm
+[FINAL] 3. Mobile-APK cidaas client_id extraction (55, HUMAN_ONLY) — sole remaining unblock path
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK via Play Store device capture or un-walled mirror; unzip; grep `assets/cidaas*.xml`, `assets/config*.json`, `*.properties`, and `strings -a` on `classes*.dex` + `lib/*.so` for `auth.hornbach.com`, UUID-format `client_id`, `redirect_uri`; return client_id + sha256(any secret) + redirect_uri allowlist. This is the single last unblock for both FINAL hypotheses — all passive web/repo/oracle/web-estate paths are exhausted; api.hornbach.de re-confirmed dead end this session.
+[LEARN] ACCEPTED class OTHER @ api.hornbach.de: 2 novel SAP ICM paths (/sap/bc/ping, /sap/wdisp/admin/public/default/cluster) → uniform 404 len=47; Via shows sapigwprd02 active node; anonymous surface breadth re-confirmed exhausted
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14+ sessions; systemic and stable
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: fully intact 3189B — all 6 service endpoints + status advertised
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+[LEARN] ACCEPTED class OTHER @ hornbach.com web estate: estate-wide F5 bot-challenge; no web-based client_id extraction
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[RISK] hornbach: 50/100 — unchanged. Unauthenticated token-management plane (introspect+revoke, 85-conf, 14+ sessions) is strongest defensible finding but 100% PoC-gated on HUMAN client_id extraction via APK decompilation. api.hornbach.de re-confirmed exhausted this session (2 novel ICM paths → uniform 404). redirect_uri bypass (70) blocked on same artifact. Program finding ceiling without HUMAN step: 0 actionable PoCs.

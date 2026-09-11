@@ -230,3 +230,7 @@
 - 2026-09-11 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
 - 2026-09-11 CHANGED class OTHER @ auth.hornbach.com/ (root): now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend but no content served; root HTML client_id extraction hypothesis definitively dead (was already PARKED)
 - 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+- 2026-09-11 ACCEPTED class OTHER @ api.hornbach.de: 2 novel SAP ICM paths (/sap/bc/ping, /sap/wdisp/admin/public/default/cluster) → uniform 404 len=47; Via shows sapigwprd02 active node; anonymous surface breadth re-confirmed exhausted
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14+ sessions; systemic and stable
+- 2026-09-11 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: fully intact 3189B — all 6 service endpoints + status advertised
+- 2026-09-11 ACCEPTED class OTHER @ hornbach.com web estate: estate-wide F5 bot-challenge; no web-based client_id extraction
