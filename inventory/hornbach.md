@@ -434,3 +434,12 @@ www.hornbach.com
 - NEW `auth.hornbach.com/authz-srv/authz`: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enumeration REMOVED
 - CHANGED `auth.hornbach.com/.well-known/openid-configuration`: RE-CONFIRMED fully intact (06:30Z) — all 6 service endpoints + status advertised; rejects metadata-rot hypothesis
 - CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+
+## 2026-09-11 08:49:14 UTC
+- CHANGED `auth.hornbach.com/` root: now returns 302 → hornbach.de (was 200 len=3038 F5 challenge). CSP header confirms cidaas backend (x-powered-by: cidaas). Follow chain: hornbach.de → 301 → www.hornbach.de →
+- NEW `auth.hornbach.com/` CSP header exposed: `default-src 'self'; script-src 'self'; img-src 'self' https:` — restrictive, no inline script; no client_id in root response headers.
+- NEW `auth.hornbach.com/` root rotated to F5 Shape Security bot-challenge (`_fs-ch-*` assets, CSP, noscript fallback) — 0 cidaas config exposed; prior root HTML client_id extraction hypothesis dead (confir
+- NEW `hornbach.com` international TLDs (.de/.at/.nl/.ch) + `login.hornbach.com/` ALL serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extra
+- NEW `auth.hornbach.com/token-srv/token`: POST `grant_type=authorization_code` + bogus client → 400 `invalid_client` "unknown client" — confirms token plane client-gated; invalid_client-vs-invalid_grant di
+- CHANGED `probe-results.md` shows 25+ consecutive GET probes returning 404 for `token-srv/introspect` and `token-srv/revoke` (latest 2026-09-10 23:53), but KB confirms POST → 200 works across 12+ independent s
+- CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)

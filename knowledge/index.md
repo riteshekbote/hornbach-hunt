@@ -225,3 +225,8 @@
 - 2026-09-11 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
 - 2026-09-11 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - 2026-09-11 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14th session 08:47Z 09-11; body-presence sole gate; systemic and stable
+- 2026-09-11 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
+- 2026-09-11 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
+- 2026-09-11 CHANGED class OTHER @ auth.hornbach.com/ (root): now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend but no content served; root HTML client_id extraction hypothesis definitively dead (was already PARKED)
+- 2026-09-11 ACCEPTED class AUTH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
