@@ -486,3 +486,5 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only afte
 
 ## 2026-09-12 09:29:55 UTC
+
+## 2026-09-12 13:12:28 UTC

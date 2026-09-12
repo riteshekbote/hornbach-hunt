@@ -1,4 +1,4 @@
-## 2026-09-12 09:29:45 UTC [target] (model nemotron3)
+## 2026-09-12 13:10:02 UTC [target] (model nemotron3)
 [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},9.10,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=6,freshness=9
 [PRIO] auth.hornbach.com/authz-srv/authz,7.65,attack_surface=9,business_value=9,tech_exposure=8,gate_ease=3,cloud_surface=6,freshness=9
 [PRIO] auth.hornbach.com/users-srv/userinfo,6.60,attack_surface=7,business_value=8,tech_exposure=7,gate_ease=2,cloud_surface=6,freshness=9
