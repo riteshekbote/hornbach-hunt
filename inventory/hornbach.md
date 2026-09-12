@@ -484,3 +484,5 @@ www.hornbach.com
 - CHANGED probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-11 08:49), but KB confirms POST → 200 works across 14+ independent session
 - CHANGED auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
 - CHANGED auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only afte
+
+## 2026-09-12 09:29:55 UTC
