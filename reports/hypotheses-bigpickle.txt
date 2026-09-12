@@ -1,45 +1,30 @@
-## 2026-09-11 22:21:35 UTC [target] (model bigpickle)
-[HYP] No findings
-class: OTHER
-asset: N/A
-confidence: 0
-reasoning: No public repositories exist under the hornbach GitHub org. cands.txt and scope.yml both confirm zero candidates. No source code is available for audit.
-impact: None
-verify_steps: Confirm via https://github.com/orgs/hornbach/repositories?type=public that the org has 0 public repos.
-[HYP] No public candidate repos exist in scope
-class: OTHER
-asset: github.com/hornbach (org)
-confidence: 95
-reasoning: The HORNBACH Baumarkt AG GitHub org (@hornbach) has 0 public repositories. The cands.txt explicitly lists "no org candidates." The scope.yml has github_orgs set to none-configured. The GitHub API returned 403, likely due to rate limiting on unauthenticated requests, but web search confirms zero public repos.
-impact: N/A — no surface to audit
-verify_steps: Visit https://github.com/hornbach to confirm zero public repos.
-class: MISCONFIG
-asset: github.com/moe-bit/hornbach-cloud-engineering-test → main.tf:248-252
-confidence: 65
-class: MISCONFIG
-asset: github.com/krzysztof-tarasiewicz-private/hornbach-e2e-tests → tests/steps/world.ts:25
+## 2026-09-12 00:44:08 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation enables claim-set disclosure and silent session kill
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
 confidence: 85
-class: MISCONFIG
-asset: github.com/moe-bit/hornbach-cloud-engineering-test → environments/*.tfvars
-confidence: 80
-[HYP] GCP Project IDs Exposed in Terraform Variables
-class: MISCONFIG
-asset: github.com/moe-bit/hornbach-cloud-engineering-test → environments/*.tfvars
-confidence: 80
-reasoning: Three .tfvars files expose internal GCP project IDs: `hornbach-dev-project`, `hornbach-prod-project`, and `hornbach-int-project`. These follow Google Cloud naming conventions and reveal HORNBACH's internal infrastructure naming scheme. While tfvars files are typically gitignored, these are committed to a public repo.
-impact: LOW-MEDIUM — Information disclosure of internal naming conventions. Could aid reconnaissance for targeting actual HORNBACH GCP infrastructure if these projects exist.
-verify_steps: 1) Check if https://github.com/moe-bit/hornbach-cloud-engineering-test is a legitimate HORNBACH engineering test. 2) Verify if these GCP project IDs exist via Google Cloud Console (requires auth). 3) Cross-reference with HORNBACH's known GCP footprint.
-[HYP] Cloud Run Public Access via allUsers IAM Binding
-class: MISCONFIG
-asset: github.com/moe-bit/hornbach-cloud-engineering-test → main.tf:248-252
-confidence: 65
-reasoning: The Terraform code grants `roles/run.invoker` to `allUsers`, which would make Cloud Run services publicly accessible without authentication. If applied to production, this would allow anyone to invoke backend services.
-impact: MEDIUM — Would expose backend APIs to unauthenticated access. However, this appears to be a test/hiring repository, not necessarily applied to production.
-verify_steps: 1) Confirm if this Terraform was actually applied to HORNBACH infrastructure. 2) Check if the Cloud Run services defined (frontend/backend) are accessible at the URLs shown in outputs. 3) Test if the services accept unauthenticated requests.
-[HYP] Internal Development URL Hardcoded in E2E Tests
-class: MISCONFIG
-asset: github.com/krzysztof-tarasiewicz-private/hornbach-e2e-tests → tests/steps/world.ts:25
-confidence: 85
-reasoning: The test code hardcodes `https://frontend.hornbach-develop.loyaltyharbor.dev` as the target URL. This reveals an internal development/staging domain for HORNBACH's loyalty platform. "loyaltyharbor.dev" appears to be a third-party platform (LoyaltyHarbor) used by HORNBACH.
-impact: LOW — Information disclosure of internal infrastructure. The URL appears to be unreachable from the public internet (connection refused), suggesting it's an internal/VPN-only endpoint.
-verify_steps: 1) Verify if `loyaltyharbor.dev` is a legitimate third-party vendor for HORNBACH. 2) Check if the domain resolves (it currently doesn't respond). 3) Determine if this was contractor work or official HORNBACH code.
+reasoning: 14+ independent sessions confirm POST (empty body, no client/auth) → 200 `{"active":false}` on introspect and 200 `OK` text/plain on revoke. RFC 7662/7009 both require client auth or auth-holder-only tokens; body-presence is the sole gate. Discovery intact 3189B advertises both endpoints. GET/HEAD→404 is established routing artefact. jwks rotation (42 RS256 keys) irrelevant here.
+evidence_needed: one real HORNBACH OAuth token (requires client_id) → introspect returns sub/claims + revoke kills the session; empty-body 200 already proves absent auth gate.
+verify_steps: PASSIVE done (POST empty body history). With token: POST token-srv/introspect {token} → observe active/sub; POST token-srv/revoke {token} → session death.
+impact: attacker holding a stolen/leaked token validates it (PII claims incl. email/phone per claims_supported) and silently revokes victims' sessions. MEDIUM-HIGH; PoC-import fully gated on token source.
+testability: AUTH_HELPED
+[HYP] Authorization endpoint redirect_uri/state validation bypass enables OAuth code theft
+class: OATH
+asset: https://auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: Endpoint live — uniform 302→AUTH10007 invalid_client gate on dummy client_id; token plane client-validation-ordering (AUTH10008/10009) fires only after client_id validity, confirmed on token-srv/token. redirect_uri allowlist behavior is untestable without a valid client_id; none recoverable from web/repo (estate F5 bot-wall, root 302, github org 0 repos, Mirakl external IdP).
+evidence_needed: valid client_id from APK → differential between allowlisted and attacker redirect_uri (302 target / 200 consent render).
+verify_steps: after client_id recovery: GET /authz-srv/authz?response_type=code&client_id=<apk>&redirect_uri=https://attacker.example&scope=openid then swap redirect_uri variants.
+impact: OAuth code theft → HORNBACH customer ATO. HIGH; 100% gated on client_id.
+testability: AUTH_HELPED
+[HYP] cidaas client_id/client_secret recoverable from mobile bundle
+class: OTHER
+asset: de.hornbach.app.smarthome (Android APK) + any de/com.hornbach.* retail app
+confidence: 55
+reasoning: Sole remaining client_id source — all web/repo/passive channels closed this and prior sessions. Discovery advertises `client_secret_jwt`, `private_key_jwt`, HS256 id_token alg: an embedded client_secret would enable id_token forging and HTTP-basic/Body token calls; `subject_types_supported=["public"]` means sub is non-pairwise (cross-client linking).
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any secret) extracted from assets/dex.
+verify_steps: HUMAN — download APK (APKMirror/APKPure, v3.9.0), unzip, grep assets config/*.properties/*.json/cidaas XML + res/raw, `strings -a classes*.dex lib/*.so` for auth.hornbach.com / UUID / redirect_uri.
+impact: MEDIUM enabler — unblocks FINAL-1 (85) and FINAL-2 (70).
+testability: HUMAN_ONLY
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure, current v3.9.0, plus any `de.hornbach.*`/`com.hornbach.*` retail app); unzip; (1) grep `assets/*.properties`, `assets/cidaas*.xml`, `assets/config*.json`, `res/raw/*` for `auth.hornbach.com`, UUID-format client_id, redirect_uri; (2) `strings -a classes*.dex lib/*.so`; return exact client_id + redirect_uri allowlist + sha256(any embedded secret). This is the single last unblock for FINAL-1/2 — estate re-confirmed walled this session (00:38Z).
+[RISK] hornbach: 50/100 — unchanged, estate fully re-confirmed stable 00:38Z. Unauthenticated token-management plane (introspect+revoke, RFC 7662/7009, 85-conf, 14+ sessions) remains the single strongest defensible finding but is 100% PoC-gated on ONE HUMAN dependency (client_id via Smarthome APK decompilation); redirect_uri bypass (70) blocked on the same artifact. New 42-key jwks + HS256/PKCE-plain metadata adds no exploitable path. Program finding ceiling without the HUMAN step: 0 actionable PoCs.

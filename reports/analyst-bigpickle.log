@@ -19095,3 +19095,259 @@ echo "== 2. status =="; curl -s -A "$UA" --max-time 15 "https://auth.hornbach.co
 echo "== 3. root =="; curl -s -o /dev/null -w "%{http_code} redirect=%{redirect_url}\n" -A "$UA" --max-time 15 "https://auth.hornbach.com/"
 echo "== 4. authz dummy client =="; curl -s -o /dev/null -w "%{http_code} redirect=%{redirect_url}\n" -A "$UA" --max-time 15 "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=public&redirect_uri=https://evil.com&scope=openid" failed
 [91m[1mError: [0mThe user rejected permission to use this specific tool call.
+===== ANALYST bigpickle 2026-09-12 00:44:17 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && echo "---" && ls -la art/ 2>/dev/null && echo "---" && ls -la inventory/ 2>/dev/null
+total 340
+drwxr-xr-x 12 runner runner   4096 Sep 12 00:37 .
+drwxr-xr-x  3 runner runner   4096 Sep 12 00:36 ..
+drwxr-xr-x  7 runner runner   4096 Sep 12 00:37 .git
+drwxr-xr-x  3 runner runner   4096 Sep 12 00:36 .github
+-rw-r--r--  1 runner runner   1901 Sep 12 00:36 README.md
+-rw-r--r--  1 runner runner     32 Sep 12 00:37 analyst-out.txt
+-rw-r--r--  1 runner runner 121113 Sep 12 00:37 analyst-prompt.txt
+-rw-r--r--  1 runner runner 117185 Sep 12 00:37 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 12 00:36 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 12 00:36 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 12 00:36 leads
+-rw-r--r--  1 runner runner  17692 Sep 12 00:36 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 12 00:36 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 12 00:36 reports
+drwxr-xr-x  2 runner runner   4096 Sep 12 00:36 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep 12 00:36 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 12 00:36 scripts
+-rw-r--r--  1 runner runner     33 Sep 12 00:36 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 12 00:36 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 12 00:36 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 12 00:36 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 12 00:36 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 12 00:36 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 12 00:36 triage
+---
+[0m
+[0m✱ [0mGlob "**/*.{md,txt,yml,yaml,json}"[90m 95 matches[0m
+[0m→ [0mRead scope.yml
+[0m→ [0mRead analyst-out.txt
+[0m→ [0mRead triage/run-2026-09-11-23-18.md
+[0m→ [0mRead probe-results.md
+Fresh read-only GET/HEAD confirmations at <=1 rps to establish this session's delta.
+[0m
+[0m$ [0mfor spec in \
+  "HEAD|https://auth.hornbach.com/.well-known/openid-configuration" \
+  "HEAD|https://auth.hornbach.com/" \
+  "HEAD|https://auth.hornbach.com/.well-known/status" \
+  "GET|https://api.hornbach.de/" \
+  "GET|https://api.hornbach.de/healthcheck" \
+  "GET|https://auth.hornbach.com/users-srv/userinfo" \
+  "HEAD|https://login.hornbach.com/" ; do
+  m="${spec%%|*}"; u="${spec##*|}"
+  echo "=== $m $u"
+  curl -s -o /dev/null -m 25 -X "$m" -w "status=%{http_code} size=%{size_download} time=%{time_total}\n" "$u"
+  sleep 1
+done
+echo "=== OIDC discovery body headers (GET sniff)"
+curl -s -m 25 -D - -o /dev/null "https://auth.hornbach.com/.well-known/openid-configuration" | head -20
+=== HEAD https://auth.hornbach.com/.well-known/openid-configuration
+status=200 size=0 time=0.558782
+=== HEAD https://auth.hornbach.com/
+status=302 size=0 time=0.314082
+=== HEAD https://auth.hornbach.com/.well-known/status
+status=200 size=0 time=0.352485
+=== GET https://api.hornbach.de/
+status=404 size=47 time=0.470591
+=== GET https://api.hornbach.de/healthcheck
+status=200 size=19 time=0.386220
+=== GET https://auth.hornbach.com/users-srv/userinfo
+status=401 size=66 time=0.316953
+=== HEAD https://login.hornbach.com/
+status=302 size=0 time=0.346962
+=== OIDC discovery body headers (GET sniff)
+HTTP/2 200 
+date: Sat, 12 Sep 2026 00:38:09 GMT
+content-type: application/json; charset=utf-8
+cache-control: public, max-age=900
+set-cookie: __cf_bm=OUcuYKf.h.QgSb4MW61E_5erOJdXDHjQXzlEARBzqPo-1789173489.835982-1.0.1.1-8xeoXaoGdRmSyFAN9Ao1SqrhZRtqOFDizkr4TOUUlS.UZnteYfYm4LQgghGOjcXp_wxBSVJ.GvIMHnYVFP6KIe9k0_xqJALG0udf.oh0WuPhllrxXrICdx_YFGhsj5VT; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Sat, 12 Sep 2026 01:08:09 GMT
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 4346d1ef-09c8-43e6-86d9-2d2353b28bca
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a39ad9077b9d02bf-CDG
+alt-svc: h3=":443"; ma=86400
+[0m
+[0m$ [0mcurl -s -m 25 "https://auth.hornbach.com/.well-known/openid-configuration" -o /tmp/hb-disc.json; echo "bytes=$(wc -c < /tmp/hb-disc.json)"; python3 - <<'PY'
+import json
+d=json.load(open('/tmp/hb-disc.json'))
+for k in ['authorization_endpoint','token_endpoint','token_endpoint_auth_methods_supported','grant_types_supported','introspection_endpoint','revocation_endpoint','userinfo_endpoint','registration_endpoint','device_authorization_endpoint','token_exchange_endpoint','scim_endpoint','subject_types_supported','status_endpoint']:
+    print(k,'=',d.get(k))
+print("n_endpoints", len([k for k in d if k.endswith('_endpoint')]))
+PY
+sleep 1
+curl -s -m 25 "https://auth.hornbach.com/.well-known/jwks.json" -o /tmp/hb-jwks.json; python3 -c "import json;d=json.load(open('/tmp/hb-jwks.json'));print('jwks_keys=',len(d.get('keys',[])))"
+bytes=3189
+authorization_endpoint = https://auth.hornbach.com/authz-srv/authz
+token_endpoint = https://auth.hornbach.com/token-srv/token
+token_endpoint_auth_methods_supported = ['client_secret_basic', 'client_secret_post', 'client_secret_jwt', 'private_key_jwt']
+grant_types_supported = ['implicit', 'authorization_code', 'refresh_token', 'password', 'client_credentials', 'urn:ietf:params:oauth:grant-type:token-exchange', 'urn:ietf:params:oauth:grant-type:device_code']
+introspection_endpoint = https://auth.hornbach.com/token-srv/introspect
+revocation_endpoint = https://auth.hornbach.com/token-srv/revoke
+userinfo_endpoint = https://auth.hornbach.com/users-srv/userinfo
+registration_endpoint = https://auth.hornbach.com/apps-srv/clients/register
+device_authorization_endpoint = https://auth.hornbach.com/authz-srv/device/authz
+token_exchange_endpoint = None
+scim_endpoint = https://auth.hornbach.com/user-scim-srv/v2
+subject_types_supported = ['public']
+status_endpoint = None
+n_endpoints 12
+jwks_keys= 42
+[0m
+[0m$ [0mpython3 - <<'PY'
+import json
+d=json.load(open('/tmp/hb-jwks.json'))
+ks=d.get('keys',[])
+from collections import Counter
+print("keys=",len(ks))
+print("kty=",Counter(k.get('kty') for k in ks))
+print("alg=",Counter(k.get('alg') for k in ks))
+print("use=",Counter(k.get('use') for k in ks))
+print("has_n=",sum('n' in k for k in ks))
+print("kids_sample=",[k.get('kid')[:12] for k in ks[:6]])
+PY
+keys= 42
+kty= Counter({'RSA': 42})
+alg= Counter({'RS256': 42})
+use= Counter({'sig': 42})
+has_n= 42
+kids_sample= ['c6b6dd13-8db', 'e152f063-bf3', '1912443f-304', '884ead70-e7f', '1a7c6094-a0f', 'c035a910-7c2']
+[0m
+[0m$ [0mpython3 - <<'PY'
+import json
+d=json.load(open('/tmp/hb-disc.json'))
+for k in ['id_token_signing_alg_values_supported','authorization_signing_alg_values_supported','code_challenge_methods_supported','claims_parameter_supported','request_parameter_supported','request_uri_parameter_supported','require_request_uri_registration','response_types_supported','claims_supported','subject_types_supported']:
+    print(k,'=',d.get(k))
+print('keys=')
+for k in sorted(d.keys()): print(' ',k)
+PY
+id_token_signing_alg_values_supported = ['HS256', 'RS256']
+authorization_signing_alg_values_supported = None
+code_challenge_methods_supported = ['plain', 'S256']
+claims_parameter_supported = None
+request_parameter_supported = None
+request_uri_parameter_supported = None
+require_request_uri_registration = None
+response_types_supported = ['code', 'token', 'id_token', 'code token', 'code id_token', 'token id_token', 'code token id_token']
+claims_supported = ['aud', 'auth_time', 'created_at', 'email', 'email_verified', 'exp', 'family_name', 'given_name', 'iat', 'identities', 'iss', 'mobile_number', 'name', 'nickname', 'phone_number', 'picture', 'sub']
+subject_types_supported = ['public']
+keys=
+  authorization_endpoint
+  backchannel_logout_supported
+  check_session_iframe
+  claim_types_supported
+  claims_locales_supported
+  claims_supported
+  code_challenge_methods_supported
+  device_authorization_endpoint
+  display_values_supported
+  end_session_endpoint
+  grant_types_supported
+  https://discovery.netid.de/properties/status_endpoint
+  id_token_encryption_alg_values_supported
+  id_token_encryption_enc_values_supported
+  id_token_signing_alg_values_supported
+  introspection_async_update_endpoint
+  introspection_endpoint
+  introspection_endpoint_auth_methods_supported
+  introspection_endpoint_auth_signing_alg_values_supported
+  issuer
+  jwks_uri
+  op_policy_uri
+  op_tos_uri
+  registration_endpoint
+  response_modes_supported
+  response_types_supported
+  revocation_endpoint
+  revocation_endpoint_auth_methods_supported
+  revocation_endpoint_auth_signing_alg_values_supported
+  scim_endpoint
+  scopes_supported
+  service_documentation
+  social_provider_token_resolver_endpoint
+  subject_types_supported
+  token_endpoint
+  token_endpoint_auth_methods_supported
+  token_endpoint_auth_signing_alg_values_supported
+  ui_locales_supported
+  userinfo_encryption_alg_values_supported
+  userinfo_encryption_enc_values_supported
+  userinfo_endpoint
+  userinfo_signing_alg_values_supported
+[0m
+All gates re-confirmed live at 2026-09-12 00:38Z. Discovery intact (3189B, 12 endpoints); JWKS grew to 42 keys (was 5+ on 09-03) — all RSA/RS256/sig, rotation metadata only. No client_id path change. Full analysis below.
+
+STEP 1 — DELTA
+- NO_DELTA surface: auth.hornbach.com root 302→hornbach.de, discovery 200/3189B, status 200, users-srv/userinfo 401/66B, login.hornbach.com 302, api.hornbach.de 404/47B + /healthcheck 200/19B — all identical to 09-11 22:24Z.
+- CHANGED auth.hornbach.com/.well-known/jwks.json: 42 RSA/RS256/sig keys (was "5+" on 09-03) — cumulative signing-key rotation list; informational, not a vuln.
+- NEW auth.hornbach.com OIDC metadata: `id_token_signing_alg_values_supported=["HS256","RS256"]` + `code_challenge_methods_supported=["plain","S256"]` — both client/secret-gated surfaces; HS256 id_token is a legitimate note for the gated alg-confusion path only.
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},7.1,a8_b8_t9_g10_c2_f3
+- [PRIO] de.hornbach.app.smarthome APK (client_id source),5.7,a4_b6_t4_g10_c3_f8
+- [PRIO] auth.hornbach.com/authz-srv/authz,5.4,a6_b8_t9_g1_c2_f2
+- [PRIO] api.hornbach.de (SAP APIM),4.5,a5_b6_t5_g1_c7_f1 — exhausted, informational only
+
+STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation enables claim-set disclosure and silent session kill
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: 14+ independent sessions confirm POST (empty body, no client/auth) → 200 `{"active":false}` on introspect and 200 `OK` text/plain on revoke. RFC 7662/7009 both require client auth or auth-holder-only tokens; body-presence is the sole gate. Discovery intact 3189B advertises both endpoints. GET/HEAD→404 is established routing artefact. jwks rotation (42 RS256 keys) irrelevant here.
+evidence_needed: one real HORNBACH OAuth token (requires client_id) → introspect returns sub/claims + revoke kills the session; empty-body 200 already proves absent auth gate.
+verify_steps: PASSIVE done (POST empty body history). With token: POST token-srv/introspect {token} → observe active/sub; POST token-srv/revoke {token} → session death.
+impact: attacker holding a stolen/leaked token validates it (PII claims incl. email/phone per claims_supported) and silently revokes victims' sessions. MEDIUM-HIGH; PoC-import fully gated on token source.
+testability: AUTH_HELPED
+
+[HYP] Authorization endpoint redirect_uri/state validation bypass enables OAuth code theft
+class: OATH
+asset: https://auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: Endpoint live — uniform 302→AUTH10007 invalid_client gate on dummy client_id; token plane client-validation-ordering (AUTH10008/10009) fires only after client_id validity, confirmed on token-srv/token. redirect_uri allowlist behavior is untestable without a valid client_id; none recoverable from web/repo (estate F5 bot-wall, root 302, github org 0 repos, Mirakl external IdP).
+evidence_needed: valid client_id from APK → differential between allowlisted and attacker redirect_uri (302 target / 200 consent render).
+verify_steps: after client_id recovery: GET /authz-srv/authz?response_type=code&client_id=<apk>&redirect_uri=https://attacker.example&scope=openid then swap redirect_uri variants.
+impact: OAuth code theft → HORNBACH customer ATO. HIGH; 100% gated on client_id.
+testability: AUTH_HELPED
+
+[HYP] cidaas client_id/client_secret recoverable from mobile bundle
+class: OTHER
+asset: de.hornbach.app.smarthome (Android APK) + any de/com.hornbach.* retail app
+confidence: 55
+reasoning: Sole remaining client_id source — all web/repo/passive channels closed this and prior sessions. Discovery advertises `client_secret_jwt`, `private_key_jwt`, HS256 id_token alg: an embedded client_secret would enable id_token forging and HTTP-basic/Body token calls; `subject_types_supported=["public"]` means sub is non-pairwise (cross-client linking).
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any secret) extracted from assets/dex.
+verify_steps: HUMAN — download APK (APKMirror/APKPure, v3.9.0), unzip, grep assets config/*.properties/*.json/cidaas XML + res/raw, `strings -a classes*.dex lib/*.so` for auth.hornbach.com / UUID / redirect_uri.
+impact: MEDIUM enabler — unblocks FINAL-1 (85) and FINAL-2 (70).
+testability: HUMAN_ONLY
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] token-srv introspect/revoke (85): not dropped — but PoC import requires a token whose only public source is the mobile client; no new evidence this session.
+- [PARKED] authz redirect_uri bypass (70): no client_id oracle remains; enumeration spirit out-of-scope, zero candidate seeds.
+- [PARKED] github third-party repos (moe-bit terraform test, krzysztof e2e `frontend.hornbach-develop.loyaltyharbor.dev`): repos are not HORNBACH-operated (scope github_orgs: none-configured) and e2e host unreachable — out-of-scope/inactive.
+- [REJECTED] jwks 42-key set: RS256/sig-only rotation metadata; outdated-library and metadata-only classes excluded.
+- [FINAL] 1. introspect/revoke unauth token plane (85, AUTH_HELPED) — 14+ session stability, single gate = client_id.
+- [FINAL] 2. authz redirect_uri bypass (70, AUTH_HELPED) — same client_id gate.
+- [FINAL] 3. APK client_id extraction (55, HUMAN_ONLY) — sole unblock for 1 & 2.
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure, current v3.9.0, plus any `de.hornbach.*`/`com.hornbach.*` retail app); unzip; (1) grep `assets/*.properties`, `assets/cidaas*.xml`, `assets/config*.json`, `res/raw/*` for `auth.hornbach.com`, UUID-format client_id, redirect_uri; (2) `strings -a classes*.dex lib/*.so`; return exact client_id + redirect_uri allowlist + sha256(any embedded secret). This is the single last unblock for FINAL-1/2 — estate re-confirmed walled this session (00:38Z).
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com: 09-12 00:38Z live re-confirm — root 302, discovery 200/3189B, status 200, users-srv/userinfo 401/66B, login.hornbach.com 302, api.hornbach.de 404/47B + /healthcheck 200/19B; all gates unchanged.
+- [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: intact, 12 endpoints; advertises `id_token_signing_alg_values_supported=[HS256,RS256]` and `code_challenge_methods_supported=[plain,S256]` — secret/PKCE-method surfaces, client-gated, informational.
+- [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/jwks.json: 42 RSA/RS256/sig keys (was 5+ 09-03) — cumulative rotation list; HS256 id_token advertised but jwks contains only RS256 -> server-side key confusion not implied.
+- [LEARN] REJECTED class OTHER @ auth.hornbach.com/.well-known/jwks.json: key count/rotation is metadata — no finding without client/token context.
+
+STEP 7 — RISK
+[RISK] hornbach: 50/100 — unchanged, estate fully re-confirmed stable 00:38Z. Unauthenticated token-management plane (introspect+revoke, RFC 7662/7009, 85-conf, 14+ sessions) remains the single strongest defensible finding but is 100% PoC-gated on ONE HUMAN dependency (client_id via Smarthome APK decompilation); redirect_uri bypass (70) blocked on the same artifact. New 42-key jwks + HS256/PKCE-plain metadata adds no exploitable path. Program finding ceiling without the HUMAN step: 0 actionable PoCs.

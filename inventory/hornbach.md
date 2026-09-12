@@ -470,3 +470,10 @@ www.hornbach.com
 - CHANGED probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-11 08:49), but KB confirms POST → 200 works across 14+ independent session
 - CHANGED auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
 - CHANGED auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only afte
+
+## 2026-09-12 00:44:17 UTC
+- NEW auth.hornbach.com/ root: now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend (x-powered-by: cidaas); chain: hornbach.de → 301 → www.hornbach.de → bot chal
+- NEW hornbach.com international TLDs (.de/.at/.nl/.ch) + login.hornbach.com/ ALL serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extractio
+- CHANGED probe-results.md shows 25+ consecutive GET probes returning 404 for token-srv/introspect and token-srv/revoke (latest 2026-09-11 08:49), but KB confirms POST → 200 works across 14+ independent session
+- CHANGED auth.hornbach.com/authz-srv/authz RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+- CHANGED auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only afte
