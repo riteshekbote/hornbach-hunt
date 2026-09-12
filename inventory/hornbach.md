@@ -504,3 +504,12 @@ www.hornbach.com
 - NEW auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only afte
 
 ## 2026-09-12 21:22:41 UTC
+
+## 2026-09-12 23:07:43 UTC
+- NEW auth.hornbach.com/ root now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend (x-powered-by: cidaas); root HTML client_id extraction hypothesis definitively
+- NEW auth.hornbach.com/session/check_session: discovery-advertised OIDC check_session iframe live (200/27021B, cidaas x-powered-by) — novel path confirmed, informational only
+- NEW auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only afte
+- CHANGED hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login.hornbach.com ALL serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_i
+- CHANGED auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:47Z (dummy→302 AUTH10007 "invalid client_id passed") — client_id enumeration still REMOVED
+- CHANGED auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14+ sessions; body-presence sole gate; systemic and stable
+- CHANGED api.hornbach.de: 2 novel SAP ICM paths (/sap/bc/ping, /sap/wdisp/admin/public/default/cluster) → uniform 404 len=47; Via shows sapigwprd02 active node; anonymous surface breadth re-confirmed exhausted
