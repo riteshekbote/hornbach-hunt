@@ -249,3 +249,7 @@
 - 2026-09-12 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
 - 2026-09-12 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - 2026-09-12 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+- 2026-09-12 ACCEPTED class OTHER @ auth.hornbach.com/session/check_session: discovery-advertised OIDC check_session iframe live (200/27021B, cidaas x-powered-by) — novel path confirmed, informational only, not separately reportable.
+- 2026-09-12 ACCEPTED class AUTH @ auth.hornbach.com/session/end_session: token-gated re-confirmed 18:48Z (302→AATON1018 requires access/id_token_hint) — no anonymous logout CSRF.
+- 2026-09-12 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed 18:47Z (dummy→302 AUTH10007 "invalid client_id passed") — client_id enumeration still removed.
+- 2026-09-12 ACCEPTED class OTHER @ api.hornbach.de: root 404/47B unchanged 18:47Z — anonymous SAP APIM breadth still exhausted.
