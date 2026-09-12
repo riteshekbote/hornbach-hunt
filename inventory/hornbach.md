@@ -488,3 +488,7 @@ www.hornbach.com
 ## 2026-09-12 09:29:55 UTC
 
 ## 2026-09-12 13:12:28 UTC
+
+## 2026-09-12 16:31:25 UTC
+- CHANGED auth.hornbach.com/ root: now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend; root HTML client_id extraction hypothesis definitively dead
+- CHANGED hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login.hornbach.com ALL serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_i

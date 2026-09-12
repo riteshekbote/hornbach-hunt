@@ -1,21 +1,31 @@
-## 2026-09-12 13:12:19 UTC [target] (model bigpickle)
-[HYP] Unauthenticated token introspection + revocation enables claim-set disclosure and silent session kill
+## 2026-09-12 16:26:03 UTC [target] (model bigpickle)
+[PRIO] token-srv/{introspect,revoke},7.35,auth_gate_now_requires_token_param_but_no_client_auth
+[HYP] Unauthenticated token introspection + revocation persists after gate-tightening (token-param required, client-auth still absent)
 class: AUTH
 asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
 confidence: 85
-reasoning: 15+ independent sessions confirm POST (empty body) → 200 `{"active":false}` (introspect) / 200 `OK` text/plain (revoke) with no client/auth; RFC 7662 §2.1 + RFC 7009 §2.1 both mandate client authentication. Discovery 3189B advertises both endpoints; `id_token_signing_alg_values_supported` includes HS256 making an obtained token introspectable only when valid, while `subject_types_supported=["public"]` means any disclosed sub maps directly to the user account. Both re-confirmed live 13:05Z.
-evidence_needed: one real HORNBACH token (client_id-gated) → introspect returns active/sub/claims; revoke → 200 on victim token + downstream 401.
-verify_steps: PASSIVE done (POST empty body re-confirmed this session). With token: POST /token-srv/introspect `token=<t>` → observe active/sub; POST /token-srv/revoke `token=<t>` → session death confirmed by userinfo 401.
-impact: attacker holding a stolen/leaked token validates it (PII claims email/phone per discovery) and silently terminates victims' sessions. MEDIUM-HIGH; PoC fully gated on token source.
+reasoning: 16:23Z probes: empty-body POST → 400 (staging/parse), but `token=dummy` (form + JSON) → 200 `{"active":false}` / `200 OK` with no client_id/secret/Basic. Endpoints honor a forged token value and continue processing; empty-body 400 is a pre-parse gate, not auth. RFC 7662 §2.1 / RFC 7009 §2.1 both mandate client authentication — still violated.
+evidence_needed: one real HORNBACH token (obtainable only with valid client_id) → introspect returns sub/claims; revoke returns 200 then userinfo 401.
+verify_steps: PASSIVE done this session (empty→400, token=dummy→200 both endpoints, form+JSON). With token: POST token-srv/introspect token=<t> → active/sub; POST token-srv/revoke token=<t> → session death.
+impact: attacker with stolen/leaked token validates claim-set (PII per claims_supported) and silently kills victim sessions. MEDIUM-HIGH; PoC-import gated on token source.
 testability: AUTH_HELPED
-[HYP] Authorization endpoint redirect_uri/state validation bypass enables OAuth code theft
+[HYP] Authorization endpoint redirect_uri validation bypass enables OAuth code theft
 class: OATH
 asset: https://auth.hornbach.com/authz-srv/authz
 confidence: 70
-reasoning: Endpoint live — uniform 302→AUTH10007 on dummy client_id re-confirmed this session-plan family; token-srv/token client-gated (400 invalid_client "unknown client"). cidaas docs (this session) confirm native→web **session_transfer (STT)** flow, which mandates a distinct web client_id + registered redirect_uri for the smarthome/customer web surface — that allowlist is exactly the redirect_uri-validation test target. HS256 id_token alg advertised means a leaked client_secret escalates to id_token forgery, but redirect_uri testing needs only client_id. No client_id recoverable from web/repo (estate F5-wall, root 302, github org 0 repos, Mirakl external IdP).
-evidence_needed: valid client_id (APK or logged-in account redirect URL) → differential between allowlisted vs attacker redirect_uri (302 code delivery vs 200 render/error).
-verify_steps: after client_id recovery: GET /authz-srv/authz?response_type=code&client_id=<id>&redirect_uri=https://attacker.example&scope=openid then swap redirect_uri variants; observe 302 target / 200 consent render.
+reasoning: Endpoint live — 16:23Z probe dummy client_id → uniform 302→AUTH10007 invalid_client. token plane client-gated (token-srv/token 400 invalid_client "unknown client"). redirect_uri allowlist untestable without a valid client_id; all web/repo/passive channels closed (estate F5-wall, root 302, github org 0 repos, Mirakl external IdP). cidaas session_transfer flow mandates a registered redirect_uri = exact test target.
+evidence_needed: valid client_id (APK/IPA or logged-in account redirect URL) → differential allowlisted vs attacker redirect_uri.
+verify_steps: after client_id: GET /authz-srv/authz?response_type=code&client_id=<id>&redirect_uri=https://attacker.example&scope=openid then swap redirect_uri variants.
 impact: OAuth code theft → customer ATO. HIGH; 100% gated on client_id.
 testability: AUTH_HELPED
-[NEXT] HUMAN: obtain a valid cidaas client_id for `auth.hornbach.com` via (a) `de.hornbach.app.smarthome` APK from a non-bot-filtered source/device (apkpure/apkmirror 403, apkcombo 410 on this egress; iOS `SmartHome by Hornbach` IPA via ipatools is a valid alternative), grep `assets/` + `res/raw/` + `strings -a classes*.dex` for UUID client_id + redirect_uri, OR (b) log into the HORNBACH customer account, open the "Smart Home" tile, and capture the `/authz-srv/authz?...&client_id=<id>&redirect_uri=<uri>` URL — the redirect URL alone yields a valid web client_id + allowlist. Return client_id + redirect_uri exactly; this single artifact unblocks FINAL-1 (85) and FINAL-2 (70).
-[RISK] hornbach: 50/100 — estate re-confirmed fully walled 13:0xZ (discovery 3189B intact, authz uniform AUTH10007, api.hornbach.de 404/47B, Mirakl 3.1304 no new anonymous route). Unauthenticated token-management plane (RFC 7662/7009, 85-conf, 15+ sessions) remains the single strongest defensible finding but is 100% PoC-gated on ONE HUMAN step (client_id via APK/IPA or logged-in Smart Home tile redirect); redirect_uri bypass (70) blocked on the same artifact. Program finding ceiling without that step: 0 actionable PoCs.
+[HYP] cidaas client_id recoverable from mobile bundle → HS256 id_token forgery potential
+class: AUTH
+asset: de.hornbach.app.smarthome APK/IPA + de/com.hornbach.* retail apps
+confidence: 55
+reasoning: Sole remaining client_id source; discovery advertises client_secret_jwt, private_key_jwt, HS256 id_token alg, subject_types_supported=["public"] (non-pairwise sub). Embedded shared secret would enable id_token forgery + HTTP-basic/Body token calls, all still subject to endpoint gates.
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret).
+verify_steps: HUMAN — download APK/IPA, unzip, grep assets/*.properties/*.json/cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com / UUID / redirect_uri. sha256 any secret before KB.
+impact: MEDIUM enabler — unblocks FINAL-1 (85) and FINAL-2 (70).
+testability: HUMAN_ONLY
+[NEXT] HUMAN: Since introspect now proves client-auth-free processing of arbitrary token params (400-empty vs 200-token), re-attempt token-srv/introspect with a **format-valid but unissued** self-generated JWT or 40-char uuid string AND plain `token=dummy` to confirm the endpoint never consults client/auth before evaluating token liveness — one POST each, read-only; record exact body/status. Concurrently execute the single real unblock: obtain a valid `auth.hornbach.com` cidaas client_id via (a) `de.hornbach.app.smarthome` APK from a non-bot-filtered mirror (apkpure/apkmirror 403, apkcombo 410 on egress — try APKMonk/IPAstore or a personal device; iOS `SmartHome by Hornbach` IPA via ipatools) grep `assets/` + `res/raw/` + `strings classes*.dex` for UUID client_id + redirect_uri, or (b) log into HORNBACH account, open Smart Home tile, capture `/authz-srv/authz?...&client_id=<id>&redirect_uri=<uri>`. Return exact client_id + redirect_uri.
+[RISK] hornbach: 50/100 — estate re-confirmed walled 16:24Z; only delta is introspect/revoke empty-body→400 while token-param UNauthenticated path stays 200 (H1 at 85 is now methodologically sharper, not patched). Unauthenticated token-management plane remains the single strongest defensible finding but is 100% PoC-gated on ONE HUMAN dependency (real token ↔ client_id via mobile bundle or logged-in redirect URL). Redirect_uri bypass (70) blocked on same artifact. Program finding ceiling without the HUMAN step: 0 actionable PoCs.
