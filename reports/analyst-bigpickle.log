@@ -20787,3 +20787,74 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] hornbach: 50/100 — estate fully walled 18:48Z; only delta is informational check_session path. Unauthenticated token-management plane (RFC 7662/7009, 85-conf, 16 sessions) stays the single strongest defensible finding but remains 100% PoC-gated on ONE HUMAN dependency (real token ↔ client_id via mobile bundle or logged-in Smart Home tile redirect); redirect_uri bypass (70) blocked on the same artifact. Program finding ceiling without the HUMAN step: 0 actionable PoCs.
+===== ANALYST bigpickle 2026-09-12 21:22:41 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sS -o /dev/null -w "%{http_code} %{size_download} %{redirect_url}" --max-time 15 https://auth.hornbach.com/.well-known/openid-configuration; echo; sleep 1; curl -sS -o /dev/null -w "%{http_code} %{size_download} %{redirect_url}" --max-time 15 https://auth.hornbach.com/; echo
+200 3189 
+302 0 https://hornbach.de/
+[0m
+[0m$ [0msleep 1; curl -sS -o /dev/null -w "%{http_code} %{size_download}" --max-time 15 https://api.hornbach.de/; echo; sleep 1; curl -sS -o /dev/null -w "%{http_code} %{size_download}" --max-time 15 https://auth.hornbach.com/session/check_session; echo
+404 47
+200 27021
+[0m
+[0m$ [0mdate -u +"%Y-%m-%d %H:%M:%S UTC"
+2026-09-12 21:19:53 UTC
+[0m
+STEP 1 — DELTA
+- [NO_DELTA] Fresh GET-plane recheck 21:18-21:19Z: discovery 200/3189B, root 302→hornbach.de, check_session 200/27021B, api.hornbach.de 404/47B — all identical to 18:47Z anchors; estate fully walled, no surface change.
+- [CHANGED] None. All gates (authz uniform 302→AUTH10007, token plane client-gated, SAP APIM breadth exhausted, nitro 302, mirak SSE) re-confirmed stable across 14+ sessions.
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},7.4,auth_gate=body-presence+no_client_auth_RFC7662/7009;sole_defensible_finding
+- [PRIO] auth.hornbach.com/authz-srv/authz,7.0,oath_gate=100%_blocked_on_valid_client_id;redirect_uri_allowlist_untestable
+- [PRIO] api.hornbach.de,5.4,other_gate=SAP_APIM_anonymous_breadth_exhausted;backend_leak_127.0.0.1:8080_not_exploitable
+- [PRIO] auth.hornbach.com/session/check_session,5.3,other_flag=info-only_OIDC_iframe;login-status_oracle_needs_RP+client_id;no_standalone_finding
+
+STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation persists (body-presence sole gate)
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 85
+reasoning: 16+ independent sessions; 21:18Z anchors unchanged; POST token=dummy → 200 {"active":false} / 200 "OK" with no client_id/secret/Basic; discovery 3189B advertises both; RFC 7662 §2.1 + RFC 7009 §2.1 mandate client auth; claims_supported includes email/phone_number/mobile_number; subject_types_supported=["public"].
+evidence_needed: one real HORNBACH token → introspect returns active/sub/claims; revoke→200 then userinfo 401.
+verify_steps: DONE passive this session (discovery/root/check_session/api anchors 21:18Z). With token: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t> → users-srv/userinfo 401.
+impact: attacker with stolen/leaked token validates PII claim-set + silently kills victim sessions; MEDIUM-HIGH; PoC-import gated on token source.
+testability: AUTH_HELPED
+[HYP] Authorization redirect_uri/state validation bypass enables OAuth code theft → customer ATO
+class: OATH
+asset: https://auth.hornbach.com/authz-srv/authz
+confidence: 70
+reasoning: Endpoint live — dummy client_id → uniform 302→AUTH10007; token plane client-gated (token-srv/token 400 "unknown client"); all web/repo/passive client_id channels closed (estate F5-wall, root 302, github 0 repos, Mirakl external IdP); cidaas session_transfer mandates allowlisted redirect_uri — exact differential target.
+evidence_needed: valid client_id → compare allowlisted vs attacker redirect_uri (302 target vs 200 render).
+verify_steps: after client_id: GET /authz-srv/authz?response_type=code&client_id=<id>&redirect_uri=https://attacker.example&scope=openid; swap redirect_uri variants.
+impact: OAuth code theft → customer ATO. HIGH; 100% gated on client_id.
+testability: AUTH_HELPED
+[HYP] cidaas client_id recoverable from mobile bundle → unblocks introspect PoC + HS256 id_token forgery potential
+class: AUTH
+asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
+confidence: 55
+reasoning: Sole remaining client_id source; discovery advertises client_secret_jwt/private_key_jwt, id_token_signing_alg HS256+RS256, subject_types_supported=["public"]; embedded shared secret would enable HTTP-basic/Body token calls + alg-confusion testing, all still subject to endpoint gates.
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret).
+verify_steps: HUMAN — obtain bundle from non-bot-filtered mirror (apkpure/apkmirror 403, apkcombo 410 from this egress; try APKMonk/IPAstorage/personal device), unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
+impact: MEDIUM enabler — unblocks FINAL-1 (85-introspect) and FINAL-2 (70-redirect_uri).
+testability: HUMAN_ONLY
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] check_session login-status oracle: standard OIDC Session Management design; requires RP cooperation + client_id; violates nothing on OP side; info-only, no standalone finding.
+- [PARKED] HS256/JWK alg-confusion on token-srv: cidaas pins per-client alg; no captured id_token or client creds → confidence <40; no anonymous differential.
+- [FINAL] token-srv/{introspect,revoke} AUTH 85 — strongest defensible finding; RFC 7662/7009 client-auth gap across 16+ sessions; PoC-import 100% gated on a real token (↔ client_id).
+- [FINAL] authz-srv/authz redirect_uri OATH 70 — live uniform gate confirmed; 100% blocked on client_id.
+- [FINAL] client_id from mobile bundle AUTH 55 — single enabler for both FINALs; no alternative source remains.
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Obtain a valid `auth.hornbach.com` cidaas client_id — (a) fetch `de.hornbach.app.smarthome` (APK via APKMonk/IPAstorage or personal device; apkpure/apkmirror 403, apkcombo 410 on this egress) or iOS `SmartHome by Hornbach` IPA via ipatools; unzip, grep `assets/*.properties|*.json|*cidaas*.xml` + `res/raw/*`, `strings -a classes*.dex lib/*.so` for `auth.hornbach.com`/UUID/`redirect_uri`; or (b) log into a HORNBACH account, open the "Smart Home" tile, capture `/authz-srv/authz?...&client_id=<id>&redirect_uri=<uri>`. Return exact client_id + redirect_uri allowlist. Single artifact unblocks FINAL-1 (85) and FINAL-2 (70). Optional read-only follow-up on dummy data (if POST permitted): POST token-srv/introspect with a format-valid but unissued JWT vs `token=dummy` to confirm token-claim parsing precedes any client/auth check.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED class OTHER @ auth.hornbach.com: GET-plane recheck 21:18-21:19Z — discovery 200/3189B, root 302→hornbach.de, check_session 200/27021B all identical; estate gates unchanged, no delta.
+- [LEARN] ACCEPTED class OTHER @ api.hornbach.de: root 404/47B unchanged 21:19Z — anonymous SAP APIM surface still exhausted.
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: no new probe needed — 16+ sessions already confirm POST→200 unauthenticated; GET/HEAD remain methodology-artefact 404.
+
+STEP 7 — RISK
+[RISK] hornbach: 50/100 — estate re-confirmed fully walled 21:19Z; only delta is zero. Unauthenticated token-management plane (RFC 7662/7009, 85-conf, 16 sessions) remains the single strongest defensible finding but is PoC-gated on ONE HUMAN dependency (real token ↔ client_id via mobile bundle or logged-in Smart Home tile). redirect_uri bypass (70) blocked on the same artifact. Program finding ceiling without the HUMAN step: 0 actionable PoCs.
