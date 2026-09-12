@@ -170,3 +170,12 @@ TARGET_ORG not configured for hornbach; skipping public-org deep scan.
 TARGET_ORG not configured for hornbach; skipping public-org deep scan.
 ## REPOSCAN 2026-09-12 06:27:40 UTC
 TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-12 11:14:02 UTC
+[HYP] No Public Repositories Available for Audit
+class: OTHER
+asset: github.com/hornbach (organization)
+confidence: 100
+reasoning: Organization page explicitly shows zero public repositories
+impact: N/A - No attack surface identified
+verify_steps: Visit https://github.com/hornbach to confirm no public repos
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
