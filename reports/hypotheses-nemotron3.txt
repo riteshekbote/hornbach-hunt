@@ -1,4 +1,4 @@
-## 2026-09-12 23:07:33 UTC [target] (model nemotron3)
+## 2026-09-13 01:13:10 UTC [target] (model nemotron3)
 [NEW] auth.hornbach.com/ root now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend (x-powered-by: cidaas); root HTML client_id extraction hypothesis definitively dead
 [NEW] auth.hornbach.com/session/check_session: discovery-advertised OIDC check_session iframe live (200/27021B, cidaas x-powered-by) — novel path confirmed, informational only
 [NEW] auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only after client_id validity

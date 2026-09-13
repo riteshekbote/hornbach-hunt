@@ -2930,3 +2930,4 @@ evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded s
 verify_steps: HUMAN — obtain bundle (APKMonk/IPAstorage/personal device; apkpure/apkmirror 403, apkcombo 410 from this egress; iOS "SmartHome by Hornbach" ipatools), unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw + strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
 impact: MEDIUM enabler — unblocks FINAL-1 (85) and FINAL-2 (70).
 testability: HUMAN_ONLY
+## 2026-09-13 01:09:19 UTC [target] (model bigpickle)

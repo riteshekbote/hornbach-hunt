@@ -253,3 +253,15 @@
 - 2026-09-12 ACCEPTED class AUTH @ auth.hornbach.com/session/end_session: token-gated re-confirmed 18:48Z (302→AATON1018 requires access/id_token_hint) — no anonymous logout CSRF.
 - 2026-09-12 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed 18:47Z (dummy→302 AUTH10007 "invalid client_id passed") — client_id enumeration still removed.
 - 2026-09-12 ACCEPTED class OTHER @ api.hornbach.de: root 404/47B unchanged 18:47Z — anonymous SAP APIM breadth still exhausted.
+- 2026-09-13 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14th session 08:47Z 09-11; body-presence sole gate; systemic and stable
+- 2026-09-13 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
+- 2026-09-13 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
+- 2026-09-13 CHANGED class OTHER @ auth.hornbach.com/ (root): now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend but no content served; root HTML client_id extraction hypothesis definitively dead (was already PARKED)
+- 2026-09-13 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only after client_id validity is the correct future differential
+- 2026-09-13 REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy (invalid_client vs invalid_grant) is unactionable with zero candidate seed; enumeration-spirit out-of-scope — no client_id recovery source
+- 2026-09-13 ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (at/nl/ch) + de + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+- 2026-09-13 ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enum REMOVED
+- 2026-09-13 ACCEPTED class OTHER @ auth.hornbach.com/login-srv/social/token: GET 500 + CORS wildcard; POST 404
+- 2026-09-13 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- 2026-09-13 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+- 2026-09-13 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed

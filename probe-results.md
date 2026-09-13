@@ -391,3 +391,9 @@ https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_cl
 https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
 https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
 https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-13 01:13:26 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
