@@ -3005,3 +3005,4 @@ evidence_needed: a case/encoding-rotated path returning non-404 (real mount) or 
 verify_steps: GET /api/HealthCheck, /Api/healthcheck, /healthcheck%2F, URL-encoded slash variants on /healthcheck vs /HealthCheck; observe 200 vs 403 vs 500 split; keep ≤1 rps.
 impact: concealed API proxy discovery → OAuth/API-key gated endpoints exposed under alternate casing; LOW alone, HIGH if a real proxy surfaces.
 testability: PASSIVE
+## 2026-09-13 16:28:10 UTC [target] (model bigpickle)
