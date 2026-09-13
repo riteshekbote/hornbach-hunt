@@ -1,4 +1,4 @@
-## 2026-09-13 19:02:55 UTC [target] (model bigpickle)
+## 2026-09-13 21:24:05 UTC [target] (model bigpickle)
 [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},88, AUTH=9+GATE=10+TECH=6+BUSINESS=7+CLOUD=5+FRESH=9 → priority=8.4
 [PRIO] api.hornbach.de/healthcheck,45, AUTH=2+GATE=10+TECH=3+BUSINESS=5+CLOUD=3+FRESH=8 → priority=4.3
 [PRIO] mobile-apk-extraction,55, AUTH=5+GATE=0+TECH=7+BUSINESS=8+CLOUD=2+FRESH=6 → priority=4.3 (HUMAN_ONLY)
@@ -34,3 +34,30 @@ testability: HUMAN_ONLY
 [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header REJECTED per scope rules.
 [LEARN] REJECTED class MISCONFIG @ api.hornbach.de: case-insensitive proxy mount discovery exhausted — no new routes, no SSRF vector.
 [RISK] hornbach: 65. Primary finding (introspect/revoke unauthenticated, 88 conf) is real but requires a leaked token for PoC import. No escalation path without mobile APK extraction (HUMAN_ONLY, 55 conf). Attack surface is narrow and well-mapped. api.hornbach.de anonymous surface definitively exhausted. F5 bot-wall closes web-based client_id extraction. Program severity likely Medium at best given dependency on token leak + no data-at-rest extraction proof.
+[HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: 18+ sessions POST token=dummy → 200 {"active":false}/200 OK with zero client creds; volunteered bogus creds → 400 "unknown client" proves client-auth fires only when supplied, never required; discovery 3189B advertises both + claims email/phone_number/mobile_number; issuer==auth.hornbach.com confirmed.
+evidence_needed: ONE real HORNBACH-issued token → introspect active:true+claims; revoke→200 + users-srv/userinfo 401.
+verify_steps: DONE passive (GET-plane). Real-token: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo Bearer <t> expect 401.
+impact: attacker with leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; import gated on ONE token.
+testability: AUTH_HELPED
+[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks both token-plane PoCs and secret-based client call
+class: AUTH
+asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
+confidence: 55
+reasoning: sole remaining client_id source; discovery advertises client_secret_jwt/private_key_jwt + id_token HS256; embedded secret enables body/Basic token calls (still endpoint-gated); all web extraction angles closed (bot-wall, root 302, GitHub empty, Mirakl external IdP, RFC 8414/9728 404, issuer==host).
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret).
+verify_steps: HUMAN — APKMonk/IPAstorage/personal device; unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
+impact: MEDIUM enabler — unblocks FINAL-1 (88→importable PoC) and FINAL-2.
+testability: HUMAN_ONLY
+[HYP] SAP APIM hidden proxy mount discoverable via case-insensitive policy matching
+class: MISCONFIG
+asset: https://api.hornbach.de/
+confidence: 40
+reasoning: /healthcheck 200 exact, 500 on case-rotated (policy matched, backend failed), uniform 404 on 30+ rotations of known-bad paths; only healthcheck route proved case-insensitive.
+evidence_needed: case/encoding variant of any 404 path returning non-404.
+verify_steps: exhausted — 30+ rotations all 404; no non-mutating variant remains.
+impact: none discovered — mechanism only.
+testability: PASSIVE
