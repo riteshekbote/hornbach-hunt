@@ -266,3 +266,6 @@
 - 2026-09-13 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - 2026-09-13 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
 - 2026-09-13 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14th+ session; body-presence sole gate; systemic and stable
+- 2026-09-13 ACCEPTED class MISCONFIG @ api.hornbach.de: gateway IS case-insensitive for /healthcheck route (case-rotated → 500 "Unexpected API invocation"); confirmed mechanism but no hidden proxy mounts discoverable via 30+ case rotations on known-bad paths.
+- 2026-09-13 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header REJECTED per scope rules.
+- 2026-09-13 REJECTED class MISCONFIG @ api.hornbach.de: case-insensitive proxy mount discovery exhausted — no new routes, no SSRF vector.

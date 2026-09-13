@@ -1402,3 +1402,10 @@
 - LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
 
 ## RANKED HYPOTHESES 2026-09-13 16:47:47 UTC
+
+## RANKED HYPOTHESES 2026-09-13 19:10:28 UTC
+- [88] https://auth.hornbach.com/token-srv/introspect: Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation (precise mechanics now proven) (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Download `de.hornbach.app.smarthome` APK from APKMonk/alternative mirror, unzip, extract `assets/cidaas*` + `res/raw/*` + `lib/*.so` strings for UUID cli
+- LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: gateway IS case-insensitive for /healthcheck route (case-rotated → 500 "Unexpected API invocation"); confirmed mecha
+- LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header REJECTED per scope rules.
+- LEARN: REJECTED class MISCONFIG @ api.hornbach.de: case-insensitive proxy mount discovery exhausted — no new routes, no SSRF vector.

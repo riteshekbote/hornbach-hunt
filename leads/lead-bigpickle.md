@@ -3006,3 +3006,39 @@ verify_steps: GET /api/HealthCheck, /Api/healthcheck, /healthcheck%2F, URL-encod
 impact: concealed API proxy discovery → OAuth/API-key gated endpoints exposed under alternate casing; LOW alone, HIGH if a real proxy surfaces.
 testability: PASSIVE
 ## 2026-09-13 16:28:10 UTC [target] (model bigpickle)
+## 2026-09-13 19:02:55 UTC [target] (model bigpickle)
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},88, AUTH=9+GATE=10+TECH=6+BUSINESS=7+CLOUD=5+FRESH=9 → priority=8.4
+[PRIO] api.hornbach.de/healthcheck,45, AUTH=2+GATE=10+TECH=3+BUSINESS=5+CLOUD=3+FRESH=8 → priority=4.3
+[PRIO] mobile-apk-extraction,55, AUTH=5+GATE=0+TECH=7+BUSINESS=8+CLOUD=2+FRESH=6 → priority=4.3 (HUMAN_ONLY)
+[HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation (precise mechanics now proven)
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/introspect AND /revoke
+confidence: 88
+reasoning: POST token=dummy AND token=<format-valid unissued HS256 JWT> both → 200 {"active":false}/OK with zero client credentials (17+ sessions). Adding bogus client_id+secret → 400 "client authentication failed : unknown client" proves client-auth logic fires only when volunteered but is never REQUIRED. Empty body → 400. RFC 7662 §2.1 / RFC 7009 §2.1: confidential-clients MUST authenticate; none enforced. discovery 3189B advertises both + claims_supported incl. email/phone_number/mobile_number.
+evidence_needed: one real HORNBACH-issued token → introspection returns active:true+claims; revoke→200 then users-srv/userinfo 401.
+verify_steps: DONE passive. With real token: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>) expect 401.
+impact: attacker with a leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; import PoC gated on ONE real token.
+testability: AUTH_HELPED
+[HYP] SAP APIM gateway is case-insensitive for mounted routes but no hidden proxy mounts discoverable via case rotation
+class: MISCONFIG
+asset: https://api.hornbach.de/
+confidence: 40
+reasoning: case-rotated /healthcheck → 500 "Unexpected API invocation" (policy matched, backend failed); all 20+ other case-rotated paths (api/v1, graphql, openapi, swagger, actuator, sap/*) → uniform 404. Gateway case-insensitivity confirmed for healthcheck route only; no hidden routes revealed. 405 on non-GET to /healthcheck with `Allow: GET, HEAD, OPTIONS`.
+evidence_needed: a case/encoding variant of any currently-404 path returning non-404.
+verify_steps: exhausted — 30+ case rotations tested on known-bad paths, all 404.
+impact: none — mechanism confirmed but no exploitable route discovered.
+testability: PASSIVE
+[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks both token-plane PoCs and HS256/secret-based client call
+class: AUTH
+asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
+confidence: 55
+reasoning: sole remaining client_id source; discovery advertises client_secret_jwt/private_key_jwt, id_token_signing_alg HS256+RS256, subject_types_supported=["public"]; embedded shared secret would enable body/Basic token calls (still endpoint-gated).
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret).
+verify_steps: HUMAN — APKMonk/IPAstorage/personal device; unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
+impact: MEDIUM enabler — unblocks FINAL-1 (88) and FINAL-2 (70).
+testability: HUMAN_ONLY
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK from APKMonk/alternative mirror, unzip, extract `assets/cidaas*` + `res/raw/*` + `lib/*.so` strings for UUID client_id + redirect_uri + client_secret (sha256 before recording). This is the SOLE remaining escalation path for FINAL-1 (88→importable PoC).
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: gateway IS case-insensitive for /healthcheck route (case-rotated → 500 "Unexpected API invocation"); confirmed mechanism but no hidden proxy mounts discoverable via 30+ case rotations on known-bad paths.
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header REJECTED per scope rules.
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: case-insensitive proxy mount discovery exhausted — no new routes, no SSRF vector.
+[RISK] hornbach: 65. Primary finding (introspect/revoke unauthenticated, 88 conf) is real but requires a leaked token for PoC import. No escalation path without mobile APK extraction (HUMAN_ONLY, 55 conf). Attack surface is narrow and well-mapped. api.hornbach.de anonymous surface definitively exhausted. F5 bot-wall closes web-based client_id extraction. Program severity likely Medium at best given dependency on token leak + no data-at-rest extraction proof.

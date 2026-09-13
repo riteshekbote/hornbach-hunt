@@ -413,3 +413,6 @@ https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
 
 ## 2026-09-13 16:47:47 UTC
 
+
+## 2026-09-13 19:10:30 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
