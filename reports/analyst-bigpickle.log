@@ -21076,3 +21076,1363 @@ testability: HUMAN_ONLY
 
 ## STEP 7 — RISK
 - [RISK] hornbach: 50/100 — estate fully walled re-confirmed 17th session; token-plane flaw is now sharper (optional-client-auth proof, body-presence sole gate) but 100% PoC-import remains gated on ONE human artifact (real token ↔ client_id). Zero actionable PoCs until the HUMAN step; no estate delta beyond the token-plane differential.
+===== ANALYST bigpickle 2026-09-13 12:20:46 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && ls -la art/ 2>/dev/null; ls -la inventory/ 2>/dev/null; ls -la *.yml *.md 2>/dev/null
+total 368
+drwxr-xr-x 12 runner runner   4096 Sep 13 12:06 .
+drwxr-xr-x  3 runner runner   4096 Sep 13 12:06 ..
+drwxr-xr-x  7 runner runner   4096 Sep 13 12:06 .git
+drwxr-xr-x  3 runner runner   4096 Sep 13 12:06 .github
+-rw-r--r--  1 runner runner   1901 Sep 13 12:06 README.md
+-rw-r--r--  1 runner runner     32 Sep 13 12:06 analyst-out.txt
+-rw-r--r--  1 runner runner 133481 Sep 13 12:06 analyst-prompt.txt
+-rw-r--r--  1 runner runner 129553 Sep 13 12:06 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 leads
+-rw-r--r--  1 runner runner  22053 Sep 13 12:06 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 reports
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep 13 12:06 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 scripts
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 triage
+total 76
+drwxr-xr-x  2 runner runner  4096 Sep 13 12:06 .
+drwxr-xr-x 12 runner runner  4096 Sep 13 12:06 ..
+-rw-r--r--  1 runner runner 65601 Sep 13 12:06 hornbach.md
+-rw-r--r-- 1 runner runner  1901 Sep 13 12:06 README.md
+-rw-r--r-- 1 runner runner 22053 Sep 13 12:06 probe-results.md
+-rw-r--r-- 1 runner runner  3341 Sep 13 12:06 scope.yml
+[0m
+[0m$ [0mcat scope.yml; echo "=== STATE ==="; cat state_*.json; echo; echo "=== ANALYST OUT ==="; cat analyst-out.txt; echo "=== LEADS ==="; ls -la leads/
+programs:
+  hornbach:
+    name: HORNBACH Holding AG & Co. KGaA / HORNBACH Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, retail systems, e-commerce platforms, mobile applications, APIs, supply chain and logistics systems, customer accounts, in-store digital systems, and domains operated by HORNBACH Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+      - "Social engineering, physical attacks, and DoS/DDoS testing (per program notes)"
+      - "Exposure of customer/employee/financial/authentication data during testing (per program notes)"
+    github_orgs:
+      - none-configured
+
+rules:
+  passive_first: false          # deep-hunt agent: active probes allowed when scoped
+  max_requests_per_second: 1    # never hammer live infra
+  no_doom: true                 # no DoS/DDoS, no account-lockout attacks
+  account_creation: restricted  # only on test/sandbox assets, never live customer data
+  no_data_modification: true    # no writes/deletes on live customer data
+  no_pre_disclosure: true       # never disclose before program response
+  poc_required: true            # scanner output alone is REJECTED
+  redact_secrets_in_commits: true
+
+models:
+  - { id: opencode/big-pickle, name: bigpickle }
+  - { id: opencode/nemotron-3-ultra-free, name: nemotron3 }
+  - { id: opencode/longcat-2.0-free, name: longcat }
+  - { id: opencode/ling-3.0-flash-free, name: ling3 }
+  - { id: opencode/laguna-s-2.1-free, name: laguna }
+=== STATE ===
+{"phase": "POC", "target": "api"}{"phase": "POC", "target": "api"}{"phase": "POC", "target": "api"}{"phase": "POC", "target": "api"}{"phase": "POC", "target": "api"}{"phase": "POC", "target": "api"}
+=== ANALYST OUT ===
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && ls -la art/ 2>/dev/null; ls -la inventory/ 2>/dev/null; ls -la *.yml *.md 2>/dev/null
+total 368
+drwxr-xr-x 12 runner runner   4096 Sep 13 12:06 .
+drwxr-xr-x  3 runner runner   4096 Sep 13 12:06 ..
+drwxr-xr-x  7 runner runner   4096 Sep 13 12:06 .git
+drwxr-xr-x  3 runner runner   4096 Sep 13 12:06 .github
+-rw-r--r--  1 runner runner   1901 Sep 13 12:06 README.md
+-rw-r--r--  1 runner runner     32 Sep 13 12:06 analyst-out.txt
+-rw-r--r--  1 runner runner 133481 Sep 13 12:06 analyst-prompt.txt
+-rw-r--r--  1 runner runner 129553 Sep 13 12:06 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 leads
+-rw-r--r--  1 runner runner  22053 Sep 13 12:06 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 reports
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep 13 12:06 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 scripts
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 13 12:06 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 triage
+total 76
+drwxr-xr-x  2 runner runner  4096 Sep 13 12:06 .
+drwxr-xr-x 12 runner runner  4096 Sep 13 12:06 ..
+-rw-r--r--  1 runner runner 65601 Sep 13 12:06 hornbach.md
+-rw-r--r-- 1 runner runner  1901 Sep 13 12:06 README.md
+-rw-r--r-- 1 runner runner 22053 Sep 13 12:06 probe-results.md
+-rw-r--r-- 1 runner runner  3341 Sep 13 12:06 scope.yml
+[0m
+=== LEADS ===
+total 1024
+drwxr-xr-x  2 runner runner   4096 Sep 13 12:06 .
+drwxr-xr-x 12 runner runner   4096 Sep 13 12:06 ..
+-rw-r--r--  1 runner runner 419597 Sep 13 12:06 lead-bigpickle.md
+-rw-r--r--  1 runner runner   3519 Sep 13 12:06 lead-laguna.md
+-rw-r--r--  1 runner runner   3450 Sep 13 12:06 lead-ling3.md
+-rw-r--r--  1 runner runner   3588 Sep 13 12:06 lead-longcat.md
+-rw-r--r--  1 runner runner     18 Sep 13 12:06 lead-mimo.md
+-rw-r--r--  1 runner runner 585867 Sep 13 12:06 lead-nemotron3.md
+-rw-r--r--  1 runner runner  12013 Sep 13 12:06 reposcan-hornbach.md
+[0m
+[0m$ [0mcat probe-results.md; echo "=== RECON NOTES ==="; ls -la recon-notes/ triage/ reports/ reposcan-raw/ scripts/
+## 2026-09-02 21:46:11 UTC
+
+
+## 2026-09-02 23:55:43 UTC
+
+
+## 2026-09-03 03:44:54 UTC
+
+
+## 2026-09-03 08:47:26 UTC
+
+
+## 2026-09-03 13:26:06 UTC
+
+
+## 2026-09-03 17:21:40 UTC
+https://auth.hornbach.com/oauth2/authorize?response_type=code&client_id=<public_client_id>&redirect_uri=https://evil.com&scope=openid -> HTTP 404
+https://auth.hornbach.com.attacker.com -> ERR <urlopen error [SSL: TLSV1_ALERT_INTERNAL_ERROR] t
+https://hornbach.com/@evil.com -> 200 len=3038
+https://login.hornbach.com/ -> 200 len=3038
+https://auth.hornbach.com/oauth2/authorize?response_type=code&client_id=public&redirect_uri=https://example.com&scope=openid -> HTTP 404
+https://auth.hornbach.com/ -> 200 len=3038
+
+## 2026-09-03 20:03:29 UTC
+https://auth.hornbach.com/ -> 200 len=3038
+https://auth.hornbach.com/oauth2/authorize?response_type=code&client_id=<candidate>&redirect_uri=https://hornbach.de/callback&scope=openid -> HTTP 404
+https://login.hornbach.com/ -> 200 len=3038
+https://hornbach.com/@evil.com` -> 200 len=3038
+https://hornbach.com/@evil.com -> 200 len=3038
+https://auth.hornbach.com/apps-srv/clients/register` -> HTTP 404
+https://auth.hornbach.com/apps-srv/clients/register -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/authz-srv/device/authz -> HTTP 400
+
+## 2026-09-03 22:32:00 UTC
+https://auth.hornbach.com/apps-srv/clients/register` -> HTTP 404
+https://auth.hornbach.com/apps-srv/clients/register -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/ -> 200 len=3038
+https://auth.hornbach.com/oauth2/authorize?response_type=code&client_id=<candidate>&redirect_uri=https://hornbach.de/callback&scope=openid -> HTTP 404
+
+## 2026-09-04 00:43:50 UTC
+
+
+## 2026-09-04 05:17:58 UTC
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-04 09:58:05 UTC
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+
+## 2026-09-04 14:20:26 UTC
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-04 17:49:15 UTC
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+
+## 2026-09-04 20:01:33 UTC
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+
+## 2026-09-04 22:16:16 UTC
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-05 00:15:34 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-05 04:42:34 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-05 08:45:32 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-05 12:18:44 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-05 15:26:23 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-05 17:43:17 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-05 19:34:12 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-05 21:49:00 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-05 23:41:27 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-06 01:24:32 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-06 06:33:27 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-06 11:22:06 UTC
+
+
+## 2026-09-06 14:41:42 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-06 17:40:53 UTC
+
+
+## 2026-09-06 19:38:03 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-06 21:45:12 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-06 23:38:42 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-07 01:21:18 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-07 06:15:03 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-07 12:52:53 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-07 18:14:21 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-07 21:38:22 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-07 23:49:12 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+
+## 2026-09-08 03:54:43 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-08 08:49:34 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-08 13:30:52 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-08 17:33:30 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-08 20:19:07 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-08 22:51:02 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 01:17:56 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 06:13:08 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 11:46:45 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 15:26:09 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 18:46:44 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 21:36:22 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-09 23:34:35 UTC
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<your-real-account-login-entrypoint>` -> 200 len=?
+
+## 2026-09-10 01:32:06 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-10 06:46:22 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/ -> 200 len=3038
+
+## 2026-09-10 12:06:59 UTC
+https://auth.hornbach.com/ -> 200 len=3038
+
+## 2026-09-10 16:16:35 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-10 19:11:24 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-10 21:46:56 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-10 23:53:53 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-11 03:52:57 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/ -> 200 len=3038
+
+## 2026-09-11 08:49:20 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-11 13:35:24 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-11 17:24:17 UTC
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+
+## 2026-09-11 19:57:17 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-11 22:24:54 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-12 00:44:27 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-12 05:05:21 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-12 09:30:02 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-12 13:12:37 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-12 16:31:34 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-12 18:50:00 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-12 21:22:50 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-12 23:07:53 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-13 01:13:26 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-13 06:25:10 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+=== RECON NOTES ===
+recon-notes/:
+total 12
+drwxr-xr-x  2 runner runner 4096 Sep 13 12:06 .
+drwxr-xr-x 12 runner runner 4096 Sep 13 12:06 ..
+-rw-r--r--  1 runner runner  819 Sep 13 12:06 DEDICATED-DEEP.md
+
+reports/:
+total 2784
+drwxr-xr-x  2 runner runner    4096 Sep 13 12:06 .
+drwxr-xr-x 12 runner runner    4096 Sep 13 12:06 ..
+-rw-r--r--  1 runner runner 1632537 Sep 13 12:06 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   14973 Sep 13 12:06 analyst-laguna.log
+-rw-r--r--  1 runner runner   14904 Sep 13 12:06 analyst-ling3.log
+-rw-r--r--  1 runner runner   15042 Sep 13 12:06 analyst-longcat.log
+-rw-r--r--  1 runner runner  915050 Sep 13 12:06 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    3520 Sep 13 12:06 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 13 12:06 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 13 12:06 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 13 12:06 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    8477 Sep 13 12:06 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  201259 Sep 13 12:06 hypotheses.md
+-rw-r--r--  1 runner runner    4817 Sep 13 12:06 valid-bugs.md
+
+reposcan-raw/:
+total 12
+drwxr-xr-x  2 runner runner 4096 Sep 13 12:06 .
+drwxr-xr-x 12 runner runner 4096 Sep 13 12:06 ..
+-rw-r--r--  1 runner runner   71 Sep 13 12:06 summary.txt
+
+scripts/:
+total 28
+drwxr-xr-x  2 runner runner  4096 Sep 13 12:06 .
+drwxr-xr-x 12 runner runner  4096 Sep 13 12:06 ..
+-rw-r--r--  1 runner runner 16987 Sep 13 12:06 sync-issues.py
+
+triage/:
+total 348
+drwxr-xr-x  2 runner runner  4096 Sep 13 12:06 .
+drwxr-xr-x 12 runner runner  4096 Sep 13 12:06 ..
+-rw-r--r--  1 runner runner     0 Sep 13 12:06 .gitkeep
+-rw-r--r--  1 runner runner   787 Sep 13 12:06 run-2026-09-02-21-36.md
+-rw-r--r--  1 runner runner   204 Sep 13 12:06 run-2026-09-02-23-32.md
+-rw-r--r--  1 runner runner   158 Sep 13 12:06 run-2026-09-03-01-25.md
+-rw-r--r--  1 runner runner   143 Sep 13 12:06 run-2026-09-03-06-28.md
+-rw-r--r--  1 runner runner   198 Sep 13 12:06 run-2026-09-03-11-41.md
+-rw-r--r--  1 runner runner   318 Sep 13 12:06 run-2026-09-03-15-39.md
+-rw-r--r--  1 runner runner  4193 Sep 13 12:06 run-2026-09-03-18-54.md
+-rw-r--r--  1 runner runner   149 Sep 13 12:06 run-2026-09-03-21-33.md
+-rw-r--r--  1 runner runner   240 Sep 13 12:06 run-2026-09-04-01-20.md
+-rw-r--r--  1 runner runner   906 Sep 13 12:06 run-2026-09-04-06-02.md
+-rw-r--r--  1 runner runner 14505 Sep 13 12:06 run-2026-09-04-11-25.md
+-rw-r--r--  1 runner runner   143 Sep 13 12:06 run-2026-09-04-15-05.md
+-rw-r--r--  1 runner runner   204 Sep 13 12:06 run-2026-09-04-18-28.md
+-rw-r--r--  1 runner runner   249 Sep 13 12:06 run-2026-09-04-21-01.md
+-rw-r--r--  1 runner runner   319 Sep 13 12:06 run-2026-09-04-23-04.md
+-rw-r--r--  1 runner runner   180 Sep 13 12:06 run-2026-09-05-01-01.md
+-rw-r--r--  1 runner runner   226 Sep 13 12:06 run-2026-09-05-05-48.md
+-rw-r--r--  1 runner runner   241 Sep 13 12:06 run-2026-09-05-09-50.md
+-rw-r--r--  1 runner runner   219 Sep 13 12:06 run-2026-09-05-13-12.md
+-rw-r--r--  1 runner runner   161 Sep 13 12:06 run-2026-09-05-16-06.md
+-rw-r--r--  1 runner runner   152 Sep 13 12:06 run-2026-09-05-18-21.md
+-rw-r--r--  1 runner runner   220 Sep 13 12:06 run-2026-09-05-20-41.md
+-rw-r--r--  1 runner runner   270 Sep 13 12:06 run-2026-09-05-22-35.md
+-rw-r--r--  1 runner runner   197 Sep 13 12:06 run-2026-09-06-00-11.md
+-rw-r--r--  1 runner runner   159 Sep 13 12:06 run-2026-09-06-04-44.md
+-rw-r--r--  1 runner runner   279 Sep 13 12:06 run-2026-09-06-09-07.md
+-rw-r--r--  1 runner runner   424 Sep 13 12:06 run-2026-09-06-12-54.md
+-rw-r--r--  1 runner runner   278 Sep 13 12:06 run-2026-09-06-15-56.md
+-rw-r--r--  1 runner runner   220 Sep 13 12:06 run-2026-09-06-18-00.md
+-rw-r--r--  1 runner runner   151 Sep 13 12:06 run-2026-09-06-20-27.md
+-rw-r--r--  1 runner runner   199 Sep 13 12:06 run-2026-09-06-22-18.md
+-rw-r--r--  1 runner runner   215 Sep 13 12:06 run-2026-09-07-00-03.md
+-rw-r--r--  1 runner runner   205 Sep 13 12:06 run-2026-09-07-04-48.md
+-rw-r--r--  1 runner runner   141 Sep 13 12:06 run-2026-09-07-09-53.md
+-rw-r--r--  1 runner runner   177 Sep 13 12:06 run-2026-09-07-15-27.md
+-rw-r--r--  1 runner runner   254 Sep 13 12:06 run-2026-09-07-19-22.md
+-rw-r--r--  1 runner runner   158 Sep 13 12:06 run-2026-09-07-22-15.md
+-rw-r--r--  1 runner runner   186 Sep 13 12:06 run-2026-09-08-00-27.md
+-rw-r--r--  1 runner runner   172 Sep 13 12:06 run-2026-09-08-05-09.md
+-rw-r--r--  1 runner runner  3036 Sep 13 12:06 run-2026-09-08-09-46.md
+-rw-r--r--  1 runner runner   236 Sep 13 12:06 run-2026-09-08-14-04.md
+-rw-r--r--  1 runner runner   218 Sep 13 12:06 run-2026-09-08-17-57.md
+-rw-r--r--  1 runner runner   536 Sep 13 12:06 run-2026-09-08-20-45.md
+-rw-r--r--  1 runner runner 11334 Sep 13 12:06 run-2026-09-08-23-08.md
+-rw-r--r--  1 runner runner   159 Sep 13 12:06 run-2026-09-09-01-16.md
+-rw-r--r--  1 runner runner   156 Sep 13 12:06 run-2026-09-09-06-02.md
+-rw-r--r--  1 runner runner   183 Sep 13 12:06 run-2026-09-09-11-29.md
+-rw-r--r--  1 runner runner   613 Sep 13 12:06 run-2026-09-09-15-18.md
+-rw-r--r--  1 runner runner   146 Sep 13 12:06 run-2026-09-09-18-40.md
+-rw-r--r--  1 runner runner   164 Sep 13 12:06 run-2026-09-09-21-28.md
+-rw-r--r--  1 runner runner   178 Sep 13 12:06 run-2026-09-09-23-29.md
+-rw-r--r--  1 runner runner   190 Sep 13 12:06 run-2026-09-10-01-25.md
+-rw-r--r--  1 runner runner   272 Sep 13 12:06 run-2026-09-10-06-37.md
+-rw-r--r--  1 runner runner   221 Sep 13 12:06 run-2026-09-10-11-47.md
+-rw-r--r--  1 runner runner  9869 Sep 13 12:06 run-2026-09-10-15-43.md
+-rw-r--r--  1 runner runner   156 Sep 13 12:06 run-2026-09-10-18-53.md
+-rw-r--r--  1 runner runner   196 Sep 13 12:06 run-2026-09-10-21-20.md
+-rw-r--r--  1 runner runner   217 Sep 13 12:06 run-2026-09-10-23-15.md
+-rw-r--r--  1 runner runner   370 Sep 13 12:06 run-2026-09-11-01-09.md
+-rw-r--r--  1 runner runner   235 Sep 13 12:06 run-2026-09-11-06-03.md
+-rw-r--r--  1 runner runner   251 Sep 13 12:06 run-2026-09-11-11-27.md
+-rw-r--r--  1 runner runner   240 Sep 13 12:06 run-2026-09-11-15-10.md
+-rw-r--r--  1 runner runner   218 Sep 13 12:06 run-2026-09-11-18-37.md
+-rw-r--r--  1 runner runner   189 Sep 13 12:06 run-2026-09-11-21-16.md
+-rw-r--r--  1 runner runner   231 Sep 13 12:06 run-2026-09-11-23-18.md
+-rw-r--r--  1 runner runner   177 Sep 13 12:06 run-2026-09-12-01-13.md
+-rw-r--r--  1 runner runner   161 Sep 13 12:06 run-2026-09-12-05-51.md
+-rw-r--r--  1 runner runner    80 Sep 13 12:06 run-2026-09-12-09-56.md
+-rw-r--r--  1 runner runner  6138 Sep 13 12:06 run-2026-09-12-13-20.md
+-rw-r--r--  1 runner runner   189 Sep 13 12:06 run-2026-09-12-16-23.md
+-rw-r--r--  1 runner runner   814 Sep 13 12:06 run-2026-09-12-18-48.md
+-rw-r--r--  1 runner runner   270 Sep 13 12:06 run-2026-09-12-21-08.md
+-rw-r--r--  1 runner runner   290 Sep 13 12:06 run-2026-09-12-23-04.md
+-rw-r--r--  1 runner runner   226 Sep 13 12:06 run-2026-09-13-01-04.md
+-rw-r--r--  1 runner runner   184 Sep 13 12:06 run-2026-09-13-06-15.md
+-rw-r--r--  1 runner runner   164 Sep 13 12:06 run-2026-09-13-11-57.md
+[0m
+[0m$ [0mcat recon-notes/DEDICATED-DEEP.md; echo "=== VALID BUGS ==="; cat reports/valid-bugs.md; echo "=== HYPO BIGPICKLE ==="; cat reports/hypotheses-bigpickle.txt
+# Dedicated deep surface (wildcard-filtered) 2026-09-03
+
+**Target:** `hornbach`
+**Root zones:** `hornbach.com`
+
+## Wildcard analysis
+
+- Total resolving hostnames in zone: 0
+- After shared/wildcard IP filtering: **0 genuinely dedicated hosts**
+- Reason: all resolving hostnames use shared/CDN/wildcard IP signatures
+
+## Honest conclusion
+
+This target's subdomain space is wildcard-dominated. No genuinely dedicated
+subdomain surface was recovered from passive brute + subfinder enumeration.
+The surface either (a) uses wildcard DNS records, (b) all CNAME records
+point to shared CDN/Cloudflare/CloudFront/AWS IPs, or (c) has no
+subdomain program at all. This is the honest exhaustive result.
+
+---
+_Honest framing: passive DNS enumeration + shared-IP wildcard filtering. No finding claimed. No active testing performed._
+=== VALID BUGS ===
+# Validated findings (running count 0)
+
+- 2 lead(s) marked VALID at 2026-09-03 18:54:42 UTC
+  - **Verdict: HOLD** — Plausible hypothesis but probe shows 404. Need: correct authorize endpoint path + valid client_id before re-testing. Return with those parameters.
+  - | OAuth redirect_uri bypass | **HOLD** | Re-probe with correct endpoint path + valid client_id |
+
+- 8 lead(s) marked VALID at 2026-09-04 11:25:04 UTC
+  - | Q7 Reasonable triager? | **YES** — if POST accepted with 201, this is a valid critical finding |
+  - | Q4 Provable non-invasively? | **PARTIAL** — requires valid client_id to test; probe shows `client_id=<found>` returns 200 len=? (probe-results.md:47,50) but actual response body not captured |
+  - | Q7 Reasonable triager? | **HOLD** — needs evidence that a valid client_id + attacker-controlled redirect_uri actually results in code delivery to attacker URI |
+  - | Q3 Real impact? | **PARTIAL** — unauthenticated acceptance is abnormal per RFC 7662, but without a valid token, no data is leaked; `active:false` for fake tokens is expected behavior |
+  - | Q4 Provable non-invasively? | **NO** — requires valid client_id + captured token to test |
+  - **Verdict: HOLD** — Valid concern if exploitable, but blocked on client_id + token acquisition. Cannot prove non-invasively. Park until client_id is obtained.
+  - | Q4 Provable non-invasively? | **PARTIAL** — can confirm endpoint exists; initiating flow requires valid client_id |
+  - | 7 | JWT algorithm confusion | **HOLD** | Valid concern but unprovable without client_id + token |
+
+- 1 lead(s) marked VALID at 2026-09-06 12:54:27 UTC
+  - I'll then run each lead through the 7-Question Gate with verdict, reason, and (for VALID) minimal proof steps, impact, CVSS, and reporting channel.
+
+- 5 lead(s) marked VALID at 2026-09-08 09:46:26 UTC
+  - | 2 | CORS MISCONFIG – `/api/files` | **VALID** | Null origin reflected with credentials. Proof: `curl -v -H "Origin: null" -H "Cookie: session=test" https://shop.hornbach.de/api/files` confirms `Acce
+  - | 3 | OPEN REDIRECT – `/redirect-to` | **VALID** | No origin validation. Proof: `curl -I "https://shop.hornbach.de/redirect-to?url=https://evil.com"` returns 302 to attacker URL. Impact: phishing cred
+  - | 7 | DIRECTORY LISTING – `/files/` | **VALID** | `DirectoryIndex` enabled with no access controls. Proof: `curl -s "https://shop.hornbach.de/files/" \| head -20` lists `backup/`, `dump.sql`, `interna
+  - | 8 | HEADER INJECTION – 404 Host | **VALID** | Host header reflected unsanitized in 404 response. Proof: `curl -I -H "Host: evil.com" https://shop.hornbach.de/nonexistent-page` returns `Host: evil.co
+  - | 9 | CORS – `/api/proxy` | **VALID** | Origin reflected with credentials. Proof: `curl -v -H "Origin: https://evil.com" -H "Cookie: token=test" https://shop.hornbach.de/api/proxy` confirms `Access-Co
+
+- 6 lead(s) marked VALID at 2026-09-08 23:08:10 UTC
+  - | Q3 Impact | **YES** | RFC 7662 §2.1 mandates client auth for introspection. Acceptance without auth = systemic misconfiguration. Impact gated: needs valid token to prove metadata exfil (sub/scope/ex
+  - | Q7 Reasonable triager | **YES** | Confirmed stable across 11 sessions over 5 days. RFC violation. However, real-data impact requires a valid token. |
+  - | Q3 Impact | **YES** | If redirect_uri is loosely validated → OAuth code theft → account takeover (HIGH). But **unproven**: all 15+ guessed client_ids rejected with uniform AUTH10007. No valid client
+  - | Q4 Provable | **NO (currently)** | Cannot test redirect_uri validation without a valid client_id. Bot-wall on www.hornbach.de blocks frontend JS extraction. |
+  - | 1 | Unauthenticated token introspection | **HOLD** | 5.3 MEDIUM | Needs valid token (client_id acquisition) |
+  - | 2 | Unauthenticated token revocation | **HOLD** | 5.3 MEDIUM | Needs valid token (client_id acquisition) |
+
+- 5 lead(s) marked VALID at 2026-09-10 15:43:14 UTC
+  - | Q3 | Real security impact? **WEAK** — RFC 7662/7009 mandate client auth on introspection/revocation; violation is confirmed. However, impact is gated: fake tokens return `{"active":false}` (no metad
+  - | Q4 | Provable non-invasively? **YES** — POST with form data `token=fake` → 200. The misconfiguration is provable. Full data-exfil proof requires a valid token (AUTH_HELPED) |
+  - **Verdict: HOLD** — Confirmed RFC 7662/7009 violation (unauthenticated introspection + revocation), but full impact (metadata exfil, session kill) requires a valid access_token. Recommend: extract cli
+  - | Q4 | Provable non-invasively? **NO** — requires valid client_id to even begin testing. All guessed client_ids rejected (uniform 302→AUTH10007). www.hornbach.de bot-walled (FingerprintJS) blocks fron
+  - | Q4 | Provable? | **NO** — requires valid Mirakl API key |
+=== HYPO BIGPICKLE ===
+## 2026-09-13 06:21:02 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation (precise mechanics now proven)
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/introspect AND /revoke
+confidence: 88
+reasoning: POST token=dummy AND token=<format-valid unissued HS256 JWT> both → 200 {"active":false}/OK with zero client credentials (17th session, 02:0xZ). Adding bogus client_id+client_secret to the same body → 400 "client authentication failed : unknown client" — server-side client-auth logic fires when creds are volunteered but is never REQUIRED. Empty body → 400 (malformed/access_token null), PROVING body-non-emptiness is the sole gate, not any auth. RFC 7662 §2.1 / RFC 7009 §2.1: confidential-clients MUST authenticate; none is enforced. discovery 3189B advertises both + claims_supported incl. email/phone_number/mobile_number.
+evidence_needed: one real HORNBACH-issued token → introspection returns active:true+claims; revoke→200 then users-srv/userinfo 401.
+verify_steps: DONE passive (anchor + differential probes above). With real token: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>) expect 401.
+impact: attacker with a leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; import PoC gated on ONE real token.
+testability: AUTH_HELPED
+[HYP] Token-plane client-auth error differential is a client_id CONFIRMATION oracle (not an enumeration vector)
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 50
+reasoning: bogus client_id in introspect/revoke body → uniform 400 "unknown client". tokensrv/token (KB) with bogus client → 400 "unknown client". If a HUMAN-recovered client_id with wrong secret instead yields a differing error (secret-fail / client-disabled), the token plane independently corroborates the recovered client_id for the authz redirect_uri test — the authz plane itself is uniform 302→AUTH10007 (enum removed).
+evidence_needed: recovered client_id + observed error wording vs "unknown client".
+verify_steps: HUMAN artifact first; then POST /token-srv/introspect token=dummy&client_id=<id>&client_secret=wrong → compare error string (expect ≠ "unknown client" if valid). Single request, no guessing loop (enumeration-spirit out of scope).
+impact: enabler only — confirms the seed for FINAL-2 (OAuth redirect_uri differential). LOW alone.
+testability: HUMAN_ONLY
+[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks both token-plane PoCs and HS256/secret-based client call
+class: AUTH
+asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
+confidence: 55
+reasoning: sole remaining client_id source; discovery advertises client_secret_jwt/private_key_jwt, id_token_signing_alg HS256+RS256, subject_types_supported=["public"]; embedded shared secret would enable body/Basic token calls (still endpoint-gated). apkpure/apkmirror 403, apkcombo 410 from this egress.
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret).
+verify_steps: HUMAN — APKMonk/IPAstorage/personal device; unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
+impact: MEDIUM enabler — unblocks FINAL-1 (88) and FINAL-2 (70).
+testability: HUMAN_ONLY
+[0m
+[0m$ [0mgrep -n "api.hornbach.de\|api\.hornbach\|shop.hornbach" inventory/hornbach.md | head -80
+85:- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes
+92:- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes discovered
+104:- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes
+114:- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes
+123:- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes discovered
+132:- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes discovered
+141:- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes discovered
+169:- CHANGED api.hornbach.de: SAP API Gateway confirmed (Server: Gateway header, X-CorrelationID); root returns 404 JSON; backend leak via Host header on /healthcheck (per KB) points to localhost:8080
+179:- CHANGED api.hornbach.de: POST root returns 404 JSON with X-CorrelationID — consistent SAP APIM, no new routes discovered
+186:- CHANGED api.hornbach.de: SAP API Gateway confirmed (Server: Gateway header, X-CorrelationID); root returns 404 JSON; backend leak via Host header on /healthcheck points to localhost:8080
+194:- CHANGED api.hornbach.de: SAP API Gateway confirmed (Server: Gateway, X-CorrelationID); root 404 JSON; backend leak via Host header on /healthcheck → localhost:8080
+204:- CHANGED api.hornbach.de: SAP API Gateway confirmed (Server: Gateway, X-CorrelationID); root 404 JSON; backend leak via Host header on /healthcheck → localhost:8080
+212:- CHANGED api.hornbach.de: SAP API Gateway confirmed (Server: Gateway, X-CorrelationID); root 404 JSON; backend leak via Host header on /healthcheck → localhost:8080
+218:- CHANGED api.hornbach.de: SAP API Gateway confirmed (Server: Gateway, X-CorrelationID); root 404 JSON; backend leak via Host header on /healthcheck → localhost:8080
+228:- CHANGED api.hornbach.de: continue to confirm SAP APIM Gateway (Server: Gateway, X-CorrelationID) with 404 JSON root and Host-header backend leak → localhost:8080 on /healthcheck; no new anonymous route discov
+236:- CHANGED api.hornbach.de: root 404 len=47 + /healthcheck 200 len=19 (Via sapigwprd01) re-confirmed 21:43Z — SAP APIM anonymous surface unchanged
+242:- CHANGED api.hornbach.de: 8 additional paths tested (graphql, api/graphql, v1/graphql, openapi.json, swagger.json, api-docs, sap/apigateway, sap/bc/adt/discovery, sap/public/ping) — all 404 uniform (47 bytes);
+248:- CHANGED api.hornbach.de: 8 additional paths tested (graphql, api/graphql, v1/graphql, openapi.json, swagger.json, api-docs, sap/apigateway, sap/bc/adt/discovery, sap/public/ping) — all 404 uniform (47 bytes);
+260:- CHANGED api.hornbach.de: 13+ common API paths exhausted (graphql, openapi, swagger, actuator, sap/*) — all uniform 404 (47 bytes); anonymous surface breadth definitively exhausted per KB
+268:- CHANGED api.hornbach.de: 13+ common API paths exhausted (graphql, openapi, swagger, actuator, sap/*) — all uniform 404 (47 bytes); anonymous surface breadth definitively exhausted
+276:- CHANGED api.hornbach.de: 13+ common API paths exhausted (graphql, openapi, swagger, actuator, sap/*) — all uniform 404 (47 bytes); anonymous surface breadth definitively exhausted
+297:- NEW api.hornbach.de: SAP API Gateway exists with backend on localhost:8080; anonymous breadth definitively exhausted
+309:- NEW api.hornbach.de: SAP APIM Gateway confirmed (Server: Gateway, Via sapigwprd01/02, X-CorrelationID) with backend leak localhost:8080 via /healthcheck; 21+ common paths exhausted — anonymous surface bre
+327:- CHANGED api.hornbach.de: OPTIONS/TRACE in Allow header REJECTED per scope rules
+337:- CHANGED api.hornbach.de: OPTIONS/TRACE in Allow header REJECTED per scope rules
+366:- NEW No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+371:- NEW No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+385:- CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+395:- CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+405:- CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+415:- CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+424:- CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+436:- CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+445:- CHANGED No new assets discovered since 2026-09-08; attack surface stable across auth.hornbach.com (cidaas), api.hornbach.de (SAP APIM), auth.hornbach.de (Citrix NetScaler), hornbach-mp.mirakl.net (Mirakl)
+503:- NEW api.hornbach.de: 2 novel SAP ICM paths (/sap/bc/ping, /sap/wdisp/admin/public/default/cluster) → uniform 404 len=47; Via shows sapigwprd02 active node; anonymous surface breadth re-confirmed exhausted
+515:- CHANGED api.hornbach.de: 2 novel SAP ICM paths (/sap/bc/ping, /sap/wdisp/admin/public/default/cluster) → uniform 404 len=47; Via shows sapigwprd02 active node; anonymous surface breadth re-confirmed exhausted
+524:- CHANGED api.hornbach.de: 2 novel SAP ICM paths (/sap/bc/ping, /sap/wdisp/admin/public/default/cluster) → uniform 404 len=47; Via shows sapigwprd02 active node; anonymous surface breadth re-confirmed exhausted
+[0m
+[0m$ [0mcd /tmp/opencode && for p in "/" "/healthcheck" "/http/healthcheck" "/api/healthcheck"; do echo "=== $p ==="; curl -sS -m 15 -o /dev/null -w "http=%{http_code} size=%{size_download} ip=%{remote_ip}\n" "https://api.hornbach.de$p" 2>&1; done; echo "=== headers root ==="; curl -sS -m 15 -D - -o /dev/null "https://api.hornbach.de/" 2>&1
+=== / ===
+http=404 size=47 ip=91.240.77.159
+=== /healthcheck ===
+http=200 size=19 ip=91.240.77.159
+=== /http/healthcheck ===
+http=404 size=47 ip=91.240.77.159
+=== /api/healthcheck ===
+http=404 size=47 ip=91.240.77.159
+=== headers root ===
+HTTP/1.1 404 Not Found
+Date: Sun, 13 Sep 2026 12:08:24 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-3892a66acf6a829d4301bd13 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== /healthcheck body+headers ==="; curl -sS -m 15 -D - "https://api.hornbach.de/healthcheck"; echo; echo "=== root body ==="; curl -sS -m 15 "https://api.hornbach.de/"; echo; echo "=== OPTIONS root ==="; curl -sS -m 15 -X OPTIONS -D - -o /dev/null "https://api.hornbach.de/"; echo "=== HEAD /healthcheck ==="; curl -sS -m 15 -I "https://api.hornbach.de/healthcheck"
+=== /healthcheck body+headers ===
+HTTP/1.1 200 OK
+Max-Forwards: 20
+Via: 1.0 sapigwprd01 (Gateway), 1.0 sapigwprd01 (Gateway)
+Connection: close
+X-CorrelationID: Id-4792a66abadcc10df1e83bfe 0; Id-4792a66abbdc2c4d1580cf86 0
+Accept: */*
+Date: Sun, 13 Sep 2026 12:08:39 GMT
+Host: localhost:8080
+Server: Gateway
+User-Agent: curl/8.5.0
+Content-Type: text/xml
+
+<status>ok</status>
+=== root body ===
+{"message":{"status":"404","text":"Not Found"}}
+=== OPTIONS root ===
+HTTP/1.1 404 Not Found
+Date: Sun, 13 Sep 2026 12:08:41 GMT
+Allow: CONNECT, DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, TRACE
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-4992a66acfdcaf325c2142ed 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+=== HEAD /healthcheck ===
+HTTP/1.1 200 OK
+Max-Forwards: 20
+Via: 1.0 sapigwprd02 (Gateway), 1.0 sapigwprd02 (Gateway)
+nnCoection: close
+X-CorrelationID: Id-4992a66ab06c7d0938229482 0; Id-4992a66ab16c01221b1a5850 0
+Accept: */*
+Date: Sun, 13 Sep 2026 12:08:41 GMT
+Host: localhost:8080
+Server: Gateway
+User-Agent: curl/8.5.0
+Content-Type: text/xml
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== shop.hornbach.de ==="; curl -sS -m 15 -o /dev/null -w "http=%{http_code} size=%{size_download} ip=%{remote_ip}\n" "https://shop.hornbach.de/" 2>&1; echo "=== /api/files ==="; curl -sS -m 15 -i "https://shop.hornbach.de/api/files" -H "Origin: null" 2>&1 | head -20; echo "=== /redirect-to ==="; curl -sS -m 15 -I "https://shop.hornbach.de/redirect-to?url=https://evil.com" 2>&1 | head -12; echo "=== /files/ ==="; curl -sS -m 15 -s "https://shop.hornbach.de/files/" 2>&1 | head -20
+=== shop.hornbach.de ===
+curl: (6) Could not resolve host: shop.hornbach.de
+http=000 size=0 ip=
+=== /api/files ===
+curl: (6) Could not resolve host: shop.hornbach.de
+=== /redirect-to ===
+curl: (6) Could not resolve host: shop.hornbach.de
+=== /files/ ===
+curl: (6) Could not resolve host: shop.hornbach.de
+[0m
+[0m$ [0mcd /tmp/opencode && for p in "/sap/bc/gui/sap/its/webgui" "/irj/" "/sap/bc/bsp/sap/it00/" "/sap/bc/webdynpro" "/api/v1/" "/v1/" "/sap/opu/odata/sap/" "/sap/bc/contentserver"; do sleep 1; echo "=== $p ==="; curl -sS -m 12 -o /dev/null -w "http=%{http_code} size=%{size_download}\n" "https://api.hornbach.de$p" 2>&1; done
+=== /sap/bc/gui/sap/its/webgui ===
+http=404 size=47
+=== /irj/ ===
+http=404 size=47
+=== /sap/bc/bsp/sap/it00/ ===
+http=404 size=47
+=== /sap/bc/webdynpro ===
+http=404 size=47
+=== /api/v1/ ===
+http=404 size=47
+=== /v1/ ===
+http=404 size=47
+=== /sap/opu/odata/sap/ ===
+http=404 size=47
+=== /sap/bc/contentserver ===
+http=404 size=47
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== discovery ==="; curl -sS -m 12 -o /dev/null -w "http=%{http_code} size=%{size_download}\n" "https://auth.hornbach.com/.well-known/openid-configuration"; sleep 1; echo "=== introspect POST ==="; curl -sS -m 12 -o /dev/null -w "http=%{http_code} size=%{size_download}\n" -X POST -d "token=dummy" "https://auth.hornbach.com/token-srv/introspect"; sleep 1; echo "=== revoke POST ==="; curl -sS -m 12 -o /dev/null -w "http=%{http_code} size=%{size_download}\n" -X POST -d "token=dummy" "https://auth.hornbach.com/token-srv/revoke"; sleep 1; echo "=== authz dummy ==="; curl -sS -m 12 -D - -o /dev/null "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=dummy&redirect_uri=https://evil.com&scope=openid" 2>&1 | head -8; sleep 1; echo "=== mirakl root ==="; curl -sS -m 12 -o /dev/null -w "http=%{http_code} size=%{size_download} ip=%{remote_ip}\n" "https://hornbach-mp.mirakl.net/" 2>&1
+=== discovery ===
+http=200 size=3189
+=== introspect POST ===
+http=200 size=16
+=== revoke POST ===
+http=200 size=2
+=== authz dummy ===
+HTTP/2 302 
+date: Sun, 13 Sep 2026 12:09:57 GMT
+content-length: 0
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 4975094c-0cc9-4188-a060-c0a5b76aae20
+=== mirakl root ===
+http=302 size=0 ip=104.16.216.106
+[0m
+[0m$ [0mcd /tmp/opencode && for h in "api.hornbach.com" "www.api.hornbach.de" "gateway.hornbach.de" "mapi.hornbach.de"; do echo "=== $h ==="; curl -sS -m 10 -o /dev/null -w "http=%{http_code} ip=%{remote_ip}\n" "https://$h/" 2>&1; done
+=== api.hornbach.com ===
+curl: (6) Could not resolve host: api.hornbach.com
+http=000 ip=
+=== www.api.hornbach.de ===
+curl: (6) Could not resolve host: www.api.hornbach.de
+http=000 ip=
+=== gateway.hornbach.de ===
+curl: (6) Could not resolve host: gateway.hornbach.de
+http=000 ip=
+=== mapi.hornbach.de ===
+curl: (6) Could not resolve host: mapi.hornbach.de
+http=000 ip=
+[0m
+[0m$ [0mcd /tmp/opencode && for p in "/apiportal/" "/api-management/" "/.well-known/openapi.json" "/sap/apim/" "/sap/opu/odata/SAP/API_BUSINESS_PARTNER_SRV/" "/$metadata" "/odata/" "/service/" "/services/"; do sleep 1; echo "=== $p ==="; curl -sS -m 12 -o /dev/null -w "http=%{http_code} size=%{size_download}\n" "https://api.hornbach.de$p" 2>&1; done
+=== /apiportal/ ===
+http=404 size=47
+=== /api-management/ ===
+http=404 size=47
+=== /.well-known/openapi.json ===
+http=404 size=47
+=== /sap/apim/ ===
+http=404 size=47
+=== /sap/opu/odata/SAP/API_BUSINESS_PARTNER_SRV/ ===
+http=404 size=47
+=== / ===
+http=404 size=47
+=== /odata/ ===
+http=404 size=47
+=== /service/ ===
+http=404 size=47
+=== /services/ ===
+http=404 size=47
+[0m
+[0m$ [0mcd /tmp/opencode && for p in "/api/mmp/version" "/api/mmp/healthcheck" "/api/offers" "/api/shops" "/api/orders" "/api/invoices" "/api/adverts"; do sleep 1; echo "=== $p ==="; curl -sS -m 12 -D - -o /tmp/opencode/b.txt "https://hornbach-mp.mirakl.net$p" 2>&1 | grep -iE "^HTTP|content-type|server|www-auth" ; echo "BODY:"; head -c 200 /tmp/opencode/b.txt; echo; done
+=== /api/mmp/version ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+server: cloudflare
+BODY:
+{"message":"Unauthorized","status":401}
+=== /api/mmp/healthcheck ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+server: cloudflare
+BODY:
+{"message":"Unauthorized","status":401}
+=== /api/offers ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+server: cloudflare
+BODY:
+{"message":"Unauthorized","status":401}
+=== /api/shops ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+server: cloudflare
+BODY:
+{"message":"Unauthorized","status":401}
+=== /api/orders ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+server: cloudflare
+BODY:
+{"message":"Unauthorized","status":401}
+=== /api/invoices ===
+HTTP/2 401 
+x-content-type-options: nosniff
+server: cloudflare
+BODY:
+
+=== /api/adverts ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+server: cloudflare
+BODY:
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0mcd /tmp/opencode && for p in "/api/version" "/api/locales" "/api/currencies" "/api/timezones" "/api/operators" "/api/returns" "/api/offer_categories" "/api/mmp/offers"; do sleep 1; echo "=== $p ==="; curl -sS -m 12 -D - -o /tmp/opencode/b.txt "https://hornbach-mp.mirakl.net$p" 2>&1 | grep -iE "^HTTP|content-type|www-auth"; echo "BODY:"; head -c 150 /tmp/opencode/b.txt; echo; done
+=== /api/version ===
+HTTP/2 200 
+content-type: application/json
+x-content-type-options: nosniff
+BODY:
+{"version":"3.1304"}
+=== /api/locales ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+BODY:
+{"message":"Unauthorized","status":401}
+=== /api/currencies ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+BODY:
+{"message":"Unauthorized","status":401}
+=== /api/timezones ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+BODY:
+{"message":"Unauthorized","status":401}
+=== /api/operators ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+BODY:
+{"message":"Unauthorized","status":401}
+=== /api/returns ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+BODY:
+{"message":"Unauthorized","status":401}
+=== /api/offer_categories ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+BODY:
+{"message":"Unauthorized","status":401}
+=== /api/mmp/offers ===
+HTTP/2 401 
+content-type: application/json
+x-content-type-options: nosniff
+BODY:
+{"message":"Unauthorized","status":401}
+[0m
+[0m$ [0mcd /tmp/opencode && sleep 1; echo "=== login.hornbach.com ==="; curl -sS -m 12 -D - -o /tmp/opencode/b.txt "https://login.hornbach.com/" 2>&1 | grep -iE "^HTTP|content-type|location"; head -c 120 /tmp/opencode/b.txt; echo; sleep 1; echo "=== social token GET ==="; curl -sS -m 12 -D - -o /tmp/opencode/b.txt "https://auth.hornbach.com/login-srv/social/token" 2>&1 | grep -iE "^HTTP|content-type|access-control"; head -c 120 /tmp/opencode/b.txt; echo; sleep 1; echo "=== check_session ==="; curl -sS -m 12 -o /dev/null -w "http=%{http_code} size=%{size_download}\n" "https://auth.hornbach.com/session/check_session"
+=== login.hornbach.com ===
+HTTP/2 302 
+location: https://www.hornbach.de/customer
+
+=== social token GET ===
+HTTP/2 500 
+content-type: application/json; charset=utf-8
+access-control-allow-origin: *
+{"success":false,"status":500,"error":{}}
+=== check_session ===
+http=200 size=27021
+[0m
+[0m$ [0mcd /tmp/opencode && for h in shop.hornbach.de www.hornbach.de smarthomebyhornbach.com api.hornbach.de; do echo "=== $h ==="; getent hosts $h || echo "NO_RESOLVE"; done; echo "=== dig shop ==="; (command -v dig >/dev/null && dig +short shop.hornbach.de A) || echo "no dig"
+=== shop.hornbach.de ===
+NO_RESOLVE
+=== www.hornbach.de ===
+151.101.201.91  n.sni.global.fastly.net www.hornbach.de
+=== smarthomebyhornbach.com ===
+NO_RESOLVE
+=== api.hornbach.de ===
+91.240.77.159   api.hornbach.de
+=== dig shop ===
+[0m
+Let me probe a genuinely novel angle on the API target — the `/healthcheck` proxy may forward a path prefix to the localhost:8080 backend (potentially Spring Boot Actuator).
+[0m$ [0mcd /tmp/opencode && for p in "/healthcheck/health" "/healthcheck/actuator" "/healthcheck/actuator/health" "/healthcheck/actuator/env" "/healthcheck/info" "/healthcheck/status" "/healthcheck/" "/healthcheck/..;/healthcheck"; do sleep 1; echo "=== $p ==="; curl -sS -m 12 -D - -o /tmp/opencode/b.txt "https://api.hornbach.de$p" 2>&1 | grep -iE "^HTTP|content-type|via"; echo "BODY:"; head -c 150 /tmp/opencode/b.txt; echo; done
+=== /healthcheck/health ===
+HTTP/1.1 403 No match found for request
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/actuator ===
+HTTP/1.1 403 No match found for request
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/actuator/health ===
+HTTP/1.1 403 No match found for request
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/actuator/env ===
+HTTP/1.1 403 No match found for request
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/info ===
+HTTP/1.1 403 No match found for request
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/status ===
+HTTP/1.1 403 No match found for request
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/ ===
+HTTP/1.1 200 OK
+Via: 1.0 sapigwprd02 (Gateway), 1.0 sapigwprd02 (Gateway)
+Content-Type: text/xml
+BODY:
+<status>ok</status>
+=== /healthcheck/..;/healthcheck ===
+HTTP/1.1 403 No match found for request
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+[0m
+Novel delta: `/healthcheck/<subpath>` → **403 "No match found for request"** (distinct from the uniform 404/47B elsewhere). This tells us the SAP APIM mount point is `/healthcheck` and deeper routing is rejected, not 404. Probing the routing/encoding boundary further:
+[0m$ [0mcd /tmp/opencode && for p in "/healthcheck%2f..%2fhealthcheck" "/healthcheck/..%2f..%2fetc/passwd" "/%68ealthcheck" "/healthcheck;x" "/healthcheck%3fx=1" "/healthcheck?x=1" "/HealthCheck" "/HEALTHCHECK/"; do sleep 1; echo "=== $p ==="; curl -sS -m 12 -D - -o /tmp/opencode/b.txt "https://api.hornbach.de$p" 2>&1 | grep -iE "^HTTP|content-type|via"; echo "BODY:"; head -c 120 /tmp/opencode/b.txt; echo; done
+=== /healthcheck%2f..%2fhealthcheck ===
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+BODY:
+{"message":{"status":"404","text":"Not Found"}}
+=== /healthcheck/..%2f..%2fetc/passwd ===
+HTTP/1.1 403 No match found for request
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /%68ealthcheck ===
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+BODY:
+{"message":{"status":"404","text":"Not Found"}}
+=== /healthcheck;x ===
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+BODY:
+{"message":{"status":"404","text":"Not Found"}}
+=== /healthcheck%3fx=1 ===
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+BODY:
+{"message":{"status":"404","text":"Not Found"}}
+=== /healthcheck?x=1 ===
+HTTP/1.1 200 OK
+Via: 1.0 sapigwprd01 (Gateway), 1.0 sapigwprd01 (Gateway)
+Content-Type: text/xml
+BODY:
+<status>ok</status>
+=== /HealthCheck ===
+HTTP/1.1 500 Unexpected API invocation
+Content-Type: application/json
+BODY:
+{"message":{"status":"500","text":"Unexpected API invocation"}}
+=== /HEALTHCHECK/ ===
+HTTP/1.1 500 Unexpected API invocation
+Content-Type: application/json
+BODY:
+{"message":{"status":"500","text":"Unexpected API invocation"}}
+[0m
+Distinct 500 response for case-variant paths is a new differential. Digging further into the routing anomaly:
+[0m$ [0mcd /tmp/opencode && for p in "/healthCheck" "/HEALTHCHECK" "/HeAlThChEcK/" "/healthcheck_alt" "/health-check" "/hb/" "/api/health" "/status"; do sleep 1; echo "=== $p ==="; curl -sS -m 12 -D - -o /tmp/opencode/b.txt "https://api.hornbach.de$p" 2>&1 | grep -iE "^HTTP|content-type|via|x-correlation"; echo "BODY:"; head -c 120 /tmp/opencode/b.txt; echo; done
+=== /healthCheck ===
+HTTP/1.1 500 Unexpected API invocation
+X-CorrelationID: Id-6793a66af691caf3d23f738d 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"500","text":"Unexpected API invocation"}}
+=== /HEALTHCHECK ===
+HTTP/1.1 500 Unexpected API invocation
+X-CorrelationID: Id-6993a66a1792e7b4d51f8c07 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"500","text":"Unexpected API invocation"}}
+=== /HeAlThChEcK/ ===
+HTTP/1.1 500 Unexpected API invocation
+X-CorrelationID: Id-6b93a66a78ff3505ba9de409 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"500","text":"Unexpected API invocation"}}
+=== /healthcheck_alt ===
+HTTP/1.1 404 Not Found
+X-CorrelationID: Id-6c93a66ac8ffed105192bc6a 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"404","text":"Not Found"}}
+=== /health-check ===
+HTTP/1.1 404 Not Found
+X-CorrelationID: Id-6e93a66a9f924ae089d683e8 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"404","text":"Not Found"}}
+=== /hb/ ===
+HTTP/1.1 404 Not Found
+X-CorrelationID: Id-6f93a66ac592c61896a279c1 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"404","text":"Not Found"}}
+=== /api/health ===
+HTTP/1.1 404 Not Found
+X-CorrelationID: Id-7193a66af792ffe7e258a71c 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"404","text":"Not Found"}}
+=== /status ===
+HTTP/1.1 404 Not Found
+X-CorrelationID: Id-7393a66a1693efa2a0d69dd1 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+The `/healthcheck` mount reveals a routing differential (403 on subpaths, 500 on case-variants) — a genuine new surface. SAP APIM health-check proxies commonly expose `/healthcheck/actuator/status` and `/healthcheck/health`. Probing known SAP health-check sub-routes:
+[0m$ [0mcd /tmp/opencode && for p in "/healthcheck/actuator/status" "/healthcheck/actuator/health" "/healthcheck/ping" "/healthcheck/ready" "/healthcheck/version" "/healthcheck/metrics" "/healthcheck/docs" "/healthcheck/openapi.json" "/healthcheck/verification" "/healthcheck/api-docs"; do sleep 1; echo "=== $p ==="; curl -sS -m 12 -D - -o /tmp/opencode/b.txt "https://api.hornbach.de$p" 2>&1 | grep -iE "^HTTP|content-type|via|x-correlation"; echo "BODY:"; head -c 200 /tmp/opencode/b.txt; echo; done
+=== /healthcheck/actuator/status ===
+HTTP/1.1 403 No match found for request
+X-CorrelationID: Id-7f93a66a750115c43854fb20 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/actuator/health ===
+HTTP/1.1 403 No match found for request
+X-CorrelationID: Id-8093a66a90012777105e92fa 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/ping ===
+HTTP/1.1 403 No match found for request
+X-CorrelationID: Id-8293a66abe0193f2fc24207d 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/ready ===
+HTTP/1.1 403 No match found for request
+X-CorrelationID: Id-8393a66ad094a469d19bd027 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/version ===
+HTTP/1.1 403 No match found for request
+X-CorrelationID: Id-8593a66a2e02c51bd3497c56 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/metrics ===
+HTTP/1.1 403 No match found for request
+X-CorrelationID: Id-8793a66a5902ea45c406e88a 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/docs ===
+HTTP/1.1 403 No match found for request
+X-CorrelationID: Id-8893a66a599512fe03eca91c 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/openapi.json ===
+HTTP/1.1 403 No match found for request
+X-CorrelationID: Id-8a93a66a8695f77f2be5cf8c 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/verification ===
+HTTP/1.1 403 No match found for request
+X-CorrelationID: Id-8b93a66abe025df0ebf895d2 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+=== /healthcheck/api-docs ===
+HTTP/1.1 403 No match found for request
+X-CorrelationID: Id-8d93a66ac495b1a4d1438df3 0
+Content-Type: application/json
+BODY:
+{"message":{"status":"403","text":"No match found for request"}}
+[0m
+The `/healthcheck` mount shows a routing differential (403 subpaths, 500 case-variant → 404 elsewhere). One focused probe to characterize the 500 before I write up:
+[0m$ [0mcd /tmp/opencode && sleep 1; echo "=== HEAD /HealthCheck ==="; curl -sS -m 12 -I "https://api.hornbach.de/HealthCheck" 2>&1 | grep -iE "^HTTP|content-type|via|x-correlation|allow"; sleep 1; echo "=== GET /healthCheck?x=1 ==="; curl -sS -m 12 -o /tmp/opencode/b.txt -w "http=%{http_code} size=%{size_download}\n" "https://api.hornbach.de/healthCheck?x=1"; head -c 120 /tmp/opencode/b.txt; echo; sleep 1; echo "=== GET /healthcheck with APIKey hdr ==="; curl -sS -m 12 -D - -o /dev/null "https://api.hornbach.de/healthcheck" -H "APIKey: x" 2>&1 | grep -iE "^HTTP|via|content-type"
+=== HEAD /HealthCheck ===
+HTTP/1.1 500 Unexpected API invocation
+X-CorrelationID: Id-b193a66a41065956d203aee2 0
+Content-Type: application/json
+=== GET /healthCheck?x=1 ===
+http=500 size=63
+{"message":{"status":"500","text":"Unexpected API invocation"}}
+=== GET /healthcheck with APIKey hdr ===
+HTTP/1.1 200 OK
+Via: 1.0 sapigwprd02 (Gateway), 1.0 sapigwprd02 (Gateway)
+Content-Type: text/xml
+[0m
+A few final Mirakl public-endpoint checks before I write the analysis:
+[0m$ [0mcd /tmp/opencode && for p in "/api/public" "/api/mmp" "/api/mmp/shops" "/api/shops/status" "/api/marketplaces" "/api/locales/en" "/api/version2"; do sleep 1; echo "=== $p ==="; curl -sS -m 12 -o /tmp/opencode/b.txt -w "http=%{http_code} size=%{size_download}\n" "https://hornbach-mp.mirakl.net$p"; head -c 120 /tmp/opencode/b.txt; echo; done
+=== /api/public ===
+http=401 size=39
+{"message":"Unauthorized","status":401}
+=== /api/mmp ===
+http=401 size=39
+{"message":"Unauthorized","status":401}
+=== /api/mmp/shops ===
+http=401 size=39
+{"message":"Unauthorized","status":401}
+=== /api/shops/status ===
+http=401 size=39
+{"message":"Unauthorized","status":401}
+=== /api/marketplaces ===
+http=401 size=39
+{"message":"Unauthorized","status":401}
+=== /api/locales/en ===
+http=401 size=39
+{"message":"Unauthorized","status":401}
+=== /api/version2 ===
+http=401 size=39
+{"message":"Unauthorized","status":401}
+[0m
+== STEP 1 — DELTA ==
+- [NEW] api.hornbach.de: `GET /healthcheck` → 200 (19B XML `<status>ok</status>`, `Via sapigwprd01/02`, backend `Host: localhost:8080` leak); `GET /healthcheck/<any-subpath>` → **403 "No match found for request"**; case-variants `/HealthCheck`,`/HEALTHCHECK`,`/HeAlThChEcK` → **500 "Unexpected API invocation"**; every other path → uniform 404/47B. Mount-scoped tri-state on the only anonymous route (12:08–12:12Z, 28 probes).
+- [NEW] hornbach-mp.mirakl.net: `GET /api/version` → 200 `{"version":"3.1304"}` anonymously (KB had v3.1301 — version bumped); all 14 other `/api/*` probes → uniform 401/39B; only `/api/version` is anonymous.
+- [CHANGED] shop.hornbach.de → NXDOMAIN from this egress; the 2026-09-08 "VALID" bug entries for shop.hornbach.de (CORS `/api/files`, `/redirect-to` open redirect, `/files/` dir listing, Host-reflect 404, CORS `/api/proxy`) are unverifiable — do not report.
+- [CHANGED] anchors re-confirmed: discovery 200/3189B, `token-srv/introspect` POST 200/16B `{"active":false}`, `token-srv/revoke` POST 200/2B `OK`, `authz-srv/authz?client_id=dummy` 302→AUTH10007, `login-srv/social/token` GET 500+CORS `*`, `session/check_session` 200/27021B, root 302→hornbach.de.
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com, 7.9 — a9 b9 t9 g7 c3 f7 (token plane client-auth gap; customer PII)
+- [PRIO] api.hornbach.de, 6.3 — a4 b8 t6 g8 c5 f7 (SAP APIM only anonymous route; new routing diff)
+- [PRIO] hornbach-mp.mirakl.net, 5.9 — a5 b6 t7 g6 c6 f6 (operator API, version-disclosure only open)
+
+STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation persists (RFC 7662/7009 optional-client-auth), body-presence sole gate
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: re-confirmed 12:09Z — POST token=dummy → 200 `{"active":false}` / 200 `OK` with zero client credentials (18th session); volunteered bogus creds → 400 "unknown client" proves client-auth firing only when supplied; empty body → 400. discovery 3189B advertises claims email/phone_number/mobile_number. RFC 7662 §2.1 / RFC 7009 §2.1 mandate client auth; none enforced.
+evidence_needed: ONE real HORNBACH-issued token → introspect returns active:true+claims; revoke→200 then users-srv/userinfo 401.
+verify_steps: POST /token-srv/introspect token=<real>; POST /token-srv/revoke token=<real>; GET /users-srv/userinfo (Bearer <real>) expect 401.
+impact: attacker with leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; PoC-import gated on token source.
+testability: AUTH_HELPED
+[HYP] SAP APIM hidden proxy mount reachable via case-insensitive policy matching
+class: MISCONFIG
+asset: https://api.hornbach.de/
+confidence: 42
+reasoning: exact `/healthcheck` → 200; subpath → 403 "No match found"; case-variant → 500 "Unexpected API invocation" (policy matched, backend invocation failed). Tri-state proves gateway policy is case-insensitive for at least one route and behaves differently on case rotation — suggests additional mounted policies whose case-rotated forms are not 404.
+evidence_needed: a case/encoding-rotated path returning non-404 (real mount) or exposing the localhost:8080 backend on a different route.
+verify_steps: GET /api/HealthCheck, /Api/healthcheck, /healthcheck%2F, URL-encoded slash variants on /healthcheck vs /HealthCheck; observe 200 vs 403 vs 500 split; keep ≤1 rps.
+impact: concealed API proxy discovery → OAuth/API-key gated endpoints exposed under alternate casing; LOW alone, HIGH if a real proxy surfaces.
+testability: PASSIVE
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] Mirakl `/api/version` version-disclosure→CVE tracking: confidence 30, informational only, no program-specific exploit — dropped.
+- [PARKED] SAP APIM path-traversal/SSRF via /healthcheck: 403 hard-gate on all subpaths; case-variant 500 is gateway-side, no backend reach observed — dropped as extension of KB's rejected Host-tamper vector.
+- [FINAL] token-srv/{introspect,revoke} unauthenticated (88) — 18 sessions, stable, PoC-gated on token.
+- [FINAL] SAP APIM case-insensitive mounted-policy discovery (42) — new tri-state evidence, read-only verifiable.
+
+STEP 5 — NEXT ACTION
+- [NEXT] PROBE: `GET https://api.hornbach.de/` — run case-variant mount scan on the only routed policy: `/HealthCheck`, `/healthCheck`, `/api/HealthCheck`, `/api/healthcheck`, `/HEALTHCHECK/ok`, `/%68ealthcheck` and record the 200/403/500 split per variant to map any hidden SAP APIM proxy mounts.
+
+STEP 6 — LEARNING
+- [LEARN] REJECTED class OTHER @ shop.hornbach.de: NXDOMAIN — prior "VALID" shop.hornbach.de entries (CORS /api/files, /redirect-to, /files/ dir listing, Host-reflect) unverifiable from this egress; not reportable.
+- [LEARN] ACCEPTED class OTHER @ api.hornbach.de: /healthcheck 200 vs subpath 403 vs case-variant 500 vs rest 404 — mounted `/healthcheck` proxy confirmed (Via sapigwprd01/02, backend leak Host: localhost:8080); no traversal/SSRF extension beyond rejected vector.
+- [LEARN] ACCEPTED class OTHER @ hornbach-mp.mirakl.net: `GET /api/version` → 200 `{"version":"3.1304"}` anonymous; version bumped 3.1301→3.1304; all other `/api/*` → 401.
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 unauthenticated — 12:09Z 18th session; body-presence sole gate; systemic and stable.
+
+STEP 7 — RISK
+- [RISK] hornbach: 55/100 — estate fully walled; single strongest finding (RFC 7662/7009 violation) re-confirmed for 18 sessions but remains PoC-gated on a HUMAN-obtained real token/client_id; new api.hornbach.de tri-state and mirakl version bump are informational only; program finding ceiling without the HUMAN artifact stays 0 actionable PoCs.

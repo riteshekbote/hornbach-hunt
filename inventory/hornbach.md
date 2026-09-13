@@ -524,3 +524,7 @@ www.hornbach.com
 - CHANGED api.hornbach.de: 2 novel SAP ICM paths (/sap/bc/ping, /sap/wdisp/admin/public/default/cluster) → uniform 404 len=47; Via shows sapigwprd02 active node; anonymous surface breadth re-confirmed exhausted
 
 ## 2026-09-13 06:25:02 UTC
+
+## 2026-09-13 12:20:46 UTC
+- CHANGED auth.hornbach.com/ root now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend; root HTML client_id extraction hypothesis definitively dead
+- CHANGED hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login.hornbach.com ALL serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_i

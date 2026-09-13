@@ -1,4 +1,4 @@
-## 2026-09-13 06:21:02 UTC [target] (model bigpickle)
+## 2026-09-13 12:16:44 UTC [target] (model bigpickle)
 [HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation (precise mechanics now proven)
 class: AUTH
 asset: https://auth.hornbach.com/token-srv/introspect AND /revoke
@@ -26,3 +26,21 @@ evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded s
 verify_steps: HUMAN — APKMonk/IPAstorage/personal device; unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
 impact: MEDIUM enabler — unblocks FINAL-1 (88) and FINAL-2 (70).
 testability: HUMAN_ONLY
+[HYP] Unauthenticated token introspection + revocation persists (RFC 7662/7009 optional-client-auth), body-presence sole gate
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: re-confirmed 12:09Z — POST token=dummy → 200 `{"active":false}` / 200 `OK` with zero client credentials (18th session); volunteered bogus creds → 400 "unknown client" proves client-auth firing only when supplied; empty body → 400. discovery 3189B advertises claims email/phone_number/mobile_number. RFC 7662 §2.1 / RFC 7009 §2.1 mandate client auth; none enforced.
+evidence_needed: ONE real HORNBACH-issued token → introspect returns active:true+claims; revoke→200 then users-srv/userinfo 401.
+verify_steps: POST /token-srv/introspect token=<real>; POST /token-srv/revoke token=<real>; GET /users-srv/userinfo (Bearer <real>) expect 401.
+impact: attacker with leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; PoC-import gated on token source.
+testability: AUTH_HELPED
+[HYP] SAP APIM hidden proxy mount reachable via case-insensitive policy matching
+class: MISCONFIG
+asset: https://api.hornbach.de/
+confidence: 42
+reasoning: exact `/healthcheck` → 200; subpath → 403 "No match found"; case-variant → 500 "Unexpected API invocation" (policy matched, backend invocation failed). Tri-state proves gateway policy is case-insensitive for at least one route and behaves differently on case rotation — suggests additional mounted policies whose case-rotated forms are not 404.
+evidence_needed: a case/encoding-rotated path returning non-404 (real mount) or exposing the localhost:8080 backend on a different route.
+verify_steps: GET /api/HealthCheck, /Api/healthcheck, /healthcheck%2F, URL-encoded slash variants on /healthcheck vs /HealthCheck; observe 200 vs 403 vs 500 split; keep ≤1 rps.
+impact: concealed API proxy discovery → OAuth/API-key gated endpoints exposed under alternate casing; LOW alone, HIGH if a real proxy surfaces.
+testability: PASSIVE

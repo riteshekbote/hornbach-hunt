@@ -1,13 +1,15 @@
-## 2026-09-13 06:24:52 UTC [target] (model nemotron3)
+## 2026-09-13 12:20:34 UTC [target] (model nemotron3)
+[CHANGED] auth.hornbach.com/ root now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend; root HTML client_id extraction hypothesis definitively dead
+[CHANGED] hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login.hornbach.com ALL serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
 [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},9.10,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=6,freshness=9
 [PRIO] auth.hornbach.com/authz-srv/authz,7.65,attack_surface=9,business_value=9,tech_exposure=8,gate_ease=3,cloud_surface=6,freshness=9
-[PRIO] auth.hornbach.com/users-srv/userinfo,6.60,attack_surface=7,business_value=8,tech_exposure=7,gate_ease=2,cloud_surface=6,freshness=9
 [PRIO] api.hornbach.de,6.25,attack_surface=6,business_value=7,tech_exposure=6,gate_ease=4,cloud_surface=8,freshness=7
+[PRIO] auth.hornbach.com/users-srv/userinfo,6.60,attack_surface=7,business_value=8,tech_exposure=7,gate_ease=2,cloud_surface=6,freshness=9
 [PRIO] auth.hornbach.de,5.15,attack_surface=5,business_value=6,tech_exposure=5,gate_ease=2,cloud_surface=7,freshness=6
 [HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
 class: AUTH
 asset: auth.hornbach.com/token-srv/{introspect,revoke}
-confidence: 85
+confidence: 88
 reasoning: POST /token-srv/introspect returns 200 {"active":false} unauthenticated across 14+ independent sessions; POST /token-srv/revoke returns 200 OK unauthenticated (text/plain); both RFC 7662/7009 require client authentication; OIDC discovery advertises client auth methods for both but endpoints accept empty POST body; GET/HEAD return 404 (parameter-sensitive routing)
 evidence_needed: Valid access_token from any client to demonstrate introspection returns active=true + token metadata (exp, scope, client_id, sub) and revoke invalidates session
 verify_steps: 1) POST https://auth.hornbach.com/token-srv/introspect -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe active=true + metadata; 2) POST https://auth.hornbach.com/token-srv/revoke -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe 200 OK; 3) Repeat introspect — observe active=false
@@ -22,20 +24,20 @@ evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, ht
 verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach.app.smarthome) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
 impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
 testability: AUTH_HELPED
-[HYP] Userinfo endpoint token binding / subject claim extraction via public subject_type
-class: AUTH
-asset: auth.hornbach.com/users-srv/userinfo
-confidence: 55
-reasoning: OIDC discovery advertises subject_types_supported=["public"] — sub claim is non-pairwise (same across clients); userinfo endpoint is bearer-gated (401 JSON) and mounted at users-srv/userinfo (token-srv/userinfo → 404 router-doesn't-exist); if valid access_token obtained, subject claim can be extracted and correlated across clients; token introspection unauthenticated may leak token metadata for stolen tokens
-evidence_needed: Valid access_token (from mobile app client_id + password grant or authorization code flow) to call userinfo and introspect; verify sub claim consistency across tokens from different clients
-verify_steps: 1) Obtain valid access_token via client_id from mobile app; 2) GET https://auth.hornbach.com/users-srv/userinfo -H "Authorization: Bearer <token>" — extract sub claim; 3) POST https://auth.hornbach.com/token-srv/introspect -d "token=<token>" — correlate metadata; 4) Repeat with different client_id if available — verify same sub
-impact: Cross-client user correlation + token metadata leak; enables user tracking and session enumeration (AUTH class, MEDIUM)
-testability: AUTH_HELPED
-[PARKED] Userinfo endpoint token binding / subject claim extraction via public subject_type: confidence 55 but depends entirely on obtaining valid client_id+token first (AUTH_HELPED gate); no independent verification path without mobile app extraction — parked until client_id recovered.
-[FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 85, AUTH_HELPED, MEDIUM-HIGH)
+[HYP] SSRF-to-cloud-metadata via SAP APIM Host-header backend routing on api.hornbach.de
+class: SSRF
+asset: api.hornbach.de
+confidence: 45
+reasoning: /healthcheck returns 200 XML with Host: localhost:8080 in response headers (Via: sapigwprd01/02, Server: Gateway); SAP APIM Gateway may route based on Host/X-Forwarded-Host headers; 21+ common API paths exhausted (all 404 len=47); OPTIONS on root shows Allow: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE but no CORS config; Host-header tampering on /healthcheck yielded only 503 or default backend (per KB 2026-09-06) — no cross-backend routing confirmed
+evidence_needed: Host/X-Forwarded-Host header manipulation that routes to 169.254.169.254 (AWS/GCP/Azure metadata) or internal services; proof of backend routing control beyond localhost:8080
+verify_steps: 1) GET https://api.hornbach.de/healthcheck -H "Host: 169.254.169.254" — observe backend response; 2) GET https://api.hornbach.de/healthcheck -H "X-Forwarded-Host: 169.254.169.254" — observe backend response; 3) Test variations: localhost, 127.0.0.1, internal hostnames; 4) If metadata reached, extract IAM keys/instance profile
+impact: Cloud metadata access → IAM credentials → lateral movement in cloud account (SSRF class, CRITICAL if confirmed)
+testability: PASSIVE
+[PARKED] SSRF-to-cloud-metadata via SAP APIM Host-header backend routing on api.hornbach.de: confidence 45 but KB 2026-09-06 explicitly REJECTED — Host/X-Forwarded-Host tampering on /healthcheck yields only 503 or default localhost:8080 backend; no cross-backend routing, no SSRF-to-metadata vector; reflected headers are descriptive only
+[FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 88, AUTH_HELPED, MEDIUM-HIGH)
 [FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
-[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks both 85-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
-[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14th session 08:47Z 09-11; body-presence sole gate; systemic and stable
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks both 88-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14th+ session; body-presence sole gate; systemic and stable
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
 [LEARN] CHANGED class OTHER @ auth.hornbach.com/ (root): now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend but no content served; root HTML client_id extraction hypothesis definitively dead (was already PARKED)

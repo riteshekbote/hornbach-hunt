@@ -2959,3 +2959,49 @@ evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded s
 verify_steps: HUMAN — APKMonk/IPAstorage/personal device; unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
 impact: MEDIUM enabler — unblocks FINAL-1 (88) and FINAL-2 (70).
 testability: HUMAN_ONLY
+## 2026-09-13 12:16:44 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation (precise mechanics now proven)
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/introspect AND /revoke
+confidence: 88
+reasoning: POST token=dummy AND token=<format-valid unissued HS256 JWT> both → 200 {"active":false}/OK with zero client credentials (17th session, 02:0xZ). Adding bogus client_id+client_secret to the same body → 400 "client authentication failed : unknown client" — server-side client-auth logic fires when creds are volunteered but is never REQUIRED. Empty body → 400 (malformed/access_token null), PROVING body-non-emptiness is the sole gate, not any auth. RFC 7662 §2.1 / RFC 7009 §2.1: confidential-clients MUST authenticate; none is enforced. discovery 3189B advertises both + claims_supported incl. email/phone_number/mobile_number.
+evidence_needed: one real HORNBACH-issued token → introspection returns active:true+claims; revoke→200 then users-srv/userinfo 401.
+verify_steps: DONE passive (anchor + differential probes above). With real token: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>) expect 401.
+impact: attacker with a leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; import PoC gated on ONE real token.
+testability: AUTH_HELPED
+[HYP] Token-plane client-auth error differential is a client_id CONFIRMATION oracle (not an enumeration vector)
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 50
+reasoning: bogus client_id in introspect/revoke body → uniform 400 "unknown client". tokensrv/token (KB) with bogus client → 400 "unknown client". If a HUMAN-recovered client_id with wrong secret instead yields a differing error (secret-fail / client-disabled), the token plane independently corroborates the recovered client_id for the authz redirect_uri test — the authz plane itself is uniform 302→AUTH10007 (enum removed).
+evidence_needed: recovered client_id + observed error wording vs "unknown client".
+verify_steps: HUMAN artifact first; then POST /token-srv/introspect token=dummy&client_id=<id>&client_secret=wrong → compare error string (expect ≠ "unknown client" if valid). Single request, no guessing loop (enumeration-spirit out of scope).
+impact: enabler only — confirms the seed for FINAL-2 (OAuth redirect_uri differential). LOW alone.
+testability: HUMAN_ONLY
+[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks both token-plane PoCs and HS256/secret-based client call
+class: AUTH
+asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
+confidence: 55
+reasoning: sole remaining client_id source; discovery advertises client_secret_jwt/private_key_jwt, id_token_signing_alg HS256+RS256, subject_types_supported=["public"]; embedded shared secret would enable body/Basic token calls (still endpoint-gated). apkpure/apkmirror 403, apkcombo 410 from this egress.
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret).
+verify_steps: HUMAN — APKMonk/IPAstorage/personal device; unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
+impact: MEDIUM enabler — unblocks FINAL-1 (88) and FINAL-2 (70).
+testability: HUMAN_ONLY
+[HYP] Unauthenticated token introspection + revocation persists (RFC 7662/7009 optional-client-auth), body-presence sole gate
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: re-confirmed 12:09Z — POST token=dummy → 200 `{"active":false}` / 200 `OK` with zero client credentials (18th session); volunteered bogus creds → 400 "unknown client" proves client-auth firing only when supplied; empty body → 400. discovery 3189B advertises claims email/phone_number/mobile_number. RFC 7662 §2.1 / RFC 7009 §2.1 mandate client auth; none enforced.
+evidence_needed: ONE real HORNBACH-issued token → introspect returns active:true+claims; revoke→200 then users-srv/userinfo 401.
+verify_steps: POST /token-srv/introspect token=<real>; POST /token-srv/revoke token=<real>; GET /users-srv/userinfo (Bearer <real>) expect 401.
+impact: attacker with leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; PoC-import gated on token source.
+testability: AUTH_HELPED
+[HYP] SAP APIM hidden proxy mount reachable via case-insensitive policy matching
+class: MISCONFIG
+asset: https://api.hornbach.de/
+confidence: 42
+reasoning: exact `/healthcheck` → 200; subpath → 403 "No match found"; case-variant → 500 "Unexpected API invocation" (policy matched, backend invocation failed). Tri-state proves gateway policy is case-insensitive for at least one route and behaves differently on case rotation — suggests additional mounted policies whose case-rotated forms are not 404.
+evidence_needed: a case/encoding-rotated path returning non-404 (real mount) or exposing the localhost:8080 backend on a different route.
+verify_steps: GET /api/HealthCheck, /Api/healthcheck, /healthcheck%2F, URL-encoded slash variants on /healthcheck vs /HealthCheck; observe 200 vs 403 vs 500 split; keep ≤1 rps.
+impact: concealed API proxy discovery → OAuth/API-key gated endpoints exposed under alternate casing; LOW alone, HIGH if a real proxy surfaces.
+testability: PASSIVE
