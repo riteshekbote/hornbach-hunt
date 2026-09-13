@@ -20952,3 +20952,127 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkdW1teSIsImF1ZCI6ImR1bW15IiwiaXN
 jwks 200
 {"keys":[{"kid":"c6b6dd13-8db9-49fc-8b11-0071d5c33f22","kty":"RSA","alg":"RS256","use":"sig","n":"0fV_ty8lszSIM1Yfoa2n2Wnf1FBvM5yDmKqzekRQNdgy7Ie1RL_jRCqdNE-amEryJ2Mz45mqvZ8Jspy67Qgj9O8UjUj3EYiKjsqsi1AjAWYeBZvbO3egWPwabH0STBAma-O-noG_S3qVqr9JYt77U45qIh7h3u8xItb0hAMv-DgD5udBVPQd6vHmvpuexiHF7zsVhojUg8FKpvRO8pvUXGPrKZX7lLAe4zZqutVU02bzJhdJ0qcoGdJ_bTFHLL24dCVkigyZaxZonEa-p7kVY4Em9Jc5GRTSN0QU_OHAtAVNu1
 [0m
+===== ANALYST bigpickle 2026-09-13 06:25:02 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mpython3 - <<'EOF'
+import base64, hashlib, hmac, json
+def b64(d):
+    return base64.urlsafe_b64encode(d).rstrip(b'=')
+header = b64(json.dumps({"alg":"HS256","typ":"JWT"}).encode())
+payload = b64(json.dumps({"sub":"00000000-0000-0000-0000-000000000000","exp":4102444800,"iss":"analyst-test"}).encode())
+sig = b64(hmac.new(b"dummy", header+b"."+payload, hashlib.sha256).digest())
+print((header+b"."+payload+b"."+sig).decode())
+EOF
+eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJzdWIiOiAiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIiwgImV4cCI6IDQxMDI0NDQ4MDAsICJpc3MiOiAiYW5hbHlzdC10ZXN0In0.GEtgaSS9sz-0MXaBGzKKO9XivaB8USJfJk4pjJc1NYY
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "curl:%{http_code}\n" --max-time 10 https://auth.hornbach.com/.well-known/openid-configuration; echo "done"
+curl:200
+done
+[0m
+Discovery still 200. Running the differential probes (dummy-only data, established methodology).
+[0m$ [0mJWT="eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJzdWIiOiAiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIiwgImV4cCI6IDQxMDI0NDQ4MDAsICJpc3MiOiAiYW5hbHlzdC10ZXN0In0.GEtgaSS9sz-0MXaBGzKKO9XivaB8USJfJk4pjJc1NYY"; for t in "dummy" "$JWT"; do echo "=== introspect token=${t:0:12}... ==="; curl -s -w "\nHTTP:%{http_code}\n" --max-time 15 -X POST -H "Content-Type: application/x-www-form-urlencoded" --data-urlencode "token=$t" https://auth.hornbach.com/token-srv/introspect; sleep 2; done; echo "=== introspect EMPTY BODY ==="; curl -s -w "\nHTTP:%{http_code}\n" --max-time 15 -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "" https://auth.hornbach.com/token-srv/introspect
+=== introspect token=dummy... ===
+{"active":false}
+HTTP:200
+=== introspect token=eyJhbGciOiAi... ===
+{"active":false}
+HTTP:200
+=== introspect EMPTY BODY ===
+{"code":"","error":"unauthorized_client","error_description":"request body cant be emptyerror: malformed request body"}
+HTTP:400
+[0m
+Introspect differential captured. Now revoke variants + route-presence probes.
+[0m$ [0mJWT="eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJzdWIiOiAiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIiwgImV4cCI6IDQxMDI0NDQ4MDAsICJpc3MiOiAiYW5hbHlzdC10ZXN0In0.GEtgaSS9sz-0MXaBGzKKO9XivaB8USJfJk4pjJc1NYY"; for t in "dummy" "$JWT"; do echo "=== revoke token=${t:0:12}... ==="; curl -s -w "\nHTTP:%{http_code}\n" --max-time 15 -X POST -H "Content-Type: application/x-www-form-urlencoded" --data-urlencode "token=$t" https://auth.hornbach.com/token-srv/revoke; sleep 2; done; echo "=== revoke EMPTY BODY ==="; curl -s -w "\nHTTP:%{http_code}\n" --max-time 15 -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "" https://auth.hornbach.com/token-srv/revoke
+=== revoke token=dummy... ===
+OK
+HTTP:200
+=== revoke token=eyJhbGciOiAi... ===
+OK
+HTTP:200
+=== revoke EMPTY BODY ===
+{"code":"","error":"invalid_request","error_description":"access_token in body must not be null"}
+HTTP:400
+[0m
+[0m$ [0mecho "=== token-exchange GET ==="; curl -s -w "\nHTTP:%{http_code}\n" --max-time 15 https://auth.hornbach.com/token-srv/token-exchange; sleep 2; echo "=== authz-srv/authz dummy ==="; curl -s -o /dev/null -w "HTTP:%{http_code} LOC:%{redirect_url}\n" --max-time 15 "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=dummy&redirect_uri=https://attacker.example&scope=openid"; sleep 2; echo "=== api.hornbach.de root ==="; curl -s -w "\nHTTP:%{http_code}\n" --max-time 15 https://api.hornbach.de/
+=== token-exchange GET ===
+{"error":"router doesn't exist"}
+HTTP:404
+=== authz-srv/authz dummy ===
+HTTP:302 LOC:https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+=== api.hornbach.de root ===
+{"message":{"status":"404","text":"Not Found"}}
+HTTP:404
+[0m
+Reconfirming that body-supplied client credentials are ignored (zero client-auth enforcement).
+[0m$ [0mecho "=== introspect with bogus client_id+secret in body ==="; curl -s -w "\nHTTP:%{http_code}\n" --max-time 15 -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "token=dummy&client_id=bogus-client-xyz&client_secret=bogus-secret-xyz" https://auth.hornbach.com/token-srv/introspect; sleep 2; echo "=== revoke with bogus client_id+secret in body ==="; curl -s -w "\nHTTP:%{http_code}\n" --max-time 15 -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "token=dummy&client_id=bogus-client-xyz&client_secret=bogus-secret-xyz" https://auth.hornbach.com/token-srv/revoke
+=== introspect with bogus client_id+secret in body ===
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+HTTP:400
+=== revoke with bogus client_id+secret in body ===
+{"code":"","error":"invalid_client","error_description":"client authentication failed : unknown client"}
+HTTP:400
+[0m
+[0m$ [0mcurl -s --max-time 15 https://auth.hornbach.com/.well-known/openid-configuration -o /tmp/oidc.json; wc -c < /tmp/oidc.json; grep -o "token_srv/token-exchange\|token-exchange\|introspection_endpoint" /tmp/oidc.json | sort | uniq -c
+3189
+      3 introspection_endpoint
+      1 token-exchange
+[0m
+## STEP 1 — DELTA
+- [NEW] auth.hornbach.com/token-srv/{introspect,revoke}: behavior **precisely characterized** — `token=<any-non-empty>` (garbage OR format-valid unissued HS256 JWT, identical results) → 200 `{"active":false}` / `OK` with NO client_id/secret/Basic; bogus `client_id`+`client_secret` in body → 400 `invalid_client "client authentication failed : unknown client"` (auth logic wired, never required); empty body → 400 (body-non-emptiness sole gate)
+- [NEW] auth.hornbach.com/token-srv/token-exchange: GET → 404 `{"error":"router doesn't exist"}` — no GET-visible route (grant served client-gated via token-srv/token per KB)
+- [CHANGED] `auth.hornbach.com/` root→302 hornbach.de, discovery 3189B, authz uniform 302→AUTH10007, api.hornbach.de root 404 JSON — all re-confirmed at anchor time (17th session), **NO_DELTA**
+
+## STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke}, 7.55, token-plane OAuth RFC7662/7009 — a=8 (two unlocked endpoints, behavior fully mapped) b=8 (all-customer PII claims + session kill) t=7 (OAuth/JWT) g=10 (only gate = non-empty body) c=3 f=7 (refined this session)
+- [PRIO] auth.hornbach.com/token-srv/client-auth-error-differential, 5.7, oracle-for-recovered-client_id — a=6 b=5 t=7 g=8 c=2 f=5
+- [PRIO] de.hornbach.app.smarthome bundle, 5.4, client_id seed source — a=4 b=6 t=6 g=4 c=3 f=4
+
+## STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation (precise mechanics now proven)
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/introspect AND /revoke
+confidence: 88
+reasoning: POST token=dummy AND token=<format-valid unissued HS256 JWT> both → 200 {"active":false}/OK with zero client credentials (17th session, 02:0xZ). Adding bogus client_id+client_secret to the same body → 400 "client authentication failed : unknown client" — server-side client-auth logic fires when creds are volunteered but is never REQUIRED. Empty body → 400 (malformed/access_token null), PROVING body-non-emptiness is the sole gate, not any auth. RFC 7662 §2.1 / RFC 7009 §2.1: confidential-clients MUST authenticate; none is enforced. discovery 3189B advertises both + claims_supported incl. email/phone_number/mobile_number.
+evidence_needed: one real HORNBACH-issued token → introspection returns active:true+claims; revoke→200 then users-srv/userinfo 401.
+verify_steps: DONE passive (anchor + differential probes above). With real token: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>) expect 401.
+impact: attacker with a leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; import PoC gated on ONE real token.
+testability: AUTH_HELPED
+[HYP] Token-plane client-auth error differential is a client_id CONFIRMATION oracle (not an enumeration vector)
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 50
+reasoning: bogus client_id in introspect/revoke body → uniform 400 "unknown client". tokensrv/token (KB) with bogus client → 400 "unknown client". If a HUMAN-recovered client_id with wrong secret instead yields a differing error (secret-fail / client-disabled), the token plane independently corroborates the recovered client_id for the authz redirect_uri test — the authz plane itself is uniform 302→AUTH10007 (enum removed).
+evidence_needed: recovered client_id + observed error wording vs "unknown client".
+verify_steps: HUMAN artifact first; then POST /token-srv/introspect token=dummy&client_id=<id>&client_secret=wrong → compare error string (expect ≠ "unknown client" if valid). Single request, no guessing loop (enumeration-spirit out of scope).
+impact: enabler only — confirms the seed for FINAL-2 (OAuth redirect_uri differential). LOW alone.
+testability: HUMAN_ONLY
+[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks both token-plane PoCs and HS256/secret-based client call
+class: AUTH
+asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
+confidence: 55
+reasoning: sole remaining client_id source; discovery advertises client_secret_jwt/private_key_jwt, id_token_signing_alg HS256+RS256, subject_types_supported=["public"]; embedded shared secret would enable body/Basic token calls (still endpoint-gated). apkpure/apkmirror 403, apkcombo 410 from this egress.
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret).
+verify_steps: HUMAN — APKMonk/IPAstorage/personal device; unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
+impact: MEDIUM enabler — unblocks FINAL-1 (88) and FINAL-2 (70).
+testability: HUMAN_ONLY
+
+## STEP 4 — SELF-CRITIQUE
+- [FINAL-1] 88 — unauthenticated token mgmt plane, now with sharp optional-client-auth proof. Survivor.
+- [FINAL-2] 50 — token-plane client_id confirmation oracle; survives as a co-dependent of the same artifact (not enumeration).
+- [FINAL-3] 55 — mobile bundle client_id seed; unchanged.
+- [PARKED] token-srv/token-exchange router-doesn't-exist on GET → no route, grant client-gated via /token-srv/token; no additive surface.
+- [PARKED] client_id enumeration (authz plane uniform 302, token plane no seed for differential value) — enumeration-spirit out of scope, recompute ONLY if a seed appears.
+- Drop: descriptive 400 error strings in empty-body/jwt probes — REJECTED-class alone.
+
+## STEP 5 — NEXT ACTION
+- [NEXT] HUMAN: Obtain one real artifact — (a) `de.hornbach.app.smarthome` APK (APKMonk/IPAstorage or personal device; apkpure/apkmirror 403, apkcombo 410 on this egress) → unzip → grep `assets/*.properties|*.json|*cidaas*.xml` + `res/raw/*` + `strings -a classes*.dex lib/*.so` for `auth.hornbach.com`/UUID/`redirect_uri`; sha256 any secret; or (b) logged-in Smart Home tile → capture `/authz-srv/authz?...&client_id=<id>&redirect_uri=<uri>`; or (c) any real HORNBACH token (Bearer on legit device). Return client_id + redirect_uri allowlist + (optionally) one token. Artifact unblocks: FINAL-1 introspection/revoke PoC (88), FINAL-2 redirect_uri differential (70), and the FINAL-2 token-plane "unknown client vs secret-fail" confirm (50). Discovered meanwhile: submit 'optional-client-auth' framing — revocation of a USED token and PII-claim introspection both demonstrated once a single real token is supplied.
+
+## STEP 6 — LEARNING
+- [LEARN] ACCEPTED AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: client authentication is OPTIONAL, never required — non-empty token body → 200 (dummy AND format-valid JWT identical); bogus client_id+secret in body → 400 "unknown client" proves auth logic exists but is bypassed by omission; empty body → 400 (body-presence sole gate). RFC 7662/7009 §2.1 violation precisely characterized; on PAPer the cleanest defensible framing (17th session, 02:0xZ).
+- [LEARN] ACCEPTED AUTH @ auth.hornbach.com/token-srv/introspect: format-valid unissued HS256 JWT → identical 200 {"active":false} to garbage token → no observable client-side token-claims/format parsing precedes the response; prior "token-claim parsing precedes client check" open follow-up answered: no.
+- [LEARN] REJECTED OTHER @ auth.hornbach.com/token-srv/token-exchange: GET → 404 {"error":"router doesn't exist"} — not mounted on GET, grant client-gated; no additive surface (NB: introspect/revoke share the body-presence POST pattern, so a POST test here is defensible only post-client_id).
+
+## STEP 7 — RISK
+- [RISK] hornbach: 50/100 — estate fully walled re-confirmed 17th session; token-plane flaw is now sharper (optional-client-auth proof, body-presence sole gate) but 100% PoC-import remains gated on ONE human artifact (real token ↔ client_id). Zero actionable PoCs until the HUMAN step; no estate delta beyond the token-plane differential.

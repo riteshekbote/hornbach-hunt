@@ -522,3 +522,5 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE 18:47Z (dummy→302 AUTH10007 "invalid client_id passed") — client_id enumeration still REMOVED
 - CHANGED auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14+ sessions; body-presence sole gate; systemic and stable
 - CHANGED api.hornbach.de: 2 novel SAP ICM paths (/sap/bc/ping, /sap/wdisp/admin/public/default/cluster) → uniform 404 len=47; Via shows sapigwprd02 active node; anonymous surface breadth re-confirmed exhausted
+
+## 2026-09-13 06:25:02 UTC

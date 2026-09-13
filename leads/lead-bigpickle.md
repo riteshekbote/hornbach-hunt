@@ -2931,3 +2931,31 @@ verify_steps: HUMAN — obtain bundle (APKMonk/IPAstorage/personal device; apkpu
 impact: MEDIUM enabler — unblocks FINAL-1 (85) and FINAL-2 (70).
 testability: HUMAN_ONLY
 ## 2026-09-13 01:09:19 UTC [target] (model bigpickle)
+## 2026-09-13 06:21:02 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation (precise mechanics now proven)
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/introspect AND /revoke
+confidence: 88
+reasoning: POST token=dummy AND token=<format-valid unissued HS256 JWT> both → 200 {"active":false}/OK with zero client credentials (17th session, 02:0xZ). Adding bogus client_id+client_secret to the same body → 400 "client authentication failed : unknown client" — server-side client-auth logic fires when creds are volunteered but is never REQUIRED. Empty body → 400 (malformed/access_token null), PROVING body-non-emptiness is the sole gate, not any auth. RFC 7662 §2.1 / RFC 7009 §2.1: confidential-clients MUST authenticate; none is enforced. discovery 3189B advertises both + claims_supported incl. email/phone_number/mobile_number.
+evidence_needed: one real HORNBACH-issued token → introspection returns active:true+claims; revoke→200 then users-srv/userinfo 401.
+verify_steps: DONE passive (anchor + differential probes above). With real token: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>) expect 401.
+impact: attacker with a leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; import PoC gated on ONE real token.
+testability: AUTH_HELPED
+[HYP] Token-plane client-auth error differential is a client_id CONFIRMATION oracle (not an enumeration vector)
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 50
+reasoning: bogus client_id in introspect/revoke body → uniform 400 "unknown client". tokensrv/token (KB) with bogus client → 400 "unknown client". If a HUMAN-recovered client_id with wrong secret instead yields a differing error (secret-fail / client-disabled), the token plane independently corroborates the recovered client_id for the authz redirect_uri test — the authz plane itself is uniform 302→AUTH10007 (enum removed).
+evidence_needed: recovered client_id + observed error wording vs "unknown client".
+verify_steps: HUMAN artifact first; then POST /token-srv/introspect token=dummy&client_id=<id>&client_secret=wrong → compare error string (expect ≠ "unknown client" if valid). Single request, no guessing loop (enumeration-spirit out of scope).
+impact: enabler only — confirms the seed for FINAL-2 (OAuth redirect_uri differential). LOW alone.
+testability: HUMAN_ONLY
+[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks both token-plane PoCs and HS256/secret-based client call
+class: AUTH
+asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
+confidence: 55
+reasoning: sole remaining client_id source; discovery advertises client_secret_jwt/private_key_jwt, id_token_signing_alg HS256+RS256, subject_types_supported=["public"]; embedded shared secret would enable body/Basic token calls (still endpoint-gated). apkpure/apkmirror 403, apkcombo 410 from this egress.
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret).
+verify_steps: HUMAN — APKMonk/IPAstorage/personal device; unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
+impact: MEDIUM enabler — unblocks FINAL-1 (88) and FINAL-2 (70).
+testability: HUMAN_ONLY
