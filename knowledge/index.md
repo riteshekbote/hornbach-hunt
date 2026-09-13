@@ -269,3 +269,6 @@
 - 2026-09-13 ACCEPTED class MISCONFIG @ api.hornbach.de: gateway IS case-insensitive for /healthcheck route (case-rotated → 500 "Unexpected API invocation"); confirmed mechanism but no hidden proxy mounts discoverable via 30+ case rotations on known-bad paths.
 - 2026-09-13 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header REJECTED per scope rules.
 - 2026-09-13 REJECTED class MISCONFIG @ api.hornbach.de: case-insensitive proxy mount discovery exhausted — no new routes, no SSRF vector.
+- 2026-09-13 ACCEPTED class AUTH @ auth.hornbach.com: 16th GET-plane recheck 2026-09-13 23:3xZ — root 302→hornbach.de, discovery 200/3189B, authz dummy-UUID uniform 302→AUTH10007, users-srv/userinfo 401, token-srv/introspect GET 404 (POST-200 methodology artifact); walled estate re-confirmed zero-delta.
+- 2026-09-13 REJECTED class OTHER @ shop.hornbach.de: NXDOMAIN from egress → 2026-09-08 valid-bugs.md claims (CORS /api/files, /redirect-to open redirect, /files/ dir listing, Host-header injection, /api/proxy CORS) unreproducible; do not escalate.
+- 2026-09-13 ACCEPTED class MISCONFIG @ api.hornbach.de: root 404/47B + healthcheck 200/19B Via sapigwprd01 re-confirmed 23:3xZ; SAP APIM anonymous breadth unchanged.

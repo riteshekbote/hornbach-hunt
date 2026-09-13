@@ -1,4 +1,11 @@
-## 2026-09-13 21:24:05 UTC [target] (model nemotron3)
+## 2026-09-13 23:37:47 UTC [target] (model nemotron3)
+[NEW] auth.hornbach.com root now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend; root HTML client_id extraction hypothesis definitively dead
+[CHANGED] hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login.hornbach.com ALL serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+[CHANGED] auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14+ sessions; body-presence sole gate; systemic and stable
+[CHANGED] auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enumeration REMOVED
+[CHANGED] auth.hornbach.com/session/check_session: discovery-advertised OIDC check_session iframe live (200/27021B, cidaas x-powered-by) — novel path confirmed, informational only
+[CHANGED] api.hornbach.de: 2 novel SAP ICM paths (/sap/bc/ping, /sap/wdisp/admin/public/default/cluster) → uniform 404 len=47; Via shows sapigwprd02 active node; anonymous surface breadth re-confirmed exhausted
+[CHANGED] auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only after client_id validity
 [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},9.10,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=6,freshness=9
 [PRIO] auth.hornbach.com/authz-srv/authz,7.65,attack_surface=9,business_value=9,tech_exposure=8,gate_ease=3,cloud_surface=6,freshness=9
 [PRIO] api.hornbach.de,6.25,attack_surface=6,business_value=7,tech_exposure=6,gate_ease=4,cloud_surface=8,freshness=7
@@ -22,7 +29,7 @@ evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, ht
 verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach.app.smarthome) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
 impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
 testability: AUTH_HELPED
-[HYP] SSRF-to-cloud-metadata via SAP APIM Host-header backend routing on api.hornbach.de
+[HYP] SAP APIM Host-header backend routing to cloud metadata on api.hornbach.de
 class: SSRF
 asset: api.hornbach.de
 confidence: 45
@@ -31,7 +38,7 @@ evidence_needed: Host/X-Forwarded-Host header manipulation that routes to 169.25
 verify_steps: 1) GET https://api.hornbach.de/healthcheck -H "Host: 169.254.169.254" — observe backend response; 2) GET https://api.hornbach.de/healthcheck -H "X-Forwarded-Host: 169.254.169.254" — observe backend response; 3) Test variations: localhost, 127.0.0.1, internal hostnames; 4) If metadata reached, extract IAM keys/instance profile
 impact: Cloud metadata access → IAM credentials → lateral movement in cloud account (SSRF class, CRITICAL if confirmed)
 testability: PASSIVE
-[PARKED] SSRF-to-cloud-metadata via SAP APIM Host-header backend routing on api.hornbach.de: KB 2026-09-06 explicitly REJECTED — Host/X-Forwarded-Host tampering on /healthcheck yields only 503 or default localhost:8080 backend; no cross-backend routing, no SSRF-to-metadata vector; reflected headers are descriptive only
+[PARKED] SAP APIM Host-header backend routing to cloud metadata on api.hornbach.de: KB 2026-09-06 explicitly REJECTED — Host/X-Forwarded-Host tampering on /healthcheck yields only 503 or default localhost:8080 backend; no cross-backend routing, no SSRF-to-metadata vector; reflected headers are descriptive only
 [FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 88, AUTH_HELPED, MEDIUM-HIGH)
 [FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
 [NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks both 88-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.

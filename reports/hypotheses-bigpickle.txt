@@ -1,63 +1,42 @@
-## 2026-09-13 21:24:05 UTC [target] (model bigpickle)
-[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},88, AUTH=9+GATE=10+TECH=6+BUSINESS=7+CLOUD=5+FRESH=9 → priority=8.4
-[PRIO] api.hornbach.de/healthcheck,45, AUTH=2+GATE=10+TECH=3+BUSINESS=5+CLOUD=3+FRESH=8 → priority=4.3
-[PRIO] mobile-apk-extraction,55, AUTH=5+GATE=0+TECH=7+BUSINESS=8+CLOUD=2+FRESH=6 → priority=4.3 (HUMAN_ONLY)
-[HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation (precise mechanics now proven)
-class: AUTH
-asset: https://auth.hornbach.com/token-srv/introspect AND /revoke
-confidence: 88
-reasoning: POST token=dummy AND token=<format-valid unissued HS256 JWT> both → 200 {"active":false}/OK with zero client credentials (17+ sessions). Adding bogus client_id+secret → 400 "client authentication failed : unknown client" proves client-auth logic fires only when volunteered but is never REQUIRED. Empty body → 400. RFC 7662 §2.1 / RFC 7009 §2.1: confidential-clients MUST authenticate; none enforced. discovery 3189B advertises both + claims_supported incl. email/phone_number/mobile_number.
-evidence_needed: one real HORNBACH-issued token → introspection returns active:true+claims; revoke→200 then users-srv/userinfo 401.
-verify_steps: DONE passive. With real token: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>) expect 401.
-impact: attacker with a leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; import PoC gated on ONE real token.
-testability: AUTH_HELPED
-[HYP] SAP APIM gateway is case-insensitive for mounted routes but no hidden proxy mounts discoverable via case rotation
-class: MISCONFIG
-asset: https://api.hornbach.de/
-confidence: 40
-reasoning: case-rotated /healthcheck → 500 "Unexpected API invocation" (policy matched, backend failed); all 20+ other case-rotated paths (api/v1, graphql, openapi, swagger, actuator, sap/*) → uniform 404. Gateway case-insensitivity confirmed for healthcheck route only; no hidden routes revealed. 405 on non-GET to /healthcheck with `Allow: GET, HEAD, OPTIONS`.
-evidence_needed: a case/encoding variant of any currently-404 path returning non-404.
-verify_steps: exhausted — 30+ case rotations tested on known-bad paths, all 404.
-impact: none — mechanism confirmed but no exploitable route discovered.
-testability: PASSIVE
-[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks both token-plane PoCs and HS256/secret-based client call
-class: AUTH
-asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
-confidence: 55
-reasoning: sole remaining client_id source; discovery advertises client_secret_jwt/private_key_jwt, id_token_signing_alg HS256+RS256, subject_types_supported=["public"]; embedded shared secret would enable body/Basic token calls (still endpoint-gated).
-evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret).
-verify_steps: HUMAN — APKMonk/IPAstorage/personal device; unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
-impact: MEDIUM enabler — unblocks FINAL-1 (88) and FINAL-2 (70).
-testability: HUMAN_ONLY
-[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK from APKMonk/alternative mirror, unzip, extract `assets/cidaas*` + `res/raw/*` + `lib/*.so` strings for UUID client_id + redirect_uri + client_secret (sha256 before recording). This is the SOLE remaining escalation path for FINAL-1 (88→importable PoC).
-[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: gateway IS case-insensitive for /healthcheck route (case-rotated → 500 "Unexpected API invocation"); confirmed mechanism but no hidden proxy mounts discoverable via 30+ case rotations on known-bad paths.
-[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE in Allow header REJECTED per scope rules.
-[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: case-insensitive proxy mount discovery exhausted — no new routes, no SSRF vector.
-[RISK] hornbach: 65. Primary finding (introspect/revoke unauthenticated, 88 conf) is real but requires a leaked token for PoC import. No escalation path without mobile APK extraction (HUMAN_ONLY, 55 conf). Attack surface is narrow and well-mapped. api.hornbach.de anonymous surface definitively exhausted. F5 bot-wall closes web-based client_id extraction. Program severity likely Medium at best given dependency on token leak + no data-at-rest extraction proof.
+## 2026-09-13 23:34:03 UTC [target] (model bigpickle)
+[CHANGED] valid-bugs.md: 2026-09-08 entries claiming `shop.hornbach.de` CORS `/api/files`, open redirect `/redirect-to`, dir listing `/files/`, Host-header injection, `/api/proxy` CORS — host is NXDOMAIN from this egress (2026-09-13 23:3xZ, getent empty + HEAD no response) → unreproducible, likely triage-model fabrication, NOT reportable.
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke}, 8.65, attack_surface:9,business_value:9,tech_exposure:9,gate_ease:10,cloud_surface:8,freshness:5
+[PRIO] auth.hornbach.com/authz-srv/authz, 8.45, attack_surface:9,business_value:9,tech_exposure:8,gate_ease:10,cloud_surface:7,freshness:5
+[PRIO] de.hornbach.app.smarthome (APK/IPA), 7.00, attack_surface:8,business_value:8,tech_exposure:7,gate_ease:0,cloud_surface:2,freshness:7
 [HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation
 class: AUTH
 asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
 confidence: 88
-reasoning: 18+ sessions POST token=dummy → 200 {"active":false}/200 OK with zero client creds; volunteered bogus creds → 400 "unknown client" proves client-auth fires only when supplied, never required; discovery 3189B advertises both + claims email/phone_number/mobile_number; issuer==auth.hornbach.com confirmed.
-evidence_needed: ONE real HORNBACH-issued token → introspect active:true+claims; revoke→200 + users-srv/userinfo 401.
-verify_steps: DONE passive (GET-plane). Real-token: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo Bearer <t> expect 401.
-impact: attacker with leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; import gated on ONE token.
+reasoning: 18+ sessions POST token=dummy → 200 {"active":false} / 200 "OK" with zero client credentials; volunteered bogus client_id+secret → 400 "unknown client" proves client-auth fires only when supplied, never required; empty body → 400 (body-presence sole gate); discovery 200/3189B today advertises both + claims_supported incl. email/phone_number/mobile_number; RFC 7662 §2.1 / RFC 7009 §2.1 mandate client auth for confidential clients.
+evidence_needed: ONE real HORNBACH-issued token → introspect active:true + claims; revoke→200 then users-srv/userinfo Bearer <t> → 401.
+verify_steps: DONE passive (17+ sessions, GET-plane recheck today). With real token: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>).
+impact: attacker with leaked/stolen token validates full PII claim-set then silently kills victim sessions server-side; MEDIUM-HIGH; PoC import gated on ONE real token.
 testability: AUTH_HELPED
-[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks both token-plane PoCs and secret-based client call
+[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks both token-plane PoCs
 class: AUTH
 asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
 confidence: 55
-reasoning: sole remaining client_id source; discovery advertises client_secret_jwt/private_key_jwt + id_token HS256; embedded secret enables body/Basic token calls (still endpoint-gated); all web extraction angles closed (bot-wall, root 302, GitHub empty, Mirakl external IdP, RFC 8414/9728 404, issuer==host).
+reasoning: sole remaining client_id source after web estate fully closed (root 302, estate-wide F5 bot-wall, GitHub org empty, Mirakl external IdP, RFC 8414/9728 404); discovery advertises client_secret_jwt/private_key_jwt + id_token HS256+RS256 + subject_types_supported=["public"].
 evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret).
-verify_steps: HUMAN — APKMonk/IPAstorage/personal device; unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
-impact: MEDIUM enabler — unblocks FINAL-1 (88→importable PoC) and FINAL-2.
+verify_steps: HUMAN — obtain APK (APKMirror/APKPure/AppBrain; current v3.9.0), unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
+impact: MEDIUM enabler — unblocks FINAL-1 (88→importable PoC) and any secret-based token call.
 testability: HUMAN_ONLY
 [HYP] SAP APIM hidden proxy mount discoverable via case-insensitive policy matching
 class: MISCONFIG
 asset: https://api.hornbach.de/
 confidence: 40
-reasoning: /healthcheck 200 exact, 500 on case-rotated (policy matched, backend failed), uniform 404 on 30+ rotations of known-bad paths; only healthcheck route proved case-insensitive.
+reasoning: /healthcheck 200 exact / 500 on case-rotation (policy matched, backend failed); 30+ case-rotations of known-bad paths all uniform 404/47B; today root 404/47B + ViG sapigwprd01 re-confirmed; case-insensitivity proven for healthcheck route only.
 evidence_needed: case/encoding variant of any 404 path returning non-404.
-verify_steps: exhausted — 30+ rotations all 404; no non-mutating variant remains.
-impact: none discovered — mechanism only.
+verify_steps: exhausted — no remaining non-mutating variant; all rotations uniform 404.
+impact: none discovered — mechanism-only, no exploitable route.
 testability: PASSIVE
+[PARKED] SAP APIM case-insensitive routing: confidence 40, verify_steps exhausted, mechanism-only with no impact path — monitor passively only.
+[PARKED] shop.hornbach.de estate: NXDOMAIN; 2026-09-08 valid-bugs.md claims unreproducible — evidence-quality flag, not a lead.
+[PARKED] client_id recovery via web/headers/repos/Mirakl: all closed (root 302, F5 bot-wall, GitHub empty, external IdP) — collapsed into APK path only.
+[FINAL] 1. Unauthenticated introspect/revoke RFC 7662/7009 (88, AUTH, AUTH_HELPED — import gated on one real token)
+[FINAL] 2. cidaas client_id+secret via mobile APK (55, HUMAN_ONLY — sole escalation enabler for FINAL-1)
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` v3.9.0 APK (APKMirror/APKPure/AppBrain), unzip, extract `assets/cidaas*` + `res/raw/*` + `strings -a classes*.dex lib/*.so` for UUID client_id + redirect_uri allowlist (sha256 any embedded secret before recording). Sole remaining path to convert FINAL-1 (88) into an importable PoC with a real HORNBACH token.
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com: 16th GET-plane recheck 2026-09-13 23:3xZ — root 302→hornbach.de, discovery 200/3189B, authz dummy-UUID uniform 302→AUTH10007, users-srv/userinfo 401, token-srv/introspect GET 404 (POST-200 methodology artifact); walled estate re-confirmed zero-delta.
+[LEARN] REJECTED class OTHER @ shop.hornbach.de: NXDOMAIN from egress → 2026-09-08 valid-bugs.md claims (CORS /api/files, /redirect-to open redirect, /files/ dir listing, Host-header injection, /api/proxy CORS) unreproducible; do not escalate.
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: root 404/47B + healthcheck 200/19B Via sapigwprd01 re-confirmed 23:3xZ; SAP APIM anonymous breadth unchanged.
+[RISK] hornbach: 65 — primary finding (unauthenticated introspect/revoke, RFC 7662/7009, 88 conf) is genuine and re-confirmed today, but PoC import remains gated on ONE real token; validated-bug count still 0; sole escalation path is HUMAN mobile-APK client_id extraction (55); web estate fully bot-walled and api.hornbach.de anonymous surface exhausted; delta check surfaced zero new surface (only a data-quality flag on unreproducible shop.hornbach.de claims); program severity realistically Medium unless token-leak chain is demonstrated.
