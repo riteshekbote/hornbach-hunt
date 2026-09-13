@@ -38,3 +38,6 @@
   - **Verdict: HOLD** — Confirmed RFC 7662/7009 violation (unauthenticated introspection + revocation), but full impact (metadata exfil, session kill) requires a valid access_token. Recommend: extract cli
   - | Q4 | Provable non-invasively? **NO** — requires valid client_id to even begin testing. All guessed client_ids rejected (uniform 302→AUTH10007). www.hornbach.de bot-walled (FingerprintJS) blocks fron
   - | Q4 | Provable? | **NO** — requires valid Mirakl API key |
+
+- 1 lead(s) marked VALID at 2026-09-13 18:29:23 UTC
+  - - The `valid-bugs.md` has prior HOLD verdicts for the unauthenticated introspection/revocation findings
