@@ -23459,3 +23459,138 @@ testability: PASSIVE
 
 [STEP 7 — RISK]
 [RISK] hornbach: 65 — primary finding (unauthenticated introspect/revoke, RFC 7662/7009, 88 conf) is genuine and re-confirmed today, but PoC import remains gated on ONE real token; validated-bug count still 0; sole escalation path is HUMAN mobile-APK client_id extraction (55); web estate fully bot-walled and api.hornbach.de anonymous surface exhausted; delta check surfaced zero new surface (only a data-quality flag on unreproducible shop.hornbach.de claims); program severity realistically Medium unless token-leak chain is demonstrated.
+===== ANALYST bigpickle 2026-09-14 01:41:35 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m✱ [0mGlob "**/*.md"[90m 95 matches[0m
+[0m
+[0m$ [0mfor u in "https://auth.hornbach.com/.well-known/status" "https://auth.hornbach.com/.well-known/openid-configuration" ; do echo "== $u"; curl -sS -o /dev/null -m 12 -w "code=%{http_code} size=%{size_download}\n" "$u" 2>&1; done
+== https://auth.hornbach.com/.well-known/status
+code=200 size=60
+== https://auth.hornbach.com/.well-known/openid-configuration
+code=200 size=3189
+[0m
+[0m$ [0mfor u in "https://api.hornbach.de/" "https://api.hornbach.de/healthcheck" "https://api.hornbach.de/sap/bc/ping/os" "https://api.hornbach.de/api" ; do echo "== $u"; curl -sS -o /dev/null -m 12 -w "code=%{http_code} size=%{size_download} via=%header{vary} server=%header{server}\n" "$u" 2>&1; done
+== https://api.hornbach.de/
+code=404 size=47 via= server=Gateway
+== https://api.hornbach.de/healthcheck
+code=200 size=19 via= server=Gateway
+== https://api.hornbach.de/sap/bc/ping/os
+code=404 size=47 via= server=Gateway
+== https://api.hornbach.de/api
+code=404 size=47 via= server=Gateway
+[0m
+[0m→ [0mRead triage/run-2026-09-14-01-10.md
+[0m
+[0m$ [0mtail -n 40 /home/runner/work/hornbach-hunt/hornbach-hunt/probe-results.md
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz -> 200 len=?
+
+## 2026-09-13 01:13:26 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+
+## 2026-09-13 06:25:10 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/users-srv/userinfo -> HTTP 401
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+
+## 2026-09-13 12:20:53 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+
+## 2026-09-13 16:47:47 UTC
+
+
+## 2026-09-13 19:10:30 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+
+## 2026-09-13 21:24:38 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+
+## 2026-09-13 23:38:04 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/token-srv/{introspect,revoke -> HTTP 404
+[0m
+[0m$ [0mfor p in "sap/bc/ping" "actuator" "api.monitor" "api.whoami" "keys" "\$howtodo" "sap/public/icm_info" "api/v1" "odata"; do u="https://api.hornbach.de/$p"; printf "%-30s " "$u"; curl -sS -o /dev/null -m 10 -w "code=%{http_code} size=%{size_download}\n" "$u" 2>&1; sleep 1; done
+https://api.hornbach.de/sap/bc/ping code=404 size=47
+https://api.hornbach.de/actuator code=404 size=47
+https://api.hornbach.de/api.monitor code=404 size=47
+https://api.hornbach.de/api.whoami code=404 size=47
+https://api.hornbach.de/keys   code=404 size=47
+https://api.hornbach.de/$howtodo code=404 size=47
+https://api.hornbach.de/sap/public/icm_info code=404 size=47
+https://api.hornbach.de/api/v1 code=404 size=47
+https://api.hornbach.de/odata  code=404 size=47
+[0m
+STEP 1 — DELTA
+- [NO_DELTA] api.hornbach.de: root 404/47B, /healthcheck 200/19B, /sap/bc/ping/os 404/47B, /api 404/47B — re-verified 2026-09-14; Server: Gateway unchanged.
+- [NO_DELTA] auth.hornbach.com: .well-known/status 200/60B, openid-configuration 200/3189B — discovery intact.
+- [NO_DELTA] 9 novel SAP APIM/UCon probes (/sap/bc/ping, /actuator, /api.monitor, /api.whoami, /keys, /$howtodo, /sap/public/icm_info, /api/v1, /odata) all uniform 404/47B — anonymous surface breadth confirmed exhausted, no new mount.
+- No changes vs 2026-09-13 23:38Z probe-results tail.
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke}, 8.65, attack_surface:9,business_value:9,tech_exposure:9,gate_ease:10,cloud_surface:8,freshness:5
+- [PRIO] auth.hornbach.com/authz-srv/authz, 8.45, attack_surface:9,business_value:9,tech_exposure:8,gate_ease:10,cloud_surface:7,freshness:5
+- [PRIO] de.hornbach.app.smarthome (APK/IPA), 7.00, attack_surface:8,business_value:8,tech_exposure:7,gate_ease:0,cloud_surface:2,freshness:7
+- [PRIO] api.hornbach.de (SAP APIM), 5.30, attack_surface:4,business_value:7,tech_exposure:8,gate_ease:10,cloud_surface:3,freshness:2 — target==api; score reflects exhausted breadth, maintained only for POC-passive duty.
+
+STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: 18+ sessions POST token=dummy → 200 {"active":false} / 200 "OK" with zero client credentials; volunteered bogus client_id+secret → 400 "unknown client" proves client-auth fires only when supplied; empty body → 400 (body-presence sole gate); discovery 200/3189B today advertises both; RFC 7662 §2.1 / RFC 7009 §2.1 mandate client auth for confidential clients.
+evidence_needed: ONE real HORNBACH-issued token → introspect active:true + claims; revoke→200 then users-srv/userinfo Bearer <t> → 401.
+verify_steps: DONE passive (18+ sessions + GET-plane recheck 23:3xZ 09-13). With real token: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>).
+impact: attacker with leaked/stolen token validates full PII claim-set then silently kills victim sessions server-side; MEDIUM-HIGH; PoC import gated on ONE real token.
+testability: AUTH_HELPED
+[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks both token-plane PoCs
+class: AUTH
+asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
+confidence: 55
+reasoning: sole remaining client_id source after web estate fully closed (root 302→hornbach.de, estate-wide F5 bot-wall, GitHub org empty, Mirakl external IdP, RFC 8414/9728 404, issuer==host); discovery advertises client_secret_jwt/private_key_jwt + id_token HS256+RS256 + subject_types_supported=["public"]; APKMirror lists package v3.9.0.
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret).
+verify_steps: HUMAN — obtain APK, unzip, grep assets/*.properties|*.json|*cidaas*.xml + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording.
+impact: MEDIUM enabler — unblocks FINAL-1 (88→importable PoC) and any secret-based token call.
+testability: HUMAN_ONLY
+[HYP] SAP APIM anonymous mount via non-404 status-code differential
+class: MISCONFIG
+asset: https://api.hornbach.de/
+confidence: 15
+reasoning: today 9 additional UCon/APIM/monitor/misc paths + 4 core paths all uniform 404/47B; /healthcheck 200 exact / 500 case-rotated proves case-insensitive policy mount exists only for healthcheck; 30+ historical case-rotations of known-bad paths uniform 404/47B; no non-mutating variant remains untested.
+evidence_needed: any path returning non-404/47B or non-200/19B.
+verify_steps: exhausted — root 404/47B, healthcheck 200/19B, all UCon/APIM/OData/actuator paths uniform 404/47B today; no non-mutating variant remains.
+impact: none discovered — mechanism-only, no exploitable route.
+testability: PASSIVE
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] SAP APIM anonymous mount hunt: confidence 15 after exhaustive 2026-09-14 sweep; verify_steps exhausted; keep solely as passive monitor — no active spend.
+- [PARKED] SAP APIM case-insensitive routing: mechanism-only (healthcheck), no impact path — monitor passively.
+- [PARKED] shop.hornbach.de: NXDOMAIN; 2026-09-08 valid-bugs claims unreproducible — evidence-quality flag only.
+- [FINAL] 1. Unauthenticated introspect/revoke RFC 7662/7009 (88, AUTH, AUTH_HELPED — import gated on one real token)
+- [FINAL] 2. cidaas client_id+secret via mobile APK (55, HUMAN_ONLY — sole escalation enabler for FINAL-1)
+
+STEP 5 — NEXT ACTION
+- [NEXT] HUMAN: Obtain `de.hornbach.app.smarthome` v3.9.0 APK (APKMirror/APKPure/AppBrain), unzip, extract `assets/cidaas*` + `res/raw/*` + `strings -a classes*.dex lib/*.so` for UUID client_id + redirect_uri allowlist + any embedded secret (sha256 before recording). Sole remaining path to convert FINAL-1 (88) into an importable PoC with a real HORNBACH token; api.hornbach.de anonymous breadth re-verified zero-delta today.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED class OTHER @ api.hornbach.de: 2026-09-14 sweep — 13 total paths (4 core + 9 novel UCon/APIM/actuator/OData) all uniform 404/47B; /healthcheck 200/19B; anonymous SAP APIM breadth definitively exhausted, no new mount.
+- [LEARN] ACCEPTED class OTHER @ auth.hornbach.com: .well-known/status 200/60B + openid-configuration 200/3189B re-confirmed 2026-09-14 — discovery-driven surface fully stable.
+- [LEARN] NO_CHANGE class AUTH @ auth.hornbach.com/token-srv: GET-plane 404 persists in probe-results (methodology artifact); POST-200 finding unchanged, 18+ sessions.
+
+STEP 7 — RISK
+- [RISK] hornbach: 65 — primary finding (unauthenticated introspect/revoke, RFC 7662/7009, 88 conf) genuine and stable across 18+ sessions, but PoC import remains gated on ONE real token; validated-bug count still 0; api.hornbach.de (target) re-verified zero-delta today, sole escalation path is HUMAN mobile-APK client_id extraction (55); web estate bot-walled and all other surfaces exhausted; program severity realistically Medium unless token-leak chain is demonstrated.

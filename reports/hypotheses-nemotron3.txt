@@ -1,4 +1,4 @@
-## 2026-09-13 23:37:47 UTC [target] (model nemotron3)
+## 2026-09-14 01:39:55 UTC [target] (model nemotron3)
 [NEW] auth.hornbach.com root now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend; root HTML client_id extraction hypothesis definitively dead
 [CHANGED] hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login.hornbach.com ALL serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
 [CHANGED] auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14+ sessions; body-presence sole gate; systemic and stable
@@ -29,16 +29,16 @@ evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, ht
 verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach.app.smarthome) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
 impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
 testability: AUTH_HELPED
-[HYP] SAP APIM Host-header backend routing to cloud metadata on api.hornbach.de
-class: SSRF
-asset: api.hornbach.de
-confidence: 45
-reasoning: /healthcheck returns 200 XML with Host: localhost:8080 in response headers (Via: sapigwprd01/02, Server: Gateway); SAP APIM Gateway may route based on Host/X-Forwarded-Host headers; 21+ common API paths exhausted (all 404 len=47); OPTIONS on root shows Allow: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE but no CORS config; Host-header tampering on /healthcheck yielded only 503 or default backend (per KB 2026-09-06) — no cross-backend routing confirmed
-evidence_needed: Host/X-Forwarded-Host header manipulation that routes to 169.254.169.254 (AWS/GCP/Azure metadata) or internal services; proof of backend routing control beyond localhost:8080
-verify_steps: 1) GET https://api.hornbach.de/healthcheck -H "Host: 169.254.169.254" — observe backend response; 2) GET https://api.hornbach.de/healthcheck -H "X-Forwarded-Host: 169.254.169.254" — observe backend response; 3) Test variations: localhost, 127.0.0.1, internal hostnames; 4) If metadata reached, extract IAM keys/instance profile
-impact: Cloud metadata access → IAM credentials → lateral movement in cloud account (SSRF class, CRITICAL if confirmed)
+[HYP] SAP APIM case-insensitive routing on /healthcheck enables backend enumeration
+class: MISCONFIG
+asset: api.hornbach.de/healthcheck
+confidence: 40
+reasoning: /healthcheck route is case-insensitive (case-rotated → 500 "Unexpected API invocation"); SAP APIM Gateway confirmed (Via: sapigwprd01/02, Server: Gateway, X-CorrelationID); backend leak via Host header shows localhost:8080; 21+ common API paths exhausted (all 404 len=47); OPTIONS on root shows Allow: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE but no CORS config
+evidence_needed: Case-variation or Host-header manipulation that routes to internal services beyond localhost:8080; proof of proxy mount discovery beyond known paths
+verify_steps: 1) GET https://api.hornbach.de/HeAlThChEcK — observe 500 "Unexpected API invocation" confirming case-insensitive mount; 2) GET https://api.hornbach.de/healthcheck -H "Host: internal-service" — observe backend response; 3) Test case variations on known-bad paths (e.g. /AcTuAtOr, /GrApHqL) for hidden mounts
+impact: Internal service enumeration via case-insensitive proxy routing; potential SSRF if backend routing controllable (MISCONFIG class, LOW-MEDIUM)
 testability: PASSIVE
-[PARKED] SAP APIM Host-header backend routing to cloud metadata on api.hornbach.de: KB 2026-09-06 explicitly REJECTED — Host/X-Forwarded-Host tampering on /healthcheck yields only 503 or default localhost:8080 backend; no cross-backend routing, no SSRF-to-metadata vector; reflected headers are descriptive only
+[PARKED] SAP APIM case-insensitive routing on /healthcheck enables backend enumeration: confidence 40 < 40 threshold; KB 2026-09-13 explicitly REJECTED case-insensitive proxy mount discovery exhausted — no new routes, no SSRF vector
 [FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 88, AUTH_HELPED, MEDIUM-HIGH)
 [FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
 [NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks both 88-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
