@@ -1,5 +1,5 @@
-## 2026-09-14 01:39:55 UTC [target] (model nemotron3)
-[NEW] auth.hornbach.com root now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend; root HTML client_id extraction hypothesis definitively dead
+## 2026-09-14 07:11:56 UTC [target] (model nemotron3)
+[CHANGED] auth.hornbach.com root now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend; root HTML client_id extraction hypothesis definitively dead
 [CHANGED] hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login.hornbach.com ALL serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
 [CHANGED] auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14+ sessions; body-presence sole gate; systemic and stable
 [CHANGED] auth.hornbach.com/authz-srv/authz: RE-CONFIRMED LIVE — 302→AUTH10007 uniform gate; client_id enumeration REMOVED
@@ -8,6 +8,7 @@
 [CHANGED] auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated; client-validation-ordering (AUTH10008/10009) fired only after client_id validity
 [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},9.10,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=6,freshness=9
 [PRIO] auth.hornbach.com/authz-srv/authz,7.65,attack_surface=9,business_value=9,tech_exposure=8,gate_ease=3,cloud_surface=6,freshness=9
+[PRIO] auth.hornbach.com/session/check_session,6.80,attack_surface=7,business_value=7,tech_exposure=8,gate_ease=10,cloud_surface=6,freshness=8
 [PRIO] api.hornbach.de,6.25,attack_surface=6,business_value=7,tech_exposure=6,gate_ease=4,cloud_surface=8,freshness=7
 [PRIO] auth.hornbach.com/users-srv/userinfo,6.60,attack_surface=7,business_value=8,tech_exposure=7,gate_ease=2,cloud_surface=6,freshness=9
 [PRIO] auth.hornbach.de,5.15,attack_surface=5,business_value=6,tech_exposure=5,gate_ease=2,cloud_surface=7,freshness=6
@@ -29,19 +30,19 @@ evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, ht
 verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach.app.smarthome) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
 impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
 testability: AUTH_HELPED
-[HYP] SAP APIM case-insensitive routing on /healthcheck enables backend enumeration
-class: MISCONFIG
-asset: api.hornbach.de/healthcheck
-confidence: 40
-reasoning: /healthcheck route is case-insensitive (case-rotated → 500 "Unexpected API invocation"); SAP APIM Gateway confirmed (Via: sapigwprd01/02, Server: Gateway, X-CorrelationID); backend leak via Host header shows localhost:8080; 21+ common API paths exhausted (all 404 len=47); OPTIONS on root shows Allow: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE but no CORS config
-evidence_needed: Case-variation or Host-header manipulation that routes to internal services beyond localhost:8080; proof of proxy mount discovery beyond known paths
-verify_steps: 1) GET https://api.hornbach.de/HeAlThChEcK — observe 500 "Unexpected API invocation" confirming case-insensitive mount; 2) GET https://api.hornbach.de/healthcheck -H "Host: internal-service" — observe backend response; 3) Test case variations on known-bad paths (e.g. /AcTuAtOr, /GrApHqL) for hidden mounts
-impact: Internal service enumeration via case-insensitive proxy routing; potential SSRF if backend routing controllable (MISCONFIG class, LOW-MEDIUM)
+[HYP] OIDC check_session iframe enables silent authentication state probing across origins
+class: OTHER
+asset: auth.hornbach.com/session/check_session
+confidence: 45
+reasoning: Discovery-advertised OIDC Session Management check_session endpoint live (200/27021B, x-powered-by: cidaas); standard spec endpoint for cross-origin session status synchronization; could leak login state to any origin framing it if missing X-Frame-Options or CSP frame-ancestors; informational only per current assessment
+evidence_needed: Demonstrate iframe loads cross-origin without CSP/X-Frame-Options blocking; observe session state change (login/logout) reflected in iframe postMessage or parent-origin communication
+verify_steps: 1) GET https://auth.hornbach.com/session/check_session — confirm 200 HTML with cidaas JS; 2) Inspect response headers for X-Frame-Options, CSP frame-ancestors; 3) Embed in attacker-origin iframe — observe if postMessage or parent.accessible indicates session state
+impact: Cross-origin login state detection (user tracking); potential session fixation aid if combined with other flaws (OTHER class, LOW)
 testability: PASSIVE
-[PARKED] SAP APIM case-insensitive routing on /healthcheck enables backend enumeration: confidence 40 < 40 threshold; KB 2026-09-13 explicitly REJECTED case-insensitive proxy mount discovery exhausted — no new routes, no SSRF vector
+[PARKED] OIDC check_session iframe enables silent authentication state probing across origins: confidence 45 < 50 threshold; informational-only endpoint per OIDC spec; no demonstrated exploit path without additional chain; KB marks "informational only, not separately reportable"
 [FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 88, AUTH_HELPED, MEDIUM-HIGH)
 [FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
-[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` → client_id + redirect_uri scheme. Unlocks both 88-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` + `res/raw/*` + `strings -a classes*.dex` for client_id + redirect_uri scheme. Unlocks both 88-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 14th+ session; body-presence sole gate; systemic and stable
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
