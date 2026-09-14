@@ -1,19 +1,28 @@
-## 2026-09-14 19:33:24 UTC [target] (model bigpickle)
-[HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation
+## 2026-09-14 22:46:31 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation = RFC 7662/7009 optional-client-auth violation
 class: AUTH
 asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
 confidence: 88
-reasoning: re-confirmed today post→200 {"active":false}/200 OK with zero client creds; all other token-plane grants client-gated (incl. today's token-exchange 400 invalid_client) isolating the flaw to these two endpoints
-evidence_needed: ONE real HORNBACH token → introspect active:true + claims; revoke→200; users-srv/userinfo Bearer <t>→200
+reasoning: POST token=dummy → 200 {"active":false} / 200 "OK" with zero client credentials, 18+ independent sessions incl. today; body-presence sole gate (empty→400); token/exchange + all other grants client-gated, isolating flaw to these two endpoints; RFC 7662 §2.1 / RFC 7009 §2.1 mandate client auth for confidential clients
+evidence_needed: ONE real HORNBACH token → introspect active:true + claims; then revoke→200; then users-srv/userinfo Bearer <t> → 200
 verify_steps: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>)
-impact: attacker w/ leaked token validates full PII claims then silently kills sessions; MEDIUM-HIGH; PoC import gated on one real token
+impact: attacker with any leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; PoC import gated on ONE real token
 testability: AUTH_HELPED
 [HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks token-plane PoCs
 class: AUTH
-asset: de.hornbach.app.smarthome APK/IPA
+asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
 confidence: 55
-reasoning: sole remaining client_id source — web estate bot-walled, root 302, GitHub org empty, Mirakl external IdP, discovery advertises client_secret_jwt + subject_types ["public"]
+reasoning: sole remaining client_id source — web estate F5 bot-walled, root 302, GitHub org empty, Mirakl federates on external IdP, RFC 8414/9728 404; discovery advertises client_secret_jwt/private_key_jwt + subject_types_supported=["public"]
 evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret)
-verify_steps: HUMAN — obtain v3.9.0 APK, unzip, grep assets/*.json|*.properties + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri
-impact: MEDIUM enabler — converts FINAL-1 (88) into importable PoC
+verify_steps: HUMAN — obtain v3.9.0 APK (APKMirror/APKPure/AppBrain), unzip, grep assets/*.json|*.properties + res/raw/*, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording
+impact: MEDIUM enabler — converts FINAL-1 (88) into importable PoC with a real token path
 testability: HUMAN_ONLY
+[HYP] SCIM provisioning controller may accept cidaas client_id-scoped auth (public client), not only admin bearer
+class: AUTH
+asset: https://auth.hornbach.com/user-scim-srv/v2/{Users,Schemas,ResourceTypes}
+confidence: 45
+reasoning: all three controllers return 401 {"success":false,"status":401} (live, bearer-gated, 09-05 00:12Z); metadata advertises scim_endpoint; cidaas SCIM auto-provisions customer identities — if any client-scoped token or client_id param is honored, /Users becomes cross-tenant PII CRUD; untested variant is client_id-auth vs pure bearer
+evidence_needed: client_id from FINAL-2 → GET /user-scim-srv/v2/Users?client_id=<id> or with public-client access token → non-401
+verify_steps: after FINAL-2: GET /user-scim-srv/v2/Users (plain 401 baseline), then with client_id param / bearer from that client; any non-401 = finding
+impact: if bypassed, full customer identity read/provision (SCIM) — HIGH PII, but gated on FINAL-2
+testability: AUTH_HELPED

@@ -23912,3 +23912,148 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] hornbach: 65 — primary finding (unauthenticated introspect/revoke, RFC 7662/7009, 88 conf) genuine, stable across 19 sessions, and today further isolated as the ONLY ungated token-plane surface; PoC import still gated on ONE real token; validated-bug count 0; sole escalation path remains HUMAN APK extraction (55); Wayback recovery deferred (IA outage); program severity realistically Medium unless token-leak chain demonstrated.
+===== ANALYST bigpickle 2026-09-14 22:48:56 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt && git -C /home/runner/work/hornbach-hunt/hornbach-hunt log --oneline -5 2>/dev/null
+total 404
+drwxr-xr-x 12 runner runner   4096 Sep 14 22:44 .
+drwxr-xr-x  3 runner runner   4096 Sep 14 22:44 ..
+drwxr-xr-x  7 runner runner   4096 Sep 14 22:44 .git
+drwxr-xr-x  3 runner runner   4096 Sep 14 22:44 .github
+-rw-r--r--  1 runner runner   1901 Sep 14 22:44 README.md
+-rw-r--r--  1 runner runner     32 Sep 14 22:44 analyst-out.txt
+-rw-r--r--  1 runner runner 147636 Sep 14 22:44 analyst-prompt.txt
+-rw-r--r--  1 runner runner 143708 Sep 14 22:44 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 14 22:44 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 14 22:44 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 14 22:44 leads
+-rw-r--r--  1 runner runner  24830 Sep 14 22:44 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 14 22:44 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 14 22:44 reports
+drwxr-xr-x  2 runner runner   4096 Sep 14 22:44 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep 14 22:44 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 14 22:44 scripts
+-rw-r--r--  1 runner runner     33 Sep 14 22:44 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 14 22:44 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 14 22:44 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 14 22:44 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 14 22:44 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 14 22:44 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 14 22:44 triage
+c22e44f triage 2026-09-14-22-14
+[0m
+[0m✱ [0mGlob "**/*.md"[90m 99 matches[0m
+[0m
+[0m$ [0mls scripts && head -30 scripts/* 2>/dev/null | head -80
+sync-issues.py
+import os, re, hashlib
+from difflib import SequenceMatcher
+from pathlib import Path
+from github import Github
+
+REPO = os.environ["GITHUB_REPOSITORY"]
+TOKEN = os.environ["GITHUB_TOKEN"]
+GLOB = os.environ.get("LEAD_GLOB", "leads/lead-*.md")
+TARGET = os.environ.get("TARGET_NAME", "hunt")
+MODEL_FROM_FILENAME = os.environ.get("MODEL_FROM_FILENAME", "0") == "1"
+
+STOP = re.compile(r'^\[(HYP|PARKED|FINAL|NEXT|LEARN|RISK|NEW|CHANGED|PRIO)\]')
+KV = re.compile(r'^([a-z_]+):\s*(.*)$', re.I)
+
+TITLE_SIM_THRESHOLD = float(os.environ.get("TITLE_SIM_THRESHOLD", "0.82"))
+COARSE_SIM_THRESHOLD = float(os.environ.get("COARSE_SIM_THRESHOLD", "0.55"))
+
+
+def split_inline(title):
+    """Extract inline attributes from a single-line lead of the form:
+    [HYP] Title: confidence 96, class MISCONFIG, verify_steps ..., asset https://...
+    Attribute matches are removed; the title is cut at the first attribute."""
+    attrs = {}
+    pats = [
+        (r'confidence\s*(?:=|:|\s+)\s*(\d{1,3})', 'confidence', None),
+        (r'conf\s*(?:=|:|\s+)\s*(\d{1,3})', 'confidence', None),
+        (r'\((\d{2,3})\)\s*[:;]', 'confidence', None),
+        (r'class\s*(?:=|:|\s+)\s*([A-Za-z_]+)', 'class', str.upper),
+        (r'asset\s*(?:=|:|\s+)\s*(https?://[^\s,;]+|/[^\s,;]+)', 'asset', None),
+        (r'severity\s*(?:=|:|\s+)\s*([A-Za-z]+)', 'severity', None),
+[0m
+[0m✱ [0mGrep "scim|user-scim|ServiceProviderConfig|Schemas"[90m 37 matches[0m
+[0m
+[0m$ [0mfor u in \
+"https://auth.hornbach.com/" \
+"https://auth.hornbach.com/.well-known/openid-configuration" \
+"https://auth.hornbach.com/.well-known/oauth-authorization-server" \
+"https://auth.hornbach.com/token-srv/token?grant_type=client_credentials" \
+"https://auth.hornbach.com/authz-srv/authz?client_id=dummy-00000000-0000-0000-0000-000000000000&response_type=code" \
+"https://hornbach-mp.mirakl.net/api-docs" \
+"https://hornbach-mp.mirakl.net/swagger-ui.html" ; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 -A "Mozilla/5.0 (compatible; recon)" -D - "$u" -o /tmp/hb-body.bin 2>/dev/null | grep -E "^HTTP" | tail -1 | awk '{print $2}')
+  size=$(stat -c%s /tmp/hb-body.bin 2>/dev/null || echo 0)
+  ctype=$(curl -s -o /dev/null --max-time 15 -A "Mozilla/5.0 (compatible; recon)" -w "%{content_type}|%{size_download}" "$u")
+  echo "$code | $size | $ctype | $u"
+  sleep 1.2
+done
+302 | 0 | |0 | https://auth.hornbach.com/
+200 | 0 | application/json; charset=utf-8|3189 | https://auth.hornbach.com/.well-known/openid-configuration
+404 | 0 | text/plain; charset=utf-8|50 | https://auth.hornbach.com/.well-known/oauth-authorization-server
+400 | 0 | application/json|104 | https://auth.hornbach.com/token-srv/token?grant_type=client_credentials
+302 | 0 | |0 | https://auth.hornbach.com/authz-srv/authz?client_id=dummy-00000000-0000-0000-0000-000000000000&response_type=code
+404 | 0 | application/json|55 | https://hornbach-mp.mirakl.net/api-docs
+404 | 0 | application/json|62 | https://hornbach-mp.mirakl.net/swagger-ui.html
+[0m
+STEP 1 — DELTA
+- NO_DELTA. Fresh read-only sweep 19:57Z 09-14, ≤1.2s spacing: `auth.hornbach.com/` 302→hornbach.de; `/.well-known/openid-configuration` 200/3189B; `/.well-known/oauth-authorization-server` 404/50B (RFC 8414 still absent); `/token-srv/token?grant_type=client_credentials` GET 400 (client-gated); `/authz-srv/authz` dummy-UUID 302→uniform AUTH10007; `hornbach-mp.mirakl.net/api-docs` 404/55B JSON and `/swagger-ui.html` 404/62B JSON (no anonymous route discovery). Walled estate zero-delta; no new surface.
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke},7.7,priority=(8,8,9,9,1,9) → queued final
+- [PRIO] de.hornbach.app.smarthome APK,6.6,priority=(6,7,6,10,0,9) → sole client_id enabler
+- [PRIO] auth.hornbach.com/user-scim-srv/v2,5.4,priority=(5,7,7,3,0,9) → bearer-gated PII CRUD, chain target
+
+STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation = RFC 7662/7009 optional-client-auth violation
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 {"active":false} / 200 "OK" with zero client credentials, 18+ independent sessions incl. today; body-presence sole gate (empty→400); token/exchange + all other grants client-gated, isolating flaw to these two endpoints; RFC 7662 §2.1 / RFC 7009 §2.1 mandate client auth for confidential clients
+evidence_needed: ONE real HORNBACH token → introspect active:true + claims; then revoke→200; then users-srv/userinfo Bearer <t> → 200
+verify_steps: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>)
+impact: attacker with any leaked/stolen token validates full PII claim-set and silently kills victim sessions server-side; MEDIUM-HIGH; PoC import gated on ONE real token
+testability: AUTH_HELPED
+[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks token-plane PoCs
+class: AUTH
+asset: de.hornbach.app.smarthome APK/IPA (+ de/com.hornbach.* retail bundles)
+confidence: 55
+reasoning: sole remaining client_id source — web estate F5 bot-walled, root 302, GitHub org empty, Mirakl federates on external IdP, RFC 8414/9728 404; discovery advertises client_secret_jwt/private_key_jwt + subject_types_supported=["public"]
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret)
+verify_steps: HUMAN — obtain v3.9.0 APK (APKMirror/APKPure/AppBrain), unzip, grep assets/*.json|*.properties + res/raw/*, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri; sha256 any secret before recording
+impact: MEDIUM enabler — converts FINAL-1 (88) into importable PoC with a real token path
+testability: HUMAN_ONLY
+[HYP] SCIM provisioning controller may accept cidaas client_id-scoped auth (public client), not only admin bearer
+class: AUTH
+asset: https://auth.hornbach.com/user-scim-srv/v2/{Users,Schemas,ResourceTypes}
+confidence: 45
+reasoning: all three controllers return 401 {"success":false,"status":401} (live, bearer-gated, 09-05 00:12Z); metadata advertises scim_endpoint; cidaas SCIM auto-provisions customer identities — if any client-scoped token or client_id param is honored, /Users becomes cross-tenant PII CRUD; untested variant is client_id-auth vs pure bearer
+evidence_needed: client_id from FINAL-2 → GET /user-scim-srv/v2/Users?client_id=<id> or with public-client access token → non-401
+verify_steps: after FINAL-2: GET /user-scim-srv/v2/Users (plain 401 baseline), then with client_id param / bearer from that client; any non-401 = finding
+impact: if bypassed, full customer identity read/provision (SCIM) — HIGH PII, but gated on FINAL-2
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] SAP APIM case-insensitive routing (15): mechanism-only, verify exhausted, monitor passive only.
+- [PARKED] client_id recovery via web/headers/repos/Mirakl: all closed; collapsed into APK path.
+- [FINAL] 1. Unauthenticated introspect/revoke RFC 7662/7009 (88, AUTH, AUTH_HELPED — import gated on ONE real token)
+- [FINAL] 2. cidaas client_id+secret via mobile APK (55, HUMAN_ONLY — sole escalation enabler for FINAL-1)
+- [FINAL] 3. SCIM client_id-scoped auth variant (45, AUTH_HELPED — chained on FINAL-2)
+
+STEP 5 — NEXT ACTION
+- [NEXT] HUMAN: Download `de.hornbach.app.smarthome` v3.9.0 APK (APKMirror/APKPure/AppBrain), unzip; run `grep -raE "cidaas|hornbach\.com|redirect_uri|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" assets/ res/` and `strings -a classes*.dex lib/*.so | grep -iE "auth\.hornbach\.com|client_id|redirect"`; sha256 any embedded secret before recording. Sole remaining path to convert FINAL-1 (88) into an importable PoC with a real HORNBACH token.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED class OTHER @ auth.hornbach.com: 09-14 19:57Z sweep — root 302→hornbach.de, discovery 200/3189B, RFC 8414 404/50B, token-srv/token GET 400 (client-gated), authz dummy uniform 302 AUTH10007; walled estate zero-delta re-confirmed.
+- [LEARN] ACCEPTED class OTHER @ hornbach-mp.mirakl.net: `/api-docs` 404/55B + `/swagger-ui.html` 404/62B JSON — no anonymous Mirakl API documentation mount; all /api/* remain Mirakl-auth-gated.
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com: POST /token-srv/{introspect,revoke} remains unauthenticated-200 (18+ sessions) — primary finding stable; no remediation signal on 09-14.
+
+STEP 7 — RISK
+- [RISK] hornbach: 65 — primary finding (unauthenticated introspect/revoke, RFC 7662/7009, 88 conf) genuine and re-confirmed today, but PoC import still gated on ONE real HORNBACH token; validated-bug count still 0; sole escalation path is HUMAN mobile-APK client_id extraction (55); web estate bot-walled, api.hornbach.de anonymous breadth exhausted, Mirakl docs-gated; today's zero-delta sweep surfaced no new surface; realistic severity stays Medium unless the token-leak/PII chain is demonstrated.
