@@ -223,3 +223,12 @@ reasoning: The test code hardcodes `https://frontend.hornbach-develop.loyaltyhar
 impact: LOW — Information disclosure of internal infrastructure. The URL appears to be unreachable from the public internet (connection refused), suggesting it's an internal/VPN-only endpoint.
 verify_steps: 1) Verify if `loyaltyharbor.dev` is a legitimate third-party vendor for HORNBACH. 2) Check if the domain resolves (it currently doesn't respond). 3) Determine if this was contractor work or official HORNBACH code.
 TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-14 06:22:55 UTC
+[HYP] No public code surface to audit
+class: OTHER
+asset: github.com/hornbach (org)
+confidence: 100
+reasoning: >
+impact: N/A — no code surface available for secret/credential/IDOR/SSRF
+verify_steps: >
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
