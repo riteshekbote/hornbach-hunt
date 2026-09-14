@@ -294,3 +294,6 @@
 - 2026-09-14 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF.
 - 2026-09-14 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope.
 - 2026-09-14 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed.
+- 2026-09-14 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 18+ sessions; body-presence sole gate; systemic and stable (today 200/16B + 200/2B).
+- 2026-09-14 CHANGED class OTHER @ auth.hornbach.com/ (root): 302 → hornbach.de — root HTML client_id extraction hypothesis definitively dead.
+- 2026-09-14 ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted.
