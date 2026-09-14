@@ -3268,3 +3268,22 @@ testability: PASSIVE
 [LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed.
 [LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted.
 [RISK] hornbach: 65 — primary finding (unauthenticated introspect/revoke, RFC 7662/7009, 88 conf) is genuine and re-confirmed today, but PoC import remains gated on ONE real token; validated-bug count still 0; sole escalation path is HUMAN mobile-APK client_id extraction (55); web estate fully bot-walled and api.hornbach.de anonymous surface exhausted; delta check surfaced zero new surface; program severity realistically Medium unless token-leak chain is demonstrated.
+## 2026-09-14 19:33:24 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation = optional-client-auth RFC 7662/7009 violation
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: re-confirmed today post→200 {"active":false}/200 OK with zero client creds; all other token-plane grants client-gated (incl. today's token-exchange 400 invalid_client) isolating the flaw to these two endpoints
+evidence_needed: ONE real HORNBACH token → introspect active:true + claims; revoke→200; users-srv/userinfo Bearer <t>→200
+verify_steps: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>)
+impact: attacker w/ leaked token validates full PII claims then silently kills sessions; MEDIUM-HIGH; PoC import gated on one real token
+testability: AUTH_HELPED
+[HYP] cidaas client_id + shared secret recoverable from mobile bundle → unblocks token-plane PoCs
+class: AUTH
+asset: de.hornbach.app.smarthome APK/IPA
+confidence: 55
+reasoning: sole remaining client_id source — web estate bot-walled, root 302, GitHub org empty, Mirakl external IdP, discovery advertises client_secret_jwt + subject_types ["public"]
+evidence_needed: UUID client_id + redirect_uri allowlist + sha256(any embedded secret)
+verify_steps: HUMAN — obtain v3.9.0 APK, unzip, grep assets/*.json|*.properties + res/raw, strings -a classes*.dex lib/*.so for auth.hornbach.com/UUID/redirect_uri
+impact: MEDIUM enabler — converts FINAL-1 (88) into importable PoC
+testability: HUMAN_ONLY
