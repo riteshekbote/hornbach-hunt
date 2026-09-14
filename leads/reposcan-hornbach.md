@@ -203,3 +203,23 @@ TARGET_ORG not configured for hornbach; skipping public-org deep scan.
 TARGET_ORG not configured for hornbach; skipping public-org deep scan.
 ## REPOSCAN 2026-09-13 23:11:56 UTC
 TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-14 01:12:10 UTC
+class: MISCONFIG
+asset: github.com/moe-bit/hornbach-cloud-engineering-test → environments/*.tfvars
+confidence: 80
+reasoning: Three .tfvars files expose internal GCP project IDs: `hornbach-dev-project`, `hornbach-prod-project`, and `hornbach-int-project` in `europe-west3` (Frankfurt). These follow Google Cloud naming conventions and reveal HORNBACH's internal infrastructure naming scheme. The GCR image references (`gcr.io/hornbach-*-project/frontend:backend`) confirm these are container registry paths for actual workloads. While .tfvars files are typically gitignored, these are committed to a public repo.
+impact: LOW-MEDIUM — Information disclosure of internal naming conventions and GCP region. Could aid reconnaissance for targeting actual HORNBACH GCP infrastructure if these projects exist.
+verify_steps: 1) Check if https://github.com/moe-bit/hornbach-cloud-engineering-test is a legitimate HORNBACH engineering test. 2) Verify if these GCP project IDs exist via Google Cloud Console (requires auth). 3) Cross-reference with HORNBACH's known GCP footprint.
+class: MISCONFIG
+asset: github.com/moe-bit/hornbach-cloud-engineering-test → main.tf:248-252
+confidence: 65
+reasoning: The Terraform code grants `roles/run.invoker` to `allUsers`, which would make Cloud Run services publicly accessible without authentication. If applied to production, this would allow anyone to invoke backend services including the Firestore-backed API.
+impact: MEDIUM — Would expose backend APIs to unauthenticated access. However, this appears to be a test/hiring repository, not necessarily applied to production. The `allUsers` binding combined with the load balancer wildcard host rule suggests this is a test setup.
+verify_steps: 1) Confirm if this Terraform was actually applied to HORNBACH infrastructure. 2) Check if the Cloud Run services defined (frontend/backend) are accessible at the URLs shown in outputs. 3) Test if the services accept unauthenticated requests.
+class: MISCONFIG
+asset: github.com/krzysztof-tarasiewicz-private/hornbach-e2e-tests → tests/steps/world.ts:25
+confidence: 85
+reasoning: The test code hardcodes `https://frontend.hornbach-develop.loyaltyharbor.dev` as the target URL. This reveals an internal development/staging domain for HORNBACH's loyalty platform. "loyaltyharbor.dev" appears to be a third-party platform (LoyaltyHarbor) used by HORNBACH. The `hornbach-develop` subdomain suggests this is a development environment.
+impact: LOW — Information disclosure of internal infrastructure. The URL appears to be unreachable from the public internet (connection refused), suggesting it's an internal/VPN-only endpoint.
+verify_steps: 1) Verify if `loyaltyharbor.dev` is a legitimate third-party vendor for HORNBACH. 2) Check if the domain resolves (it currently doesn't respond). 3) Determine if this was contractor work or official HORNBACH code.
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
