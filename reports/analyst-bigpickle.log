@@ -25278,3 +25278,100 @@ testability: HUMAN_ONLY
 **STEP 7 — RISK**
 
 [RISK] hornbach: 65 — token plane stable (unauthenticated introspect+revoke at 88, PoC gated on one real token), one informational-grade 500 differential on introspect at 72; api.hornbach.de fully exhausted and SAP case-insensitive mount discovery closed; estate-wide F5 bot-wall and cidaas client_id enumeration remediation leave no new high-value anonymous vector. Sole escalation path is APK binary extraction (HUMAN_ONLY, 30 conf).
+===== ANALYST bigpickle 2026-09-15 20:01:14 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sk -o /dev/null -D - -X HEAD "https://auth.hornbach.com/token-srv/introspect"; sleep 1; echo "---OPTIONS---"; curl -sk -o /dev/null -D - -X OPTIONS "https://auth.hornbach.com/token-srv/introspect" -H "Access-Control-Request-Method: POST" -H "Origin: https://evil.example"; sleep 1; echo "---DISCOVERY---"; curl -sk -o /dev/null -w "http_code=%{http_code} size=%{size_download}\n" "https://auth.hornbach.com/.well-known/openid-configuration"; sleep 1; echo "---API---"; curl -sk -o /dev/null -w "http_code=%{http_code} size=%{size_download}\n" "https://api.hornbach.de/"
+HTTP/2 404 
+date: Tue, 15 Sep 2026 19:51:41 GMT
+content-type: application/json
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-ref-number: e7da11f3-e829-49f5-a645-9f452e2663e2
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=cJDR9C3yqRHk6MRwR6Rd2.p1xtjVpdG7iyHt8Im_sAM-1789501901.3100848-1.0.1.1-cI24vOyS4vE0rdFHH7OsK8ohXa4e2TVomZ7c_YeW91wivwn2uBbWYz2utzZCVg5OUHfigCGSxjqn7_5kcFAqOey4R67LD9zVeQUVJc.YjMlo8toOkPMx4y4xs.RdIqXE; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Tue, 15 Sep 2026 20:21:41 GMT
+server: cloudflare
+cf-ray: a3ba2ae32d1f6dde-HAM
+alt-svc: h3=":443"; ma=86400
+
+---OPTIONS---
+HTTP/2 204 
+date: Tue, 15 Sep 2026 19:51:42 GMT
+access-control-allow-methods: GET,POST,HEAD,PUT,DELETE,PATCH
+access-control-allow-origin: *
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Access-Control-Request-Method, Access-Control-Request-Headers, Origin
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: bd610704-9910-4512-92c2-29ab264a35cf
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=hjwTR_eU0o7mXa77RpU6HGhEpICyKzrJAzdvD8fOMLo-1789501902.7117395-1.0.1.1-k96pcYn_4np5.WMfP7778wpAtwTtSHQKHF9ASLTt7ZOwPqlIZCeoou2qWFm4B710xbZQXT.bO5X7x3XH.b3r6O0uRjqH6_.kZr6EIl8qVUK3QF2mQA.MUsxyMlYuUfSP; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Tue, 15 Sep 2026 20:21:42 GMT
+server: cloudflare
+cf-ray: a3ba2aebf93f1f5f-HAM
+alt-svc: h3=":443"; ma=86400
+
+---DISCOVERY---
+http_code=200 size=3189
+---API---
+http_code=404 size=47
+[0m
+STEP 1 — DELTA (2026-09-15 19:51Z read-only probes)
+- [NEW] `auth.hornbach.com/token-srv/introspect`: OPTIONS with `Origin: https://evil.example` + `Access-Control-Request-Method: POST` → **204**, `access-control-allow-origin: *`, `allow-methods: GET,POST,HEAD,PUT,DELETE,PATCH`, `x-powered-by: cidaas` — token-management plane is browser cross-origin reachable (2nd wildcard-CORS cidaas surface after `login-srv/social/token`; jointly strengthens core finding, not separately reportable as it is header-class).
+- [CHANGED] HEAD `/token-srv/introspect` → 404 (no `x-powered-by`); OPTIONS → 204 (cidaas-served): GET/HEAD 404 is method-gating of the routed POST handler, not routing rot — POST-only surface re-confirmed 19:51Z.
+- [CHANGED] `x-ref-number` on 204 is UUID (`bd610704-9910-...`) incl. on prior 500s — non-predictable, correlation-angle closed.
+- [NO_DELTA] `.well-known/openid-configuration` 200/3189B; `api.hornbach.de` root 404/47B.
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/introspect, 5.5, OAuth/RFC7662 lenient-parser exposure (a=4 b=3 t=7 g=10 c=0 f=8)
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke}, 8.3, unauthenticated token plane + CORS* reachability (a=8 b=8 t=8 g=10 c=1 f=9)
+- [PRIO] de.hornbach.app.smarthome (APK), 6.1, sole PoC-import gate for #1 (a=5 b=9 t=5 g=1 c=0 f=8)
+
+STEP 3 — HYPOTHESES
+[HYP] token_type_hint unhandled-exception path on RFC 7662 endpoint may leak internal detail under malformed request shapes
+class: MISCONFIG
+asset: auth.hornbach.com/token-srv/introspect
+confidence: 65
+reasoning: POST token=any + token_type_hint in {foo,unknown,client_credentials,urn:ietf:params:oauth:token-type:access_token} → 500 `internal_error` (4/4, 2 cycles; RFC-valid URN also 500 = string-compare unhandled case); revoke returns clean 400 on same input; empty token → 400 `"access token is mandatoryerror:"` concat bug; JSON content-type accepted; 500 drops `x-powered-by` (different code path) but keeps UUID `x-ref-number`; live HEAD→404/OPTIONS→204 confirms POST-only handler.
+evidence_needed: whether 500 body expands to stack trace / class-name under multipart/form-data, repeated `token_type_hint` params, or >10KB hint; whether hint value is echoed in any 500 body (reflection).
+verify_steps: [POST-gated — deferred per GET/HEAD/OPTIONS-only rule] POST /token-srv/introspect Content-Type multipart/form-data `token=1&token_type_hint=test`; POST `token=1&token_type_hint=foo&token_type_hint=bar`; OPTIONS /token-srv/introspect (read-only) already confirms route. 
+impact: informational-grade; no data exfil or DoS >self; co-signs finding #1's "attacker-controlled input processed without client auth"; possible partial info leak if body expands.
+testability: PASSIVE
+
+[HYP] Unauthenticated introspect+revoke with wildcard-CORS on token plane enables silent session-kill + PII-metadata oracle
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}` / 200 `OK` text/plain, zero client creds, 19+ sessions incl. 09-15 01:25Z; token endpoint client-gated (400 invalid_client); RFC 7662/7009 mandate client auth; NEW 19:51Z: OPTIONS shows `ACAO:*` + methods incl POST — cross-origin browser POST is permitted at preflight layer; users-srv/userinfo is the sole consuming Bearer gate.
+evidence_needed: ONE real HORNBACH token → introspect `active:true` + claims, then revoke 200; cross-origin revoke viability still requires token value in body (attacker must already know it) — evidence CC1; CORS* on revoke path pending same OPTIONS check.
+verify_steps: OPTIONS /token-srv/revoke (read-only, identical probe as introspect); POST `/token-srv/introspect token=<t>` then `/token-srv/revoke token=<t>` (token-gated); GET `/users-srv/userinfo` Bearer <t>.
+impact: attacker with single leaked/forged token validates full claim set (sub,email,mobile_number,identities,name,phone) and kills victim sessions server-side — MEDIUM-HIGH; wildcard-CORS + body-presence gate confirmed means only the token VALUE (not client auth or browser origin) separates PoC from proof.
+testability: AUTH_HELPED
+
+[HYP] APK extraction for client_id/secret to unlock PoC import
+class: AUTH
+asset: de.hornbach.app.smarthome (Google Play)
+confidence: 30
+reasoning: sole conversion path for FINAL-1 to importable PoC with a real token; estate-wide F5 bot-wall closed all web-based client_id extraction; no alternative seed source exists.
+evidence_needed: APK binary → grep assets/cidaas.xml, res/raw/*, strings classes*.dex for auth.hornbach.com UUID, redirect_uri, clientSecret.
+verify_steps: HUMAN: obtain APK via trusted route → unzip → grep OIDC config.
+impact: HIGH (enables PoC) but fully gated on human action.
+testability: HUMAN_ONLY
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] APK extraction: confidence 30 < 40; wholly HUMAN_ONLY, no session-verifiable step.
+- [FINAL] 1) introspect+revoke unauthenticated (88) — sole real finding, now with CORS* preflight reachability evidenced; token value is the only remaining gate.
+- [FINAL] 2) token_type_hint 500 differential (65) — x-ref-number correlation angle closed (UUID), request-shape expansion still open but POST-gated.
+
+STEP 5 — NEXT ACTION
+[NEXT] PROBE: `OPTIONS https://auth.hornbach.com/token-srv/revoke` with `Origin: https://evil.example` + `Access-Control-Request-Method: POST` — confirm identical `ACAO:*`/allow-methods preflight as introspect, closing cross-origin reachability evidence on the revoke path of finding #1 (1 req, read-only).
+
+STEP 6 — LEARNING
+- [LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/token-srv/introspect: `x-ref-number` is random UUID across 200/204/500 responses — no correlation/predictability; angle dropped (watch: RFC-valid URN hint still 500 → differential hypothesis retained, conf 72→65 after trimming this evidence need).
+- [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/token-srv/introspect: OPTIONS → 204 with `Access-Control-Allow-Origin:*` + methods `GET,POST,HEAD,PUT,DELETE,PATCH`, x-powered-by cidaas — token plane is browser cross-origin callable at preflight layer; informational co-sign for finding #1, not separately reportable (header-class).
+- [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/token-srv/introspect: HEAD→404 (no x-powered-by) vs OPTIONS→204 (cidaas) — GET/HEAD 404 is method-gating of the routed POST handler; POST-only surface stable 19:51Z.
+- [LEARN] NO_DELTA: `.well-known/openid-configuration` 200/3189B, `api.hornbach.de` root 404/47B 19:51Z — walled estate unchanged.
+
+STEP 7 — RISK
+[RISK] hornbach: 65 — token plane finding (88) stable with evidence now strengthened by wildcard-CORS preflight on introspect; PoC import still gated on one real token (APK HUMAN path parked at 30). Informational hint-500 differential (65) at 500 drop rate re-confirms live unauthenticated code-path execution. api.hornbach.de and tireless surface oscillation (ciicaas bot-wall, client_id enum removal) leave no new high-value anonymous vector; single escalation path remains APK binary extraction, fully human-gated.

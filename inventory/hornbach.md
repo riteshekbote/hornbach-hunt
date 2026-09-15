@@ -632,3 +632,13 @@ www.hornbach.com
 - CHANGED api.hornbach.de/healthcheck: 200 XML, Via sapigwprd01 (Gateway), Host: localhost:8080 backend leak confirmed; root 404; 30+ paths exhausted — anonymous breadth definitively exhausted
 - CHANGED auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed (dummy client_id → 302 AUTH10007 "invalid client_id passed"); client_id enumeration removed
 - CHANGED auth.hornbach.com/.well-known/openid-configuration: fully intact 3189B — all 6 service endpoints + status + token-exchange (RFC 8693), password, client_credentials grants, subject_types_supported=["pu
+
+## 2026-09-15 20:01:14 UTC
+- NEW auth.hornbach.com/token-srv/introspect: POST method confirmed as only working method across 18+ independent sessions (latest live test 2026-09-15 01:25Z); GET/HEAD returning 404 was methodology artifa
+- NEW auth.hornbach.com/token-srv/revoke: POST method confirmed as only working method across 18+ sessions; returns 200 OK text/plain unauthenticated; GET/HEAD parameter-sensitive 404
+- NEW auth.hornbach.com/session/check_session: Discovery-advertised OIDC Session Management check_session iframe live (200/27021B, x-powered-by: cidaas) — novel path confirmed
+- NEW api.hornbach.de/healthcheck: 200 XML, Via sapigwprd01 (Gateway), Host: localhost:8080 backend leak confirmed; 30+ paths exhausted — anonymous breadth definitively exhausted
+- CHANGED auth.hornbach.com/ root: now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend; web-based client_id extraction definitively dead
+- CHANGED hornbach.com web estate (.de/.at/.nl/.ch + login): all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id angle
+- CHANGED auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed (dummy client_id → 302 AUTH10007 "invalid client_id passed"); client_id enumeration removed
+- CHANGED auth.hornbach.com/.well-known/openid-configuration: fully intact 3189B — all 6 service endpoints + status + token-exchange (RFC 8693), password, client_credentials grants, subject_types_supported=["pu
