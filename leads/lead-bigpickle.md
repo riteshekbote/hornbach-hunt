@@ -3396,3 +3396,46 @@ evidence_needed: APK binary, then grep assets/cidaas.xml, res/raw/*, strings cla
 verify_steps: HUMAN: obtain APK via trusted route → unzip → extract OIDC config
 impact: HIGH (enables PoC import) but fully gated on human action
 testability: HUMAN_ONLY
+## 2026-09-15 16:36:48 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + PII leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}` (16B JSON) / 200 `OK` (2B text/plain), zero client credentials, re-confirmed 2026-09-15 01:25Z (19th+ independent session); token endpoint vs these two is client-gated (400 `invalid_client`); RFC 7662 §2.1 / RFC 7009 §2.1 mandate client auth for confidential clients; cidaas `subject_types_supported=["public"]` suggests public client grants may exist but introspect/revoke bypass them entirely
+evidence_needed: ONE real HORNBACH token (de.hornbach.app.smarthome) → introspect `active:true` + claims, revoke 200, then users-srv/userinfo Bearer 200
+verify_steps: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>)
+impact: attacker w/ single leaked/forged token validates full PII claim set (sub, email, mobile_number, identities, name, phone) and server-side kills victim sessions; MEDIUM-HIGH; PoC import gated on one real token
+testability: AUTH_HELPED
+[HYP] token_type_hint error differential proves live code-path on RFC 7662 endpoint
+class: MISCONFIG
+asset: auth.hornbach.com/token-srv/introspect
+confidence: 72
+reasoning: token=any + token_type_hint=[foo|unknown|client_credentials|urn:ietf:params:oauth:token-type:access_token] → 500 `{"code":"","error":"internal_error","error_description":"error during introspection validation"}` (4/4 values, 2 probe cycles); valid hints + empty hint → 200 active:false; token=JWT-shaped → 200 (opaque lookup, no parse); URN-form valid RFC type identifier also triggers 500 — unhandled exception on string comparison; `x-ref-number` correlation ID exposed on 500; empty token → 400 with string concat bug "access token is mandatoryerror:"
+evidence_needed: confirm whether 500 body expands to stack trace under multipart Content-Type, param pollution, or very long hint value; confirm `x-ref-number` pattern predictability
+verify_steps: POST /token-srv/introspect with Content-Type: multipart/form-data boundary=... and token_type_hint=test; POST with token_type_hint=<10KB string>; compare x-ref-number values across 500s for pattern
+impact: low (no data or DoS >self); 500 on valid RFC token type URN signals incomplete implementation; informational-grade; co-signs core finding's "endpoint trusts attacker-controlled input without client auth"
+testability: PASSIVE
+[HYP] APK extraction for client_id/secret to unlock PoC
+class: AUTH
+asset: de.hornbach.app.smarthome (Google Play)
+confidence: 30
+reasoning: sole conversion path for FINAL-1 (88) → importable PoC with a real token; APK not yet obtained; prior hypothesis to download from APK mirrors is HUMAN_ONLY; no new path to extract client_id without APK analysis
+evidence_needed: APK binary, then grep assets/cidaas.xml, res/raw/*, strings classes*.dex for auth.hornbach.com UUID, redirect_uri, clientSecret
+verify_steps: HUMAN: obtain APK via trusted route → unzip → extract OIDC config
+impact: HIGH (enables PoC import) but fully gated on human action
+testability: HUMAN_ONLY
+[PARKED] APK extraction: confidence 30 < 40 threshold; fully HUMAN_ONLY with no verifiable steps from this session; valid as tracking item but not actionable.
+[FINAL] survivors ranked:
+[NEXT] PROBE: POST https://auth.hornbach.com/token-srv/introspect with `token=1234567890&token_type_hint=foo` using Content-Type: multipart/form-data; then repeat with `token_type_hint` as URL-encoded array-style repeated param (`token_type_hint=foo&token_type_hint=bar`); read full response body + headers including `x-ref-number` on each. Confirm 500 is hint-value-bound (not request-length/content-type artifact) and capture correlation ID pattern ([LIMIT] 2 requests). Then re-advance the HUMAN APK path in parallel.
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 `{"active":false}` / 200 `OK` unauthenticated — 19th+ session 09-15; body-presence sole gate; systemic and stable
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
+[LEARN] CHANGED class OTHER @ auth.hornbach.com/ (root): 302 → hornbach.de — root HTML client_id extraction hypothesis definitively dead
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 `invalid_client "unknown client"` — token plane client-gated
+[LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy unactionable with zero candidate seed; enumeration-spirit out-of-scope
+[LEARN] ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted
+[RISK] hornbach: 65 — token plane stable (unauthenticated introspect+revoke at 88, PoC gated on one real token), one informational-grade 500 differential on introspect at 72; api.hornbach.de fully exhausted and SAP case-insensitive mount discovery closed; estate-wide F5 bot-wall and cidaas client_id enumeration remediation leave no new high-value anonymous vector. Sole escalation path is APK binary extraction (HUMAN_ONLY, 30 conf).

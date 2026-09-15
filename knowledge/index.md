@@ -308,3 +308,5 @@
 - 2026-09-15 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - 2026-09-15 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
 - 2026-09-15 ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted
+- 2026-09-15 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 `{"active":false}` / 200 `OK` unauthenticated — 19th+ session 09-15; body-presence sole gate; systemic and stable
+- 2026-09-15 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 `invalid_client "unknown client"` — token plane client-gated
