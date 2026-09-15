@@ -606,3 +606,13 @@ www.hornbach.com
 - NEW api.hornbach.de/healthcheck: 200 XML, Via sapigwprd01 (Gateway), Host: localhost:8080 backend leak confirmed; root 404; 30+ paths exhausted — anonymous breadth definitively exhausted
 - CHANGED hornbach.com web estate (.de/.at/.nl/.ch + login): all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id angle
 - CHANGED auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 `invalid_client "unknown client"` — token plane client-gated; client-validation-ordering (AUTH10008/10009) fires only af
+
+## 2026-09-15 06:17:46 UTC
+- NEW auth.hornbach.com/token-srv/{introspect,revoke}: POST confirmed live unauthenticated (18+ sessions in KB; live test 2026-09-15 01:25Z → introspect 200 `{"active":false}`, revoke 200 `OK` text/plain); 
+- NEW auth.hornbach.com/ root: 302 → hornbach.de (was 200 F5 challenge); CSP header confirms cidaas backend; web-based client_id extraction definitively dead
+- NEW auth.hornbach.com/session/check_session: OIDC Session Management iframe live (200/27KB, x-powered-by: cidaas); discovery-advertised, novel path confirmed
+- NEW auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed (dummy client_id → 302 AUTH10007 "invalid client_id passed"); client_id enumeration removed
+- NEW auth.hornbach.com/.well-known/openid-configuration: fully intact 3189B — all 6 service endpoints + status + token-exchange (RFC 8693), password, client_credentials grants, subject_types_supported=["pu
+- NEW api.hornbach.de/healthcheck: 200 XML, Via sapigwprd01 (Gateway), Host: localhost:8080 backend leak confirmed; root 404; 30+ paths exhausted — anonymous breadth definitively exhausted
+- CHANGED hornbach.com web estate (.de/.at/.nl/.ch + login): all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id angle
+- CHANGED auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 `invalid_client "unknown client"` — token plane client-gated; client-validation-ordering (AUTH10008/10009) fires only af
