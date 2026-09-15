@@ -616,3 +616,10 @@ www.hornbach.com
 - NEW api.hornbach.de/healthcheck: 200 XML, Via sapigwprd01 (Gateway), Host: localhost:8080 backend leak confirmed; root 404; 30+ paths exhausted — anonymous breadth definitively exhausted
 - CHANGED hornbach.com web estate (.de/.at/.nl/.ch + login): all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id angle
 - CHANGED auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 `invalid_client "unknown client"` — token plane client-gated; client-validation-ordering (AUTH10008/10009) fires only af
+
+## 2026-09-15 11:58:00 UTC
+- NEW auth.hornbach.com/ root: now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend; web-based client_id extraction definitively dead
+- CHANGED auth.hornbach.com/token-srv/{introspect,revoke}: POST confirmed live unauthenticated across 18+ independent sessions (latest live test 2026-09-15 01:25Z); GET/HEAD return 404 (methodology artifact) — 
+- CHANGED hornbach.com web estate (.de/.at/.nl/.ch + login): all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id angle
+- CHANGED auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 `invalid_client "unknown client"` — token plane client-gated; client-validation-ordering (AUTH10008/10009) fires only af
+- CHANGED api.hornbach.de/healthcheck: 200 XML, Via sapigwprd01 (Gateway), Host: localhost:8080 backend leak confirmed; root 404; 30+ paths exhausted — anonymous breadth definitively exhausted

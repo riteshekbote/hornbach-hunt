@@ -3371,3 +3371,28 @@ impact: none
 testability: PASSIVE
 [NEXT] PROBE: POST https://auth.hornbach.com/token-srv/introspect with `token_type_hint=foo&token=1234567890` repeated-param list variant to confirm the 500 is hint-value-bound (not request-length) and capture full body + headers once ([LIMIT] 2 requests). Then advance the 2026-09-15 APK path (HUMAN) in parallel — it is the only path to FINAL-1 PoC import.
 [RISK] hornbach: 65 — token plane stable (unauthenticated introspect+revoke at 88, PoC gated on one real token), one new informational-grade 500 differential on introspect; api.hornbach.de fully exhausted and SAP case-insensitive mount discovery closed; estate-wide F5 bot-wall and cidaas client_id enumeration remediation leave no new high-value anonymous vector.
+## 2026-09-15 11:57:50 UTC [target] (model bigpickle)
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}` (16B JSON) / 200 `OK` (2B text/plain), zero client credentials, re-confirmed 2026-09-15 11:55Z (20th+ independent session); token endpoint vs these two is client-gated (400 `invalid_client`); RFC 7662 §2.1 / RFC 7009 §2.1 mandate client auth for confidential clients; cidaas `subject_types_supported=["public"]` suggests public client grants may exist but introspect/revoke bypass them entirely
+evidence_needed: ONE real HORNBACH token (de.hornbach.app.smarthome) → introspect `active:true` + claims, revoke 200, then users-srv/userinfo Bearer 200
+verify_steps: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>)
+impact: attacker w/ single leaked/forged token validates full PII claim set (sub, email, mobile_number, identities, name, phone) and server-side kills victim sessions; MEDIUM-HIGH; PoC import gated on one real token
+testability: AUTH_HELPED
+class: MISCONFIG
+asset: https://auth.hornbach.com/token-srv/introspect
+confidence: 72
+reasoning: introspect returns 500 `internal_error` on ANY non-`access_token`/`refresh_token` `token_type_hint` value (10 tested values, all 500); sibling revoke endpoint returns clean 400 `invalid_request` on same inputs; the URN-form `urn:ietf:params:oauth:token-type:access_token` (a valid per-RFC type identifier) also triggers 500 — unhandled exception on string comparison; JSON content-type accepted (not form-only); empty token → 400 with string concat bug "access token is mandatoryerror:"; `x-powered-by: cidaas` header missing on 500 responses (different code path); `x-ref-number` correlation ID exposed
+evidence_needed: confirm whether 500 response body expands to stack trace under additional request shapes (Content-Type: multipart, param pollution, very long hint value); confirm `x-ref-number` is predictable/correlatable
+verify_steps: POST /token-srv/introspect with Content-Type: multipart/form-data, boundary=... and token_type_hint=test; POST with token_type_hint=<10KB string>; compare x-ref-number values across 500s for pattern
+impact: low (no data or DoS >self); 500 on valid RFC token type URN signals incomplete implementation; informational-grade; notable because it proves live error-handling code on an RFC 7662 endpoint and could co-sign core finding's "endpoint trusts attacker-controlled input without client auth"
+testability: PASSIVE
+class: AUTH
+asset: de.hornbach.app.smarthome (Google Play)
+confidence: 30
+reasoning: sole conversion path for FINAL-1 (88) → importable PoC with a real token; APK not yet obtained; prior hypothesis to download from APK mirrors is HUMAN_ONLY; no new path to extract client_id without APK analysis
+evidence_needed: APK binary, then grep assets/cidaas.xml, res/raw/*, strings classes*.dex for auth.hornbach.com UUID, redirect_uri, clientSecret
+verify_steps: HUMAN: obtain APK via trusted route → unzip → extract OIDC config
+impact: HIGH (enables PoC import) but fully gated on human action
+testability: HUMAN_ONLY
