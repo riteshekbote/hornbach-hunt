@@ -249,3 +249,17 @@ verify_steps: Visit https://github.com/hornbach or query https://api.github.com/
 TARGET_ORG not configured for hornbach; skipping public-org deep scan.
 ## REPOSCAN 2026-09-15 05:40:10 UTC
 TARGET_ORG not configured for hornbach; skipping public-org deep scan.
+## REPOSCAN 2026-09-15 10:32:07 UTC
+class: SECRET
+asset: .git/config:12
+confidence: 85
+reasoning: Base64-encoded `ghs_*` GitHub App installation token (JWT) embedded as HTTP extraheader. Not tracked in git (`.git` directory is excluded by git internals), but repository has NO `.gitignore` file, increasing accidental-commit risk if future files are generated outside `.git/`.
+impact: LOW (local-only exposure, not in tracked codebase)
+verify_steps: 1) `git ls-files .git/config` returns empty (confirmed not tracked). 2) Decode base64 value to confirm `ghs_*` prefix. 3) Check JWT expiration (currently valid).
+class: MISCONFIG
+asset: / (repo root)
+confidence: 90
+reasoning: Repository lacks `.gitignore`. Generated files (`ctx.txt`, `analyst-prompt.txt`, state files, log files) could be accidentally committed. The hunt workflow does include automated secret redaction before commit (`scope.yml:48`), which partially mitigates this.
+impact: LOW
+verify_steps: 1) `ls -la .gitignore` confirms absence. 2) Review generated artifacts in repo root for accidental tracking.
+TARGET_ORG not configured for hornbach; skipping public-org deep scan.
