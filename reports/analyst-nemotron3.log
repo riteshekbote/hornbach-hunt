@@ -10819,3 +10819,234 @@ testability: PASSIVE
 **STEP 7 — RISK**
 
 [RISK] hornbach: 78 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled; token introspection + revocation both confirmed live unauthenticated via POST (RFC 7009/7662 violations systemic); authorization endpoint responds to valid client_id with login page but uniform invalid_client gate. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) identified as SAP APIM with localhost:8080 backend leak but no routes enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra (version 25.5.1.15, likely patched). Mirakl marketplace is separate auth-gated surface. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz and token management endpoints.
+===== ANALYST nemotron3 2026-09-15 01:27:50 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt/
+total 412
+drwxr-xr-x 12 runner runner   4096 Sep 15 01:16 .
+drwxr-xr-x  3 runner runner   4096 Sep 15 01:16 ..
+drwxr-xr-x  7 runner runner   4096 Sep 15 01:16 .git
+drwxr-xr-x  3 runner runner   4096 Sep 15 01:16 .github
+-rw-r--r--  1 runner runner   1901 Sep 15 01:16 README.md
+-rw-r--r--  1 runner runner     43 Sep 15 01:16 analyst-out.txt
+-rw-r--r--  1 runner runner 152426 Sep 15 01:16 analyst-prompt.txt
+-rw-r--r--  1 runner runner 148498 Sep 15 01:16 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 15 01:16 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 15 01:16 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 15 01:16 leads
+-rw-r--r--  1 runner runner  25329 Sep 15 01:16 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 15 01:16 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 15 01:16 reports
+drwxr-xr-x  2 runner runner   4096 Sep 15 01:16 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep 15 01:16 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 15 01:16 scripts
+-rw-r--r--  1 runner runner     33 Sep 15 01:16 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 15 01:16 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 15 01:16 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 15 01:16 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 15 01:16 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 15 01:16 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 15 01:16 triage
+[0m
+[0m→ [0mRead state_nemotron3.json
+[0m→ [0mRead probe-results.md[90m [limit=100][0m
+[0m→ [0mRead scope.yml
+[0m→ [0mRead probe-results.md[90m [limit=100, offset=100][0m
+[0m→ [0mRead probe-results.md[90m [limit=100, offset=350][0m
+[0m→ [0mRead probe-results.md[90m [limit=20, offset=450][0m
+[0m
+[0m$ [0mcurl -s -X POST "https://auth.hornbach.com/token-srv/introspect" -H "Content-Type: application/x-www-form-urlencoded" -d "token=test" -w "\nHTTP %{http_code}"
+{"active":false}
+HTTP 200
+[0m
+[0m$ [0mcurl -s -X POST "https://auth.hornbach.com/token-srv/revoke" -H "Content-Type: application/x-www-form-urlencoded" -d "token=test" -w "\nHTTP %{http_code}"
+OK
+HTTP 200
+[0m
+[0m$ [0mcurl -s -X GET "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=dummy&redirect_uri=https://evil.com&scope=openid" -w "\nHTTP %{http_code}" --max-redirs 0
+HTTP 302
+[0m
+[0m$ [0mcurl -s -X GET "https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=dummy&redirect_uri=https://evil.com&scope=openid" -I
+HTTP/2 302 
+date: Tue, 15 Sep 2026 01:25:18 GMT
+content-length: 0
+location: https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 5b763486-eaa4-4b23-ae4e-a291ea891a01
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=RGFKUU7u8yfW64Vv1KlEdGI6lq26j8IoHstmZFUpKr8-1789435518.5339882-1.0.1.1-GRmAs86aNjmqed6zyiakzrNZnJfUacjhJeLK6Zz4fURw51zIqMTOgWANPWKgWc2qaM1lxwxGZ8vxGeI6gl.XqX6Ww3dG3VxB91j91ZMYAEKXnerdiRTSLBGtOsYZP.z1; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Tue, 15 Sep 2026 01:55:18 GMT
+server: cloudflare
+cf-ray: a3b3d636dd520214-CDG
+alt-svc: h3=":443"; ma=86400
+[0m
+[0m$ [0mcurl -s -X GET "https://auth.hornbach.com/" -I
+HTTP/2 302 
+date: Tue, 15 Sep 2026 01:25:33 GMT
+content-length: 0
+location: https://hornbach.de/
+content-security-policy: default-src 'self'; img-src 'self' https:; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com
+permissions-policy: geolocation=(), camera=(), microphone=(), accelerometer=(), autoplay=(), clipboard-read=(), clipboard-write=(), display-capture=(), document-domain=(), encrypted-media=(), fullscreen=(), gamepad=(), gyroscope=(), magnetometer=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()
+referrer-policy: no-referrer
+strict-transport-security: max-age=15724800; includeSubDomains
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+x-powered-by: cidaas
+x-ref-number: 2538a25b-1614-4f2e-9406-e16a24cd37e7
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=tGJa.RcOe_FWXqkKFnG7v1tEFB0SHCXgte4hcQJNN9k-1789435533.2108617-1.0.1.1-fANYPTCIH1zGvqWTE5vQmwr18AojyT6dpegZ66GMK.VER5mJeCzkPQGkUMl2sUHizdyaBHQdPf2..WEJItr9gtJLRHGGXjqaZRyxUOZ21ef9xNhjWO5PJoVr70pp8JMB; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Tue, 15 Sep 2026 01:55:33 GMT
+server: cloudflare
+cf-ray: a3b3d6928ecf9e85-CDG
+alt-svc: h3=":443"; ma=86400
+[0m
+[0m$ [0mcurl -s "https://auth.hornbach.com/.well-known/openid-configuration"
+{"issuer":"https://auth.hornbach.com","authorization_endpoint":"https://auth.hornbach.com/authz-srv/authz","token_endpoint":"https://auth.hornbach.com/token-srv/token","userinfo_endpoint":"https://auth.hornbach.com/users-srv/userinfo","https://discovery.netid.de/properties/status_endpoint":"https://auth.hornbach.com/.well-known/status","jwks_uri":"https://auth.hornbach.com/.well-known/jwks.json","scopes_supported":["openid","profile","email","phone","address","offline_access","identities","roles","groups"],"response_types_supported":["code","token","id_token","code token","code id_token","token id_token","code token id_token"],"response_modes_supported":["query","fragment","form_post"],"subject_types_supported":["public"],"id_token_signing_alg_values_supported":["HS256","RS256"],"token_endpoint_auth_methods_supported":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"],"claims_supported":["aud","auth_time","created_at","email","email_verified","exp","family_name","given_name","iat","identities","iss","mobile_number","name","nickname","phone_number","picture","sub"],"token_endpoint_auth_signing_alg_values_supported":["HS256","RS256"],"check_session_iframe":"https://auth.hornbach.com/session/check_session","end_session_endpoint":"https://auth.hornbach.com/session/end_session","social_provider_token_resolver_endpoint":"https://auth.hornbach.com/login-srv/social/token","registration_endpoint":"https://auth.hornbach.com/apps-srv/clients/register","userinfo_signing_alg_values_supported":["HS256","RS256"],"userinfo_encryption_alg_values_supported":["RS256"],"userinfo_encryption_enc_values_supported":["A128CBC-HS256"],"id_token_encryption_alg_values_supported":["RS256"],"id_token_encryption_enc_values_supported":["A128CBC-HS256"],"display_values_supported":["page","popup"],"claim_types_supported":["normal"],"service_documentation":"https://docs.cidaas.de/","ui_locales_supported":["en-US","de-DE"],"introspection_endpoint":"https://auth.hornbach.com/token-srv/introspect","introspection_async_update_endpoint":"https://auth.hornbach.com/token-srv/introspect/async/tokenusage","revocation_endpoint":"https://auth.hornbach.com/token-srv/revoke","introspection_endpoint_auth_methods_supported":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"],"introspection_endpoint_auth_signing_alg_values_supported":["HS256","RS256"],"revocation_endpoint_auth_methods_supported":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt"],"revocation_endpoint_auth_signing_alg_values_supported":["HS256","RS256"],"claims_locales_supported":["en-US"],"op_policy_uri":"https://www.cidaas.com/privacy-policy/","op_tos_uri":"https://www.cidaas.com/terms-of-use/","grant_types_supported":["implicit","authorization_code","refresh_token","password","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code"],"code_challenge_methods_supported":["plain","S256"],"device_authorization_endpoint":"https://auth.hornbach.com/authz-srv/device/authz","backchannel_logout_supported":true,"scim_endpoint":"https://auth.hornbach.com/user-scim-srv/v2"}
+[0m
+[0m$ [0mcurl -s -X GET "https://auth.hornbach.com/session/check_session" -I
+HTTP/2 200 
+date: Tue, 15 Sep 2026 01:25:58 GMT
+content-type: text/html;charset=UTF-8
+set-cookie: __cf_bm=MKqsRGNkarccQ.EU8e6T9xhvdqGe.8i8ORpBDICu4ZM-1789435558.8288665-1.0.1.1-FSVXlehAnDGW4nnQ1nQ0d3T7HkBw8qN1TkCfmzNYHCLO21RIasLJc9k4roqu1E9SKhGL7VP.SLQoXlIq.PHtZpBhakvouR6a5tpSx3aDgQIm40RsFXSxM5VvFh_kdV26; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Tue, 15 Sep 2026 01:55:58 GMT
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: fbe73edd-abf8-491a-ba71-74d80a69cb52
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+server: cloudflare
+cf-ray: a3b3d732ac963c83-CDG
+alt-svc: h3=":443"; ma=86400
+[0m
+[0m$ [0mcurl -s -X GET "https://auth.hornbach.com/authz-srv/device/authz" -w "\nHTTP %{http_code}"
+{"error":"invalid_request","error_code":"AUTH10003","error_description":"invalid_request: error parsing request parameters","error_hint":"please check the query/form parameters you are passing are in correct format"}
+HTTP 400
+[0m
+[0m$ [0mcurl -s -X GET "https://api.hornbach.de/healthcheck" -w "\nHTTP %{http_code}"
+<status>ok</status>
+HTTP 200
+[0m
+[0m$ [0mcurl -s -X GET "https://api.hornbach.de/healthcheck" -I
+HTTP/1.1 200 OK
+Max-Forwards: 20
+Via: 1.0 sapigwprd01 (Gateway), 1.0 sapigwprd01 (Gateway)
+Connection: close
+X-CorrelationID: Id-c89ea86a70cc231b47543765 0; Id-c89ea86a71ccbf0a26e9644d 0
+Accept: */*
+Date: Tue, 15 Sep 2026 01:26:32 GMT
+Host: localhost:8080
+Server: Gateway
+User-Agent: curl/8.5.0
+Content-Type: text/xml
+[0m
+[0m$ [0mcurl -s -X GET "https://api.hornbach.de/" -w "\nHTTP %{http_code}"
+{"message":{"status":"404","text":"Not Found"}}
+HTTP 404
+[0m
+Now I have all the current surface data. Let me execute the 8 steps:
+
+---
+
+### STEP 1 — DELTA
+
+[NEW] auth.hornbach.com/token-srv/{introspect,revoke}: POST confirmed live unauthenticated (18+ sessions in KB; live test 2026-09-15 01:25Z → introspect 200 `{"active":false}`, revoke 200 `OK` text/plain); GET/HEAD return 404 (methodology artifact)
+
+[NEW] auth.hornbach.com/ root: 302 → hornbach.de (was 200 F5 challenge); CSP header confirms cidaas backend; web-based client_id extraction definitively dead
+
+[NEW] auth.hornbach.com/session/check_session: OIDC Session Management iframe live (200/27KB, x-powered-by: cidaas); discovery-advertised, novel path confirmed
+
+[NEW] auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed (dummy client_id → 302 AUTH10007 "invalid client_id passed"); client_id enumeration removed
+
+[NEW] auth.hornbach.com/.well-known/openid-configuration: fully intact 3189B — all 6 service endpoints + status + token-exchange (RFC 8693), password, client_credentials grants, subject_types_supported=["public"]
+
+[NEW] api.hornbach.de/healthcheck: 200 XML, Via sapigwprd01 (Gateway), Host: localhost:8080 backend leak confirmed; root 404; 30+ paths exhausted — anonymous breadth definitively exhausted
+
+[CHANGED] hornbach.com web estate (.de/.at/.nl/.ch + login): all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id angle
+
+[CHANGED] auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 `invalid_client "unknown client"` — token plane client-gated; client-validation-ordering (AUTH10008/10009) fires only after client_id validity
+
+---
+
+### STEP 2 — PRIORITIZE
+
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},9.10,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=6,freshness=9
+[PRIO] auth.hornbach.com/authz-srv/authz,7.65,attack_surface=9,business_value=9,tech_exposure=8,gate_ease=3,cloud_surface=6,freshness=9
+[PRIO] auth.hornbach.com/session/check_session,6.80,attack_surface=7,business_value=7,tech_exposure=8,gate_ease=10,cloud_surface=6,freshness=8
+[PRIO] api.hornbach.de,6.25,attack_surface=6,business_value=6,tech_exposure=5,gate_ease=10,cloud_surface=7,freshness=7
+[PRIO] auth.hornbach.de,5.15,attack_surface=5,business_value=6,tech_exposure=5,gate_ease=2,cloud_surface=7,freshness=6
+
+---
+
+### STEP 3 — HYPOTHESES
+
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST /token-srv/introspect returns 200 {"active":false} unauthenticated across 18+ independent sessions (KB + live 2026-09-15 01:25Z); POST /token-srv/revoke returns 200 OK unauthenticated (text/plain); both RFC 7662/7009 require client authentication per OIDC discovery advertises client auth methods but endpoints accept empty POST body; GET/HEAD return 404 (parameter-sensitive routing)
+evidence_needed: Valid access_token from any client to demonstrate introspection returns active=true + token metadata (exp, scope, client_id, sub) and revoke invalidates session
+verify_steps: 1) POST https://auth.hornbach.com/token-srv/introspect -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe active=true + metadata; 2) POST https://auth.hornbach.com/token-srv/revoke -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe 200 OK; 3) Repeat introspect — observe active=false
+impact: Silent session termination + token metadata leak for any valid access_token; enables account takeover via token theft + revocation denial-of-service (AUTH class, MEDIUM-HIGH)
+testability: AUTH_HELPED
+
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 65
+reasoning: Authorization endpoint confirmed live (returns 200 login/consent page for valid client_id per KB); verbose error messages (AUTH10007, AUTH10003) indicate detailed validation logic; cidaas CIAM platform historically has redirect_uri validation flaws (wildcard/subdomain bypass); client_id discovery is the only gate — mobile app (de.hornbach.app.smarthome) or hornbach.de frontend JS (behind bot challenge) are sources
+evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, https://hornbach.de.evil.com, https://hornbach.de@evil.com, path traversal /..;/evil.com) accepted and authorization code delivered to attacker URI
+verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach.app.smarthome) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
+impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
+testability: AUTH_HELPED
+
+[HYP] OIDC check_session iframe enables silent authentication state probing across origins
+class: OTHER
+asset: auth.hornbach.com/session/check_session
+confidence: 45
+reasoning: Discovery-advertised OIDC Session Management check_session endpoint live (200/27021B, x-powered-by: cidaas); standard spec endpoint for cross-origin session status synchronization; could leak login state to any origin framing it if missing X-Frame-Options or CSP frame-ancestors; informational only per current assessment
+evidence_needed: Demonstrate iframe loads cross-origin without CSP/X-Frame-Options blocking; observe session state change (login/logout) reflected in iframe postMessage or parent-origin communication
+verify_steps: 1) GET https://auth.hornbach.com/session/check_session — confirm 200 HTML with cidaas JS; 2) Inspect response headers for X-Frame-Options, CSP frame-ancestors; 3) Embed in attacker-origin iframe — observe if postMessage or parent.accessible indicates session state
+impact: Cross-origin login state detection (user tracking); potential session fixation aid if combined with other flaws (OTHER class, LOW)
+testability: PASSIVE
+
+---
+
+### STEP 4 — SELF-CRITIQUE
+
+[PARKED] OIDC check_session iframe enables silent authentication state probing across origins: confidence 45 < 50 threshold; informational-only endpoint per OIDC spec; no demonstrated exploit path without additional chain; KB marks "informational only, not separately reportable"
+
+[FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 88, AUTH_HELPED, MEDIUM-HIGH)
+[FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
+
+---
+
+### STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` + `res/raw/*` + `strings -a classes*.dex` for client_id + redirect_uri scheme. Unlocks both 88-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
+
+---
+
+### STEP 6 — LEARNING
+
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 18+ sessions; body-presence sole gate; systemic and stable
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
+[LEARN] CHANGED class OTHER @ auth.hornbach.com/ (root): 302 → hornbach.de — root HTML client_id extraction hypothesis definitively dead
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated
+[LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy unactionable with zero candidate seed; enumeration-spirit out-of-scope
+[LEARN] ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted
+
+---
+
+### STEP 7 — RISK
+
+[RISK] hornbach: 78 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled; token introspection + revocation both confirmed live unauthenticated via POST (RFC 7009/7662 violations systemic); authorization endpoint responds to valid client_id with login page but uniform invalid_client gate. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) identified as SAP APIM with localhost:8080 backend leak but no routes enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra (version 25.5.1.15, likely patched). Mirakl marketplace is separate auth-gated surface. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz and token management endpoints.

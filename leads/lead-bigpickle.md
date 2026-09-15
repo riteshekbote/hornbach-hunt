@@ -3315,3 +3315,32 @@ evidence_needed: client_id from FINAL-2 → GET /user-scim-srv/v2/Users?client_i
 verify_steps: after FINAL-2: GET /user-scim-srv/v2/Users (plain 401 baseline), then with client_id param / bearer from that client; any non-401 = finding
 impact: if bypassed, full customer identity read/provision (SCIM) — HIGH PII, but gated on FINAL-2
 testability: AUTH_HELPED
+## 2026-09-15 01:20:28 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation = RFC 7662/7009 optional-client-auth violation
+class: AUTH
+asset: https://auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: re-confirmed 2026-09-15 POST token=dummy → 200 {"active":false} / 200 OK with zero client creds (18+ sessions); body-presence sole gate; all issuance grants client-gated; SCIM/userinfo 401-gated → flaw isolated to these two endpoints
+evidence_needed: ONE real HORNBACH token → introspect active:true + claims; revoke → 200; users-srv/userinfo Bearer <t> → 200
+verify_steps: POST /token-srv/introspect token=<t>; POST /token-srv/revoke token=<t>; GET /users-srv/userinfo (Bearer <t>)
+impact: attacker w/ one leaked token validates full PII claim set and silently kills victim sessions server-side; MEDIUM-HIGH; PoC import gated on ONE real token; not blocking on live recon — needs token source
+testability: AUTH_HELPED
+[HYP] SCIM /Users honors cidaas client_id-scoped public-client auth (not only admin bearer)
+class: AUTH
+asset: https://auth.hornbach.com/user-scim-srv/v2/Users
+confidence: 45
+reasoning: endpoint confirmed live + 401/66B bearer-gated today (09-15); metadata advertises scim_endpoint; KB 2026-09-07 shows users-srv/userinfo is the single consuming gate on token plane, but SCIM is a separate router — client_id-auth variant never tested
+evidence_needed: client_id + its token → any non-401 on /Users (200 list or 403-scope error proof it consumed the client)
+verify_steps: GET /user-scim-srv/v2/Users (plain 401 baseline) then with client_id param / Bearer from that client after FINAL-2
+impact: cross-tenant customer identity read/provision (SCIM) — HIGH PII, gated on FINAL-2 client_id
+testability: AUTH_HELPED
+[HYP] (api.hornbach.de) — no hypothesis ≥40: named OData services, ICF, WebGUI, actuator, case-rotations, Host/XFH tampering all exhausted; no new anonymous surface
+class: OTHER
+asset: api.hornbach.de
+confidence: 10
+reasoning: everything probed returns uniform 404/47B except gated /healthcheck; no differential to pursue
+evidence_needed: none
+verify_steps: none
+impact: none
+testability: PASSIVE
+[NEXT] HUMAN: Obtain `de.hornbach.app.smarthome` APK via a trusted route (Play-authenticated session / APKExtractor backup from a personal device / Play Store install + `adb pull` — NOT Cloudflare-walled mirrors which 403 from this egress), unzip and grep `assets/cidaas.xml`, `res/raw/*`, `strings -a classes*.dex lib/*.so` for `auth.hornbach.com`, UUID, `redirect_uri`, `clientSecret`; sha256 any secret before recording. Package/publisher confirmed today: "SMART HOME by hornbach", Hornbach Baumarkt AG. Target version v3.9.0 (version not independently verifiable from public Play HTML). This remains the sole conversion path for FINAL-1 (88) → importable PoC with a real token.
