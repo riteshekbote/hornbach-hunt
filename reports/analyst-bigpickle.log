@@ -25375,3 +25375,10 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] hornbach: 65 — token plane finding (88) stable with evidence now strengthened by wildcard-CORS preflight on introspect; PoC import still gated on one real token (APK HUMAN path parked at 30). Informational hint-500 differential (65) at 500 drop rate re-confirms live unauthenticated code-path execution. api.hornbach.de and tireless surface oscillation (ciicaas bot-wall, client_id enum removal) leave no new high-value anonymous vector; single escalation path remains APK binary extraction, fully human-gated.
+===== ANALYST bigpickle 2026-09-15 22:52:41 UTC =====
+[0m
+> build · big-pickle
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -sS -o /tmp/revoke_opt.txt -D /tmp/revoke_opt_h.txt -X OPTIONS "https://auth.hornbach.com/token-srv/revoke" -H "Origin: https://evil.example" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type" --max-time 20; echo "---STATUS---"; head -1 /tmp/revoke_opt_h.txt; echo "---HEADERS---"; cat /tmp/revoke_opt_h.txt; echo "---BODY---"; cat /tmp/revoke_opt.txt; echo; echo "===INTROSPECT SAME PROBE==="; curl -sS -o /tmp/introspect_opt.txt -D /tmp/introspect_opt_h.txt -X OPTIONS "https://auth.hornbach.com/token-srv/introspect" -H "Origin: https://evil.example" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type" --max-time 20; head -1 /tmp/introspect_opt_h.txt; grep -iE "access-control|allow|server|x-" /tmp/introspect_opt_h.txt; echo "---BODY---"; cat /tmp/introspect_opt.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

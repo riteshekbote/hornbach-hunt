@@ -1649,3 +1649,5 @@
 - LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
 - LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations o
+
+## RANKED HYPOTHESES 2026-09-15 22:52:41 UTC

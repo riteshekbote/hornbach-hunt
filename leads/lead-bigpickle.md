@@ -3469,3 +3469,4 @@ impact: HIGH (enables PoC) but fully gated on human action.
 testability: HUMAN_ONLY
 [NEXT] PROBE: `OPTIONS https://auth.hornbach.com/token-srv/revoke` with `Origin: https://evil.example` + `Access-Control-Request-Method: POST` — confirm identical `ACAO:*`/allow-methods preflight as introspect, closing cross-origin reachability evidence on the revoke path of finding #1 (1 req, read-only).
 [RISK] hornbach: 65 — token plane finding (88) stable with evidence now strengthened by wildcard-CORS preflight on introspect; PoC import still gated on one real token (APK HUMAN path parked at 30). Informational hint-500 differential (65) at 500 drop rate re-confirms live unauthenticated code-path execution. api.hornbach.de and tireless surface oscillation (ciicaas bot-wall, client_id enum removal) leave no new high-value anonymous vector; single escalation path remains APK binary extraction, fully human-gated.
+## 2026-09-15 22:46:24 UTC [target] (model bigpickle)
