@@ -3940,3 +3940,4 @@ evidence_needed: valid client_id → POST returns user_code+verification_uri+dev
 verify_steps: POST-gated (requires valid client_id): POST `{"client_id":"<valid>","scope":"openid"}`.
 impact: social-engineered device approval → session takeover; HIGH in-theory, client_id-gated.
 testability: AUTH_HELPED
+## 2026-09-16 22:46:00 UTC [target] (model bigpickle)

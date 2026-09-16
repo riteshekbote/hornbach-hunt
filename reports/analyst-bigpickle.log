@@ -27470,3 +27470,73 @@ testability: AUTH_HELPED
 
 **STEP 7 — RISK**
 - [RISK] hornbach: 66 — token-plane finding (88) stable and re-anchored live today; SCIM BOLA (55) + wildcard-CORS on all routers confirmed; device-code (45) client_id-gated; api.hornbach.de + Mirakl + NetScaler breadth exhausted; estate bot-walled for client_id; PoC gated on single APK client_id/token extraction (HUMAN_ONLY); no new anonymous high-value vector — risk stable.
+===== ANALYST bigpickle 2026-09-16 22:47:10 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/hornbach-hunt/hornbach-hunt 2>/dev/null | head -50; echo "---"; ls /home/runner/work/hornbach-hunt/hornbach-hunt/*.md 2>/dev/null | head
+total 448
+drwxr-xr-x 12 runner runner   4096 Sep 16 22:45 .
+drwxr-xr-x  3 runner runner   4096 Sep 16 22:45 ..
+drwxr-xr-x  7 runner runner   4096 Sep 16 22:45 .git
+drwxr-xr-x  3 runner runner   4096 Sep 16 22:45 .github
+-rw-r--r--  1 runner runner   1901 Sep 16 22:45 README.md
+-rw-r--r--  1 runner runner     32 Sep 16 22:45 analyst-out.txt
+-rw-r--r--  1 runner runner 168465 Sep 16 22:45 analyst-prompt.txt
+-rw-r--r--  1 runner runner 164537 Sep 16 22:45 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 16 22:45 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 16 22:45 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 16 22:45 leads
+-rw-r--r--  1 runner runner  29642 Sep 16 22:45 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 16 22:45 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 16 22:45 reports
+drwxr-xr-x  2 runner runner   4096 Sep 16 22:45 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep 16 22:45 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 16 22:45 scripts
+-rw-r--r--  1 runner runner     33 Sep 16 22:45 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 16 22:45 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 16 22:45 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 16 22:45 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 16 22:45 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 16 22:45 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 16 22:45 triage
+---
+/home/runner/work/hornbach-hunt/hornbach-hunt/README.md
+/home/runner/work/hornbach-hunt/hornbach-hunt/probe-results.md
+[0m
+[0m$ [0mwhich curl unzip 7z python3 2>/dev/null; echo "---net---"; curl -sI --max-time 10 https://auth.hornbach.com/.well-known/openid-configuration 2>&1 | head -8
+/usr/bin/curl
+/usr/bin/unzip
+/usr/bin/7z
+/usr/bin/python3
+---net---
+HTTP/2 200 
+date: Wed, 16 Sep 2026 22:45:56 GMT
+content-type: application/json; charset=utf-8
+cache-control: public, max-age=900
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-powered-by: cidaas
+[0m
+[0m$ [0mls /home/runner/work/hornbach-hunt/hornbach-hunt/leads /home/runner/work/hornbach-hunt/hornbach-hunt/knowledge /home/runner/work/hornbach-hunt/hornbach-hunt/inventory 2>/dev/null; echo "---"; ls /home/runner/work/hornbach-hunt/hornbach-hunt/scripts
+/home/runner/work/hornbach-hunt/hornbach-hunt/inventory:
+hornbach.md
+
+/home/runner/work/hornbach-hunt/hornbach-hunt/knowledge:
+index.md
+
+/home/runner/work/hornbach-hunt/hornbach-hunt/leads:
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-mimo.md
+lead-nemotron3.md
+reposcan-hornbach.md
+---
+sync-issues.py
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -s --max-time 15 https://auth.hornbach.com/token-srv/introspect -X POST -d 'token=dummy' -H 'Content-Type: application/x-www-form-urlencoded' -o /tmp/is.txt -w "introspect: %{http_code}\n"; cat /tmp/is.txt; echo; curl -s --max-time 15 "https://auth.hornbach.com/authz-srv/authz?client_id=dummy&response_type=code&redirect_uri=https://example.com&scope=openid" -o /dev/null -D - | head -6; echo "---status---"; curl -s --max-time 15 https://auth.hornbach.com/.well-known/status; echo failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
