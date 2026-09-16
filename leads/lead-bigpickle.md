@@ -3912,3 +3912,31 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: 6 novel SAP ICF paths (`/sap/public/icf_info`, `/sap/public/icman/ping`, `/sap/bc/bsp/sap/system`, `/sap/bc/webdynpro/sap/appl_webdynpro`, `/sap/bc/gui/sap/its/webgui`, `/sap/wdisp/admin/public/default/host`) → uniform 404/47B 09-16 11:5xZ; anonymous breadth re-confirmed exhausted, no SSRF/route mount.
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-16 11:5xZ — discovery 200/3189B, status 200/60B, userinfo 401/66B, check_session 200/27021B; walled estate re-confirmed.
 [RISK] hornbach: 66 — token-plane finding (88) stable and re-anchored today; SCIM BOLA (55) + tenant-wide wildcard-CORS confirmed on all routers; device-code (45) client_id-gated; api.hornbach.de + Mirakl breadth exhausted; estate bot-walled for client_id; PoC gated on single APK client_id/token extraction (HUMAN_ONLY); no new anonymous high-value vector — risk stable, evidence base unchanged.
+## 2026-09-16 19:42:25 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}`/`OK` with zero client creds across 20+ sessions; OPTIONS on token-srv/users-srv/user-scim-srv → 204 `ACAO:*` + 6 methods; tokens-srv/token issuance client-gated (400 invalid_client); anchors zero-delta today (discovery 200/3189B, authz 302→AUTH10007); RFC 7662/7009 mandate client auth; only real token VALUE separates PoC from full chain.
+evidence_needed: ONE valid HORNBACH session/access token → introspect `active:true` + claims; revoke kills session; userinfo/SCIM Bearer confirms PII.
+verify_steps: POST-gated (human auth): POST introspect `token=<t>`; POST revoke `token=<t>`; GET users-srv/userinfo Bearer; re-introspect → `active:false`.
+impact: silent server-side session kill + token-metadata disclosure; MEDIUM-HIGH.
+testability: AUTH_HELPED
+[HYP] SCIM v2 provisioning controller behind 401 — cross-tenant customer-identity BOLA
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2/Users
+confidence: 55
+reasoning: /v2/Users + /v2/Schemas + /v2/ResourceTypes mounted at uniform 401/66B (gate shape = token-srv); wildcard-CORS preflight confirmed on SCIM routes; metadata advertises scim_endpoint; auto-provisions customer identities; only bearer auth separates attacker from CRUD.
+evidence_needed: any cidaas/SCIM bearer → GET /v2/Users + /v2/Users/{id} for cross-tenant PII.
+verify_steps: token-gated (deferred): GET /user-scim-srv/v2/Users Bearer; GET /Users/{id}; 401→200 differential.
+impact: cross-tenant customer identity/PII enumeration IF token obtained; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+[HYP] Device-code flow abuse (RFC 8628)
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint live (400 AUTH10003 on malformed JSON); discovery advertises device_authorization_endpoint; attacker-initiated user_code needs only valid client_id; POST-gated this session.
+evidence_needed: valid client_id → POST returns user_code+verification_uri+device_code.
+verify_steps: POST-gated (requires valid client_id): POST `{"client_id":"<valid>","scope":"openid"}`.
+impact: social-engineered device approval → session takeover; HIGH in-theory, client_id-gated.
+testability: AUTH_HELPED
