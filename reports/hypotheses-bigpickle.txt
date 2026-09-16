@@ -1,36 +1,4 @@
-## 2026-09-16 01:12:03 UTC [target] (model bigpickle)
-[PRIO] auth.hornbach.com, 8.2, attack_surface:9, business_value:9, tech_exposure:8, gate_ease:7, cloud_surface:8, freshness:8
-[PRIO] login.hornbach.com, 7.0, attack_surface:7, business_value:8, tech_exposure:6, gate_ease:7, cloud_surface:6, freshness:8
-[PRIO] www.hornbach.com, 5.5, attack_surface:5, business_value:7, tech_exposure:4, gate_ease:6, cloud_surface:5, freshness:8
-[HYP] cidaas OAuth redirect_uri validation bypass
-class: OATH
-asset: auth.hornbach.com
-confidence: 35
-reasoning: auth.hornbach.com is CNAME to hornbach-prod.cidaas.eu (third-party IdP); cidaas supports OAuth2/OIDC flows; redirect_uri parameter validation is a common misconfiguration point in hosted IdP integrations; no explicit redirect_uri whitelist testing has been performed yet
-evidence_needed: capture OAuth authorize request parameters, enumerate valid redirect_uri values via passive observation
-verify_steps: GET https://auth.hornbach.com/ → follow 302 to hornbach.de; observe query params (client_id, redirect_uri, state); attempt parameter pollution with non-hornbach redirect_uri values; test with curl --max-redirs 0 -v
-impact: OAuth code theft → account takeover; severity HIGH if redirect_uri is loosely validated
-testability: PASSIVE
-[PARKED] cidaas OAuth redirect_uri validation bypass: confidence 35 < 40 threshold; no OAuth flow captured yet to confirm redirect_uri parameter exists or is user-controlled; cidaas is a mature provider likely to have strict defaults
-[NEXT] PROBE: GET https://auth.hornbach.com/ -v --max-redirs 0 to capture initial redirect chain and query parameters (client_id, redirect_uri, state) for OAuth flow analysis
-[LEARN] REJECTED class WILDCARD_DOM: wildcard DNS dominates hornbach.com zone; no dedicated hosts recovered; move to CDN-proxied surface analysis instead of subdomain enumeration
-[LEARN] ACCEPTED class OATH: third-party IdP (cidaas) integration on auth.hornbach.com creates OAuth/OIDC attack surface worth investigating
-[RISK] hornbach: 25/100; broad scope with CDN-heavy architecture limits direct infrastructure access; private disclosure channel (bugs.olivermaicher.eu) indicates responsive program; cidaas is mature third-party provider reducing misconfiguration likelihood; surface is limited to 4 hosts with 2 live HTTP endpoints
-[CHANGED] auth.hornbach.com: OIDC discovery endpoint `.well-known/openid-configuration` returns 200 with full provider metadata; 6 new service endpoints discovered (authz-srv, token-srv, users-srv, apps-srv, user-scim-srv, token-srv/introspect)
-[CHANGED] auth.hornbach.com: Authorization endpoint `authz-srv/authz` confirmed live — returns 302 to error page with `invalid_client` + verbose error_description + error_hint
-[CHANGED] auth.hornbach.com: Device code flow endpoint `authz-srv/device/authz` confirmed live — returns 400 with JSON `invalid_request`
-[CHANGED] auth.hornbach.com: JWKS endpoint `.well-known/jwks.json` returns 5+ RSA public keys (RS256)
-[NEW] auth.hornbach.com: Client registration endpoint `apps-srv/clients/register` exists in OIDC metadata — returns 404 on GET, may accept POST (unauthenticated client registration potential)
-[NEW] auth.hornbach.com: SCIM endpoint `user-scim-srv/v2` exists in OIDC metadata — returns 404 on GET, worth POST/fuzzing (user provisioning protocol)
-[NEW] auth.hornbach.com: Introspection endpoint `token-srv/introspect` exposed in metadata
-[CHANGED] www.hornbach.com / hornbach.de: Login page returns bot-challenge page (FingerprintJS-based `_fs_ch_st_` cookie), 3038-byte stub, not direct login form
-[PRIO] auth.hornbach.com, 8.6, attack_surface:9, business_value:9, tech_exposure:9, gate_ease:7, cloud_surface:8, freshness:9
-[PRIO] www.hornbach.com, 5.0, attack_surface:5, business_value:6, tech_exposure:3, gate_ease:6, cloud_surface:4, freshness:6
-[PRIO] login.hornbach.com, 4.5, attack_surface:4, business_value:6, tech_exposure:3, gate_ease:5, cloud_surface:5, freshness:5
-[HYP] Unauthenticated OAuth client registration via apps-srv/clients/register
-class: AUTH
-asset: auth.hornbach.com/apps-srv/clients/register
-confidence: 55
+## 2026-09-16 06:13:43 UTC [target] (model bigpickle)
 reasoning: OIDC discovery metadata lists `registration_endpoint: https://auth.hornbach.com/apps-srv/clients/register`. Dynamic client registration (RFC 7591) allows creating OAuth clients without pre-provisioning. GET returns 404 "Not Found" but POST with JSON body returned 404 with content-length 9 — server may filter by method. If unauthenticated POST is accepted, attacker can register a client with arbitrary redirect_uri, enabling OAuth code theft. cidaas documentation (service_documentation: https://docs.cidaas.de/) confirms registration feature exists.
 evidence_needed: POST to apps-srv/clients/register with Content-Type: application/json and {"client_name":"test","redirect_uris":["https://evil.com"]}; observe 201 vs 401/403 vs 404
 verify_steps: curl -s -D- -X POST https://auth.hornbach.com/apps-srv/clients/register -H "Content-Type: application/json" -d '{"client_name":"test","redirect_uris":["https://evil.com"],"grant_types":["authorization_code"],"response_types":["code"]}'; check status code and response body
@@ -111,3 +79,130 @@ impact: informational-grade; no data exfil or DoS >self; confirms attacker-contr
 testability: PASSIVE
 [NEXT] HUMAN: obtain `de.hornbach.app.smarthome` (Google Play, v3.9.0, package de.hornbach.app.smarthome) via trusted mirror → unzip → grep assets/cidaas.xml, res/raw/*, strings classes*.dex for auth.hornbach.com client_id (UUID), redirect_uri, clientSecret; then POST token-srv/introspect with a real token from that client to convert FINAL-1 into importable PoC.
 [RISK] hornbach: 65 — token plane finding (88) consolidated: unauthenticated introspect+revoke + wildcard-CORS preflight on both endpoints, PoC still gated on one real token (APK HUMAN path parked 30). Informational hint-500 differential (65) re-confirms live unauthenticated code-path execution but is POST-gated. api.hornbach.de breadth exhausted, F5 bot-wall + client_id enum remediation leave no new high-value anonymous vector; sole escalation path is APK binary extraction, fully human-gated.
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST /token-srv/introspect returns 200 {"active":false} unauthenticated across 18+ independent sessions (KB + live 2026-09-15 01:25Z); POST /token-srv/revoke returns 200 OK unauthenticated (text/plain); both RFC 7662/7009 require client authentication per OIDC discovery advertises client auth methods but endpoints accept empty POST body; GET/HEAD return 404 (parameter-sensitive routing)
+evidence_needed: Valid access_token from any client to demonstrate introspection returns active=true + token metadata (exp, scope, client_id, sub) and revoke invalidates session
+verify_steps: 1) POST https://auth.hornbach.com/token-srv/introspect -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe active=true + metadata; 2) POST https://auth.hornbach.com/token-srv/revoke -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe 200 OK; 3) Repeat introspect — observe active=false
+impact: Silent session termination + token metadata leak for any valid access_token; enables account takeover via token theft + revocation denial-of-service (AUTH class, MEDIUM-HIGH)
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 65
+reasoning: Authorization endpoint confirmed live (returns 200 login/consent page for valid client_id per KB); verbose error messages (AUTH10007, AUTH10003) indicate detailed validation logic; cidaas CIAM platform historically has redirect_uri validation flaws (wildcard/subdomain bypass); client_id discovery is the only gate — mobile app (de.hornbach.app.smarthome) or hornbach.de frontend JS (behind bot challenge) are sources
+evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, https://hornbach.de.evil.com, https://hornbach.de@evil.com, path traversal /..;/evil.com) accepted and authorization code delivered to attacker URI
+verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach.app.smarthome) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
+impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
+testability: AUTH_HELPED
+[HYP] OIDC check_session iframe enables silent authentication state probing across origins
+class: OTHER
+asset: auth.hornbach.com/session/check_session
+confidence: 45
+reasoning: Discovery-advertised OIDC Session Management check_session endpoint live (200/27021B, x-powered-by: cidaas); standard spec endpoint for cross-origin session status synchronization; could leak login state to any origin framing it if missing X-Frame-Options or CSP frame-ancestors; informational only per current assessment
+evidence_needed: Demonstrate iframe loads cross-origin without CSP/X-Frame-Options blocking; observe session state change (login/logout) reflected in iframe postMessage or parent-origin communication
+verify_steps: 1) GET https://auth.hornbach.com/session/check_session — confirm 200 HTML with cidaas JS; 2) Inspect response headers for X-Frame-Options, CSP frame-ancestors; 3) Embed in attacker-origin iframe — observe if postMessage or parent.accessible indicates session state
+impact: Cross-origin login state detection (user tracking); potential session fixation aid if combined with other flaws (OTHER class, LOW)
+testability: PASSIVE
+[PARKED] OIDC check_session iframe enables silent authentication state probing across origins: confidence 45 < 50 threshold; informational-only endpoint per OIDC spec; no demonstrated exploit path without additional chain; KB marks "informational only, not separately reportable"
+[FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 88, AUTH_HELPED, MEDIUM-HIGH)
+[FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` + `res/raw/*` + `strings -a classes*.dex` for client_id + redirect_uri scheme. Unlocks both 88-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 18+ sessions; body-presence sole gate; systemic and stable
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
+[LEARN] CHANGED class OTHER @ auth.hornbach.com/ (root): 302 → hornbach.de — root HTML client_id extraction hypothesis definitively dead
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated
+[LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy unactionable with zero candidate seed; enumeration-spirit out-of-scope
+[LEARN] ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted
+[RISK] hornbach: 78 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled; token introspection + revocation both confirmed live unauthenticated via POST (RFC 7009/7662 violations systemic); authorization endpoint responds to valid client_id with login page but uniform invalid_client gate. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) identified as SAP APIM with localhost:8080 backend leak but no routes enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra (version 25.5.1.15, likely patched). Mirakl marketplace is separate auth-gated surface. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz and token management endpoints.
+[NEW] auth.hornbach.com/ root: now returns 302 → hornbach.de (was 200 len=3038 F5 challenge); CSP header confirms cidaas backend; web-based client_id extraction definitively dead
+[NEW] auth.hornbach.com/session/check_session: Discovery-advertised OIDC Session Management check_session iframe live (200/27021B, x-powered-by: cidaas) — novel path confirmed
+[NEW] api.hornbach.de/healthcheck: 200 XML, Via sapigwprd01 (Gateway), Host: localhost:8080 backend leak confirmed; 30+ paths exhausted — anonymous breadth definitively exhausted
+[CHANGED] hornbach.com web estate (.de/.at/.nl/.ch + login): all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id angle
+[CHANGED] auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed (dummy client_id → 302 AUTH10007 "invalid client_id passed"); client_id enumeration removed
+[CHANGED] auth.hornbach.com/.well-known/openid-configuration: fully intact 3189B — all 6 service endpoints + status + token-exchange (RFC 8693), password, client_credentials grants, subject_types_supported=["public"]
+[CHANGED] auth.hornbach.com/token-srv/{introspect,revoke}: POST confirmed live unauthenticated across 18+ independent sessions (latest live test 2026-09-15 01:25Z); GET/HEAD return 404 (methodology artifact) — systemic and stable
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},9.10,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=6,freshness=9
+[PRIO] auth.hornbach.com/authz-srv/authz,7.65,attack_surface=9,business_value=9,tech_exposure=8,gate_ease=3,cloud_surface=6,freshness=9
+[PRIO] auth.hornbach.com/session/check_session,6.80,attack_surface=7,business_value=7,tech_exposure=8,gate_ease=10,cloud_surface=6,freshness=8
+[PRIO] api.hornbach.de,6.25,attack_surface=6,business_value=6,tech_exposure=5,gate_ease=10,cloud_surface=7,freshness=7
+[PRIO] auth.hornbach.de,5.15,attack_surface=5,business_value=6,tech_exposure=5,gate_ease=2,cloud_surface=7,freshness=6
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST /token-srv/introspect returns 200 {"active":false} unauthenticated across 18+ independent sessions (KB + live 2026-09-15 01:25Z); POST /token-srv/revoke returns 200 OK unauthenticated (text/plain); both RFC 7662/7009 require client authentication per OIDC discovery advertises client auth methods but endpoints accept empty POST body; GET/HEAD return 404 (parameter-sensitive routing)
+evidence_needed: Valid access_token from any client to demonstrate introspection returns active=true + token metadata (exp, scope, client_id, sub) and revoke invalidates session
+verify_steps: 1) POST https://auth.hornbach.com/token-srv/introspect -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe active=true + metadata; 2) POST https://auth.hornbach.com/token-srv/revoke -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe 200 OK; 3) Repeat introspect — observe active=false
+impact: Silent session termination + token metadata leak for any valid access_token; enables account takeover via token theft + revocation denial-of-service (AUTH class, MEDIUM-HIGH)
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 65
+reasoning: Authorization endpoint confirmed live (returns 200 login/consent page for valid client_id per KB); verbose error messages (AUTH10007, AUTH10003) indicate detailed validation logic; cidaas CIAM platform historically has redirect_uri validation flaws (wildcard/subdomain bypass); client_id discovery is the only gate — mobile app (de.hornbach.app.smarthome) or hornbach.de frontend JS (behind bot challenge) are sources
+evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, https://hornbach.de.evil.com, https://hornbach.de@evil.com, path traversal /..;/evil.com) accepted and authorization code delivered to attacker URI
+verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach.app.smarthome) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
+impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
+testability: AUTH_HELPED
+[HYP] OIDC check_session iframe enables silent authentication state probing across origins
+class: OTHER
+asset: auth.hornbach.com/session/check_session
+confidence: 45
+reasoning: Discovery-advertised OIDC Session Management check_session endpoint live (200/27021B, x-powered-by: cidaas); standard spec endpoint for cross-origin session status synchronization; could leak login state to any origin framing it if missing X-Frame-Options or CSP frame-ancestors; informational only per current assessment
+evidence_needed: Demonstrate iframe loads cross-origin without CSP/X-Frame-Options blocking; observe session state change (login/logout) reflected in iframe postMessage or parent-origin communication
+verify_steps: 1) GET https://auth.hornbach.com/session/check_session — confirm 200 HTML with cidaas JS; 2) Inspect response headers for X-Frame-Options, CSP frame-ancestors; 3) Embed in attacker-origin iframe — observe if postMessage or parent.accessible indicates session state
+impact: Cross-origin login state detection (user tracking); potential session fixation aid if combined with other flaws (OTHER class, LOW)
+testability: PASSIVE
+[PARKED] OIDC check_session iframe enables silent authentication state probing across origins: confidence 45 < 50 threshold; informational-only endpoint per OIDC spec; no demonstrated exploit path without additional chain; KB marks "informational only, not separately reportable"
+[FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 88, AUTH_HELPED, MEDIUM-HIGH)
+[FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` + `res/raw/*` + `strings -a classes*.dex` for client_id + redirect_uri scheme. Unlocks both 88-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 18+ sessions; body-presence sole gate; systemic and stable
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
+[LEARN] CHANGED class OTHER @ auth.hornbach.com/ (root): 302 → hornbach.de — root HTML client_id extraction hypothesis definitively dead
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated
+[LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy unactionable with zero candidate seed; enumeration-spirit out-of-scope
+[LEARN] ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted
+[RISK] hornbach: 78 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled; token introspection + revocation both confirmed live unauthenticated via POST (RFC 7009/7662 violations systemic); authorization endpoint responds to valid client_id with login page but uniform invalid_client gate. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) identified as SAP APIM with localhost:8080 backend leak but no routes enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra (version 25.5.1.15, likely patched). Mirakl marketplace is separate auth-gated surface. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz and token management endpoints.
+[HYP] Unauthenticated introspection+revocation with tenant-wide wildcard-CORS preflight enables cross-origin token-metadata disclosure and silent session kill
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}` / 200 `OK` no client creds, 19+ sessions; token-srv/token client-gated (400 invalid_client) isolates flaw to both management routes; 09-16 OPTIONS: 204 `ACAO:*` + 6 methods on token-srv AND users-srv AND user-scim-srv — browser preflight permitted across all cidaas routers; RFC 7662/7009 mandate client auth; only token VALUE separates PoC from proof.
+evidence_needed: ONE real HORNBACH token → introspect `active:true`+claims (sub, email, mobile_number, name, phone), revoke 200, then users-srv/userinfo Bearer to confirm claim set + session death.
+verify_steps: (POST-gated, run under human authorization) POST token-srv/introspect `token=<t>`; POST token-srv/revoke `token=<t>`; GET users-srv/userinfo `Authorization: Bearer <t>`; re-introspect to confirm `active:false`.
+impact: attacker with one leaked/forged token enumerates full claim set and kills victim sessions server-side; MEDIUM-HIGH.
+testability: AUTH_HELPED
+[HYP] SCIM v2 provisioning controller exposed behind 401 — cross-tenant customer-identity BOLA if any bearer leaks
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 50
+reasoning: 09-16 probes confirm /v2/Users, /v2/Schemas, /v2/ResourceTypes all mounted → uniform 401/66B (identical shape to token-plane consuming gate); SCIM auto-provisions HORNBACH customer identities (metadata advertises scim_endpoint); tenant-wide wildcard-CORS preflight now also confirmed on SCIM routes — only bearer auth separates attackers from CRUD; /v2/Requests → 404 router-gap.
+evidence_needed: any SCIM bearer or cidaas-issued token from obtained client_id → GET /v2/Users and /v2/Users/{id} for cross-tenant PII/provisioning abuse.
+verify_steps: (deferred, token-gated) GET /user-scim-srv/v2/Users `Authorization: Bearer <t>`; GET /user-scim-srv/v2/Users/{id}; compare 401→200 differential.
+impact: cross-tenant customer identity/PII enumeration if token obtained; LOW anonymously, MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+[HYP] Device-code flow abuse via authz-srv/device/authz for account takeover
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint confirmed live (400 `invalid_request`); discovery advertises device_authorization_endpoint; flow allows attacker-initiated user_code; needs a valid client_id + social step; parked pending seed.
+evidence_needed: valid client_id → POST device/authz returns user_code+verification_uri+device_code (RFC 8628).
+verify_steps: (POST-gated, requires valid client_id) POST `{"client_id":"<valid>","scope":"openid"}`.
+impact: social-engineered device-code approval → attacker session takeover; HIGH in-theory; social/dependency-gated.
+testability: AUTH_HELPED
+[NEXT] HUMAN: obtain `de.hornbach.app.smarthome` (Google Play v3.9.0) via trusted mirror → unzip → grep `assets/cidaas.xml`, `res/raw/*`, `strings -a classes*.dex` for auth.hornbach.com UUID client_id + redirect_uri + clientSecret; then under authorization run the POST chain (introspect `token=<real>` → revoke → users-srv/userinfo AND user-scim-srv/v2/Users) to convert the 88-conf token-plane + 50-conf SCIM findings into an importable PoC. (Previous PROBE — OPTIONS token-srv/revoke — CLOSED 01:11Z: 204 ACAO:* confirmed; both preflight probes done.)
+[RISK] hornbach: 66 — token-plane finding (88) consolidated: unauthenticated introspect+revoke now backed by tenant-wide wildcard-CORS preflight evidence (token-srv+users-srv+user-scim-srv), plus live SCIM BOLA surface; PoC remains gated on a single token/client_id (APK, HUMAN_ONLY); api.hornbach.de and Mirakl breadth exhausted; estate bot-walled for client_id; no new anonymous high-value vector — risk stable, evidence base strengthened.
