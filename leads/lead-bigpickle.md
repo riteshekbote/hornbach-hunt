@@ -3791,3 +3791,29 @@ impact: social-engineered device-code approval → attacker session takeover; HI
 testability: AUTH_HELPED
 [NEXT] HUMAN: obtain `de.hornbach.app.smarthome` (Google Play v3.9.0) via trusted mirror → unzip → grep `assets/cidaas.xml`, `res/raw/*`, `strings -a classes*.dex` for auth.hornbach.com UUID client_id + redirect_uri + clientSecret; then under authorization run the POST chain (introspect `token=<real>` → revoke → users-srv/userinfo AND user-scim-srv/v2/Users) to convert the 88-conf token-plane + 50-conf SCIM findings into an importable PoC. (Previous PROBE — OPTIONS token-srv/revoke — CLOSED 01:11Z: 204 ACAO:* confirmed; both preflight probes done.)
 [RISK] hornbach: 66 — token-plane finding (88) consolidated: unauthenticated introspect+revoke now backed by tenant-wide wildcard-CORS preflight evidence (token-srv+users-srv+user-scim-srv), plus live SCIM BOLA surface; PoC remains gated on a single token/client_id (APK, HUMAN_ONLY); api.hornbach.de and Mirakl breadth exhausted; estate bot-walled for client_id; no new anonymous high-value vector — risk stable, evidence base strengthened.
+## 2026-09-16 11:51:52 UTC [target] (model bigpickle)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke} + user-scim-srv/v2
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}` / 200 OK, no client creds, 20+ sessions stable; OPTIONS on all three routers (token-srv, users-srv, user-scim-srv) → 204 `ACAO:*` with 6 methods (GET,POST,HEAD,PUT,DELETE,PATCH); SCIM /v2/Users mounted at identical 401 auth gate; RFC 7662/7009 mandate client auth; only token VALUE separates PoC from full chain (introspect real token → revoke it → query SCIM for PII via users-srv/userinfo or /v2/Users).
+evidence_needed: ONE valid HORNBACH session or access token → introspect returns `active:true` + claims; revoke kills session; SCIM BOLA across users.
+verify_steps: (POST-gated, human authorization) 1) POST `token-srv/introspect` `token=<real_token>` → expect `active:true` + claims; 2) POST `token-srv/revoke` `token=<real_token>` → expect 200 OK; 3) GET `users-srv/userinfo` with Bearer → user profile claims; 4) GET `user-scim-srv/v2/Users` Bearer → cross-tenant PII.
+impact: Silent session kill + cross-tenant customer identity enumeration via unauthenticated endpoints with full CORS wildcard; MEDIUM-HIGH.
+testability: AUTH_HELPED
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2/Users
+confidence: 55
+reasoning: `/v2/Users` + `/v2/Schemas` both mounted, uniform 401/66B (identical auth gate shape to token-srv); CORS wildcard confirmed preflight permitted; SCIM auto-provisions customer identities (metadata advertises `scim_endpoint`); tenant-wide wildcard-CORS now re-confirmed across all three routers; only bearer auth separates attacker from CRUD.
+evidence_needed: Any SCIM bearer or cidaas-issued token → GET /v2/Users and /v2/Users/{id} for PII/provisioning abuse.
+verify_steps: (token-gated, deferred) GET `user-scim-srv/v2/Users` `Authorization: Bearer <t>`; GET `user-scim-srv/v2/Users/{id}`; compare 401→200 differential.
+impact: Cross-tenant customer identity/PII enumeration if token obtained; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: Endpoint confirmed live (400 AUTH10003 on malformed JSON); discovery advertises device_authorization_endpoint; RFC 8628 flow allows attacker-initiated user_code with only a valid client_id needed. Returns verbose AUTH10003 parse error (error_hint: "check the query/form parameters") — indicates active routing to real endpoint.
+evidence_needed: Valid client_id → POST returns `user_code`, `verification_uri`, `device_code` (RFC 8628); victim approves on verification_uri.
+verify_steps: (POST-gated, requires valid client_id) POST `{"client_id":"<valid>","scope":"openid"}`.
+impact: Social-engineered device-code approval → attacker session takeover; HIGH in-theory; client_id-gated.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; current v3.9.0, package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` + `res/raw/*` + `strings -a classes*.dex` for auth.hornbach.com UUID client_id + redirect_uri + clientSecret. This single extraction unlocks: (1) 88-conf introspection/revoke PoC with valid token, (2) 55-conf SCIM BOLA chain, (3) 45-conf device-code flow test, (4) 50-conf redirect_uri validation bypass on authz-srv/authz.
