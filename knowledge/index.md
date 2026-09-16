@@ -325,3 +325,7 @@
 - 2026-09-16 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - 2026-09-16 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
 - 2026-09-16 ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted
+- 2026-09-16 ACCEPTED class MISCONFIG @ api.hornbach.de: 6 novel SAP ICF paths (/sap/public/icf_info, /sap/public/icman/ping, /sap/bc/bsp/sap/system, /sap/bc/webdynpro/sap/appl_webdynpro, /sap/bc/gui/sap/its/webgui, /sap/wdisp/admin/public/default/host) → uniform 404/47B 11:5xZ; anonymous breadth re-confirmed exhausted, no new route, no SSRF mount.
+- 2026-09-16 ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 11:5xZ — discovery 200/3189B, status 200/60B, users-srv/userinfo 401/66B, session/check_session 200/27021B; walled estate re-confirmed.
+- 2026-09-16 ACCEPTED class MISCONFIG @ api.hornbach.de: 6 novel SAP ICF paths (`/sap/public/icf_info`, `/sap/public/icman/ping`, `/sap/bc/bsp/sap/system`, `/sap/bc/webdynpro/sap/appl_webdynpro`, `/sap/bc/gui/sap/its/webgui`, `/sap/wdisp/admin/public/default/host`) → uniform 404/47B 09-16 11:5xZ; anonymous breadth re-confirmed exhausted, no SSRF/route mount.
+- 2026-09-16 ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-16 11:5xZ — discovery 200/3189B, status 200/60B, userinfo 401/66B, check_session 200/27021B; walled estate re-confirmed.

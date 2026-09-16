@@ -688,3 +688,5 @@ www.hornbach.com
 - CHANGED auth.hornbach.com/.well-known/openid-configuration: fully intact 3189B — all 6 service endpoints + status + token-exchange (RFC 8693), password, client_credentials grants, subject_types_supported=["pu
 - CHANGED api.hornbach.de/healthcheck: 200 XML, Via sapigwprd01 (Gateway), Host: localhost:8080 backend leak confirmed; root 404; 30+ paths exhausted — anonymous breadth definitively exhausted
 - CHANGED auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 `invalid_client "unknown client"` — token plane client-gated; client-validation-ordering (AUTH10008/10009) fires only af
+
+## 2026-09-16 16:34:12 UTC

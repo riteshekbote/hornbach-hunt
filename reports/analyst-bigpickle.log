@@ -27225,3 +27225,180 @@ testability: AUTH_HELPED
 ## STEP 7 — RISK
 
 **[RISK] hornbach: 75** — Stable across 20+ sessions over 14 days; the unauthenticated introspect+revoke finding (88-conf) remains the strongest reportable angle but needs a valid token to convert from theoretical to proven; SCIM BOLA (55-conf) and device-code (45-conf) strengthen the chain narrative but are similarly gated; api.hornbach.de anonymous surface is definitively exhausted with zero novel route in 40+ paths; the entire web estate (hornbach.com/.de/.at/.nl/.ch) is bot-walled with no client_id extraction path; **critical path blocker is APK client_id extraction** — until a single valid client_id is obtained, the highest-value hypothesis stack (introspect+revoke+SCIM BOLA+device-code+redirect_uri) cannot advance from 88/theoretical to PoC. **Recommended immediate action:** HUMAN APK extraction is the single highest-leverage next step for the program.
+===== ANALYST bigpickle 2026-09-16 16:34:12 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m→ [0mRead .
+[0m✱ [0mGlob "**/*.md"[90m 100 matches[0m
+[0m✱ [0mGlob "**/*.txt"[90m 9 matches[0m
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead state_bigpickle.json
+[0m→ [0mRead probe-results.md[90m [limit=120][0m
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m→ [0mRead probe-results.md[90m [offset=121, limit=200][0m
+[0m→ [0mRead probe-results.md[90m [offset=321][0m
+[0m→ [0mRead triage/run-2026-09-16-10-01.md
+[0m→ [0mRead reports/hypotheses.md
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code} %{size_download} %{content_type}\n" --max-time 15 https://api.hornbach.de/ 2>&1; echo "---"; curl -s -o /dev/null -w "%{http_code} %{size_download}\n" --max-time 15 https://api.hornbach.de/healthcheck 2>&1; echo "---"; curl -s -o /dev/null -w "%{http_code} %{size_download}\n" --max-time 15 https://api.hornbach.de/sap/public/ping 2>&1
+404 47 application/json
+---
+200 19
+---
+404 47
+[0m
+Network live; api.hornbach.de root 404/47, /healthcheck 200/19, /sap/public/ping 404/47 — matches KB exactly. Probing a few novel SAP ICF paths (GET-only, low rate) for the `api` target.
+[0m$ [0mfor p in "/sap/public/icf_info" "/sap/public/icman/ping" "/sap/bc/bsp/sap/system" "/sap/bc/webdynpro/sap/appl_webdynpro" "/sap/bc/gui/sap/its/webgui" "/sap/wdisp/admin/public/default/host"; do echo -n "$p -> "; curl -s -o /dev/null -w "%{http_code} %{size_download}\n" --max-time 12 "https://api.hornbach.de$p"; sleep 1; done
+/sap/public/icf_info -> 404 47
+/sap/public/icman/ping -> 404 47
+/sap/bc/bsp/sap/system -> 404 47
+/sap/bc/webdynpro/sap/appl_webdynpro -> 404 47
+/sap/bc/gui/sap/its/webgui -> 404 47
+/sap/wdisp/admin/public/default/host -> 404 47
+[0m
+All six novel SAP ICF paths → uniform 404/47B, matching the exhausted-breadth conclusion. Verifying auth anchors unchanged (GET-only, ≤1rps).
+[0m$ [0mecho -n "discovery -> "; curl -s -o /dev/null -w "%{http_code} %{size_download}\n" --max-time 12 "https://auth.hornbach.com/.well-known/openid-configuration"; sleep 1; echo -n "status -> "; curl -s -o /dev/null -w "%{http_code} %{size_download}\n" --max-time 12 "https://auth.hornbach.com/.well-known/status"; sleep 1; echo -n "userinfo -> "; curl -s -o /dev/null -w "%{http_code} %{size_download}\n" --max-time 12 "https://auth.hornbach.com/users-srv/userinfo"; sleep 1; echo -n "check_session -> "; curl -s -o /dev/null -w "%{http_code} %{size_download}\n" --max-time 12 "https://auth.hornbach.com/session/check_session"
+discovery -> 200 3189
+status -> 200 60
+userinfo -> 401 66
+check_session -> 200 27021
+[0m
+[0m$ [0mcat >> leads/lead-bigpickle.md << 'EOF'
+
+## 2026-09-16 11:58:00 UTC [target] (model bigpickle)
+[DELTA] NO_DELTA on surface — live re-confirm 11:5xZ: api.hornbach.de root 404/47B, /healthcheck 200/19B, /sap/public/ping 404/47B; 6 novel SAP ICF paths (/sap/public/icf_info, /sap/public/icman/ping, /sap/bc/bsp/sap/system, /sap/bc/webdynpro/sap/appl_webdynpro, /sap/bc/gui/sap/its/webgui, /sap/wdisp/admin/public/default/host) all uniform 404/47B — anonymous breadth re-confirmed exhausted; auth.hornbach.com discovery 200/3189B, status 200/60B, userinfo 401/66B, check_session 200/27021B — zero-delta anchors.
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke}, 8.35, attack_surface:9, business_value:9, tech_exposure:9, gate_ease:8, cloud_surface:8, freshness:5
+[PRIO] auth.hornbach.com/user-scim-srv/v2, 7.00, attack_surface:7, business_value:8, tech_exposure:8, gate_ease:6, cloud_surface:6, freshness:5
+[PRIO] api.hornbach.de, 5.00, attack_surface:4, business_value:7, tech_exposure:6, gate_ease:3, cloud_surface:5, freshness:4
+[HYP] Unauthenticated token introspection + revocation pair (RFC 7662/7009 systemic bypass) silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 {"active":false} / 200 OK, zero client creds, 20+ sessions stable; OPTIONS on token-srv/users-srv/user-scim-srv → 204 ACAO:* + 6 methods; token-srv/token issuance client-gated (400 invalid_client); anchors zero-delta today (discovery 200/3189B, status 200/60B); RFC 7662/7009 mandate client auth; only token VALUE separates PoC from full chain.
+evidence_needed: ONE valid HORNBACH session/access token → introspect returns active:true + claims (sub, email, mobile_number, name); revoke kills session; users-srv/userinfo or user-scim-srv/v2/Users Bearer confirms claim set + cross-tenant PII.
+verify_steps: (POST-gated, human authorization) POST token-srv/introspect token=<t>; POST token-srv/revoke token=<t>; GET users-srv/userinfo Bearer <t>; re-introspect → active:false.
+impact: attacker with leaked/forged token enumerates full claim set + kills victim sessions server-side; MEDIUM-HIGH.
+testability: AUTH_HELPED
+[HYP] SCIM v2 provisioning controller behind 401 — cross-tenant customer-identity BOLA if any bearer leaks
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 55
+reasoning: /v2/Users + /v2/Schemas + /v2/ResourceTypes mounted at uniform 401/66B (identical auth-gate shape to token-srv); tenant-wide wildcard-CORS preflight confirmed on SCIM routes; metadata advertises scim_endpoint; SCIM auto-provisions HORNBACH customer identities; only bearer auth separates attacker from CRUD.
+evidence_needed: any SCIM bearer or cidaas-issued token → GET /v2/Users, /v2/Users/{id} for PII/provisioning abuse.
+verify_steps: (token-gated, deferred) GET user-scim-srv/v2/Users Bearer <t>; GET /v2/Users/{id}; compare 401→200 differential.
+impact: cross-tenant customer identity/PII enumeration if token obtained; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+[HYP] Device-code flow abuse via authz-srv/device/authz for account takeover
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint live (400 AUTH10003 parse error on malformed body); discovery advertises device_authorization_endpoint; RFC 8628 allows attacker-initiated user_code with valid client_id; error_hint "check the query/form parameters" indicates active routing.
+evidence_needed: valid client_id → POST device/authz returns user_code+verification_uri+device_code.
+verify_steps: (POST-gated, requires valid client_id) POST {"client_id":"<valid>","scope":"openid"}.
+impact: social-engineered device-code approval → attacker session takeover; HIGH in-theory; client_id-gated.
+testability: AUTH_HELPED
+[PARKED] OAuth redirect_uri validation bypass on authz-srv/authz: zero candidate seed; client_id discrepancy unactionable; enumeration-spirit out-of-scope (~40 guesses → uniform AUTH10007).
+[FINAL] 1. Unauthenticated token introspect+revoke (88, AUTH_HELPED, MEDIUM-HIGH)
+[FINAL] 2. SCIM BOLA (55, AUTH_HELPED, MEDIUM-HIGH gated)
+[FINAL] 3. Device-code abuse (45, AUTH_HELPED, HIGH in-theory)
+[NEXT] HUMAN: Download de.hornbach.app.smarthome APK (APKMirror/APKPure/AppBrain; v3.9.0) → unzip → grep assets/cidaas.xml + res/raw/* + strings -a classes*.dex for auth.hornbach.com UUID client_id + redirect_uri + clientSecret; unlocks introspect/revoke PoC (real token), SCIM BOLA chain, device-code test, redirect_uri validation — single unlock for all 3 FINAL chains. (No anonymous probe remains: api breadth definitively exhausted, token-plane POST-gated per scope rules.)
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: 6 novel SAP ICF paths (/sap/public/icf_info, /sap/public/icman/ping, /sap/bc/bsp/sap/system, /sap/bc/webdynpro/sap/appl_webdynpro, /sap/bc/gui/sap/its/webgui, /sap/wdisp/admin/public/default/host) → uniform 404/47B 11:5xZ; anonymous breadth re-confirmed exhausted, no new route, no SSRF mount.
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 11:5xZ — discovery 200/3189B, status 200/60B, users-srv/userinfo 401/66B, session/check_session 200/27021B; walled estate re-confirmed.
+[RISK] hornbach: 66 — token-plane finding (88) unchanged and re-anchored today (zero-delta anchors); SCIM BOLA surface (55) + CORS-wildcard confirmed on routers; device-code (45) client_id-gated; api and Mirakl breadth exhausted; estate bot-walled for client_id; PoC gated on single APK client_id/token extract (HUMAN_ONLY); no new anonymous high-value vector — risk stable.
+EOF
+echo appended-lead
+appended-lead
+[0m
+All anchors match KB exactly (discovery 200/3189B, status 200/60B, userinfo 401/66B, check_session 200/27021B). Estate is zero-delta today. Updating my lead/hypothesis files with this session's structured output.
+[0m$ [0mcat > reports/hypotheses-bigpickle.txt << 'EOF'
+## 2026-09-16 11:58:00 UTC [target] (model bigpickle)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke} + user-scim-srv/v2
+confidence: 88
+reasoning: POST token=dummy → 200 {"active":false} / 200 OK, no client creds, 20+ sessions stable; OPTIONS on all three routers (token-srv, users-srv, user-scim-srv) → 204 ACAO:* with 6 methods; SCIM /v2/Users mounted at identical 401/66B auth gate; RFC 7662/7009 mandate client auth; only token VALUE separates PoC from full chain. Anchors zero-delta today (discovery 200/3189B, status 200/60B).
+evidence_needed: ONE valid HORNBACH session or access token → introspect returns active:true + claims; revoke kills session; SCIM BOLA across users.
+verify_steps: (POST-gated, human authorization) 1) POST token-srv/introspect token=<real_token> → expect active:true + claims; 2) POST token-srv/revoke token=<real_token> → expect 200 OK; 3) GET users-srv/userinfo with Bearer → profile claims; 4) GET user-scim-srv/v2/Users Bearer → cross-tenant PII.
+impact: Silent session kill + cross-tenant customer identity enumeration via unauthenticated endpoints with full CORS wildcard; MEDIUM-HIGH.
+testability: AUTH_HELPED
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2/Users
+confidence: 55
+reasoning: /v2/Users + /v2/Schemas + /v2/ResourceTypes mounted, uniform 401/66B (identical auth gate shape to token-srv); CORS wildcard preflight permitted on SCIM routes; SCIM auto-provisions customer identities (metadata advertises scim_endpoint); only bearer auth separates attacker from CRUD.
+evidence_needed: Any SCIM bearer or cidaas-issued token → GET /v2/Users and /v2/Users/{id} for PII/provisioning abuse.
+verify_steps: (token-gated, deferred) GET user-scim-srv/v2/Users Authorization: Bearer <t>; GET user-scim-srv/v2/Users/{id}; compare 401→200 differential.
+impact: Cross-tenant customer identity/PII enumeration if token obtained; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: Endpoint live (400 AUTH10003 on malformed JSON); discovery advertises device_authorization_endpoint; RFC 8628 flow allows attacker-initiated user_code with only a valid client_id needed.
+evidence_needed: Valid client_id → POST returns user_code, verification_uri, device_code (RFC 8628); victim approves on verification_uri.
+verify_steps: (POST-gated, requires valid client_id) POST {"client_id":"<valid>","scope":"openid"}.
+impact: Social-engineered device-code approval → attacker session takeover; HIGH in-theory; client_id-gated.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Download de.hornbach.app.smarthome APK (APKMirror/APKPure/AppBrain; v3.9.0), unzip, extract assets/cidaas.xml + res/raw/* + strings -a classes*.dex for auth.hornbach.com UUID client_id + redirect_uri + clientSecret. Single extraction unlocks: (1) 88-conf introspection/revoke PoC with valid token, (2) 55-conf SCIM BOLA chain, (3) 45-conf device-code flow test, (4) redirect_uri validation on authz-srv/authz.
+EOF
+echo written
+written
+[0m
+## STEP 1 — DELTA
+**NO_DELTA on surface.** Live 11:5xZ re-confirm:
+- `api.hornbach.de`: root 404/47B, `/healthcheck` 200/19B, `/sap/public/ping` 404/47B — unchanged.
+- **[NEW]** 6 novel SAP ICF paths (`/sap/public/icf_info`, `/sap/public/icman/ping`, `/sap/bc/bsp/sap/system`, `/sap/bc/webdynpro/sap/appl_webdynpro`, `/sap/bc/gui/sap/its/webgui`, `/sap/wdisp/admin/public/default/host`) → uniform 404/47B. Anonymous breadth re-confirmed exhausted; no new mount.
+- `auth.hornbach.com` anchors: discovery 200/3189B, status 200/60B, userinfo 401/66B, check_session 200/27021B — zero-delta.
+- **NO_DELTA** overall: no new assets, no behavior change since 2026-09-15.
+
+## STEP 2 — PRIORITIZE
+- **`auth.hornbach.com/token-srv/{introspect,revoke}`** → **prio 8.35** (attack_surface 9, business_value 9, tech_exposure 9, gate_ease 8, cloud_surface 8, freshness 5)
+- `auth.hornbach.com/user-scim-srv/v2` → **7.00** (7,8,8,6,6,5)
+- `api.hornbach.de` → **5.00** (4,7,6,3,5,4) — SAP APIM gate_ease 3 (401-everything; only /healthcheck public); no route; exhausted.
+
+## STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation pair (RFC 7662/7009 systemic bypass)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}` / 200 OK with zero client creds across 20+ sessions; OPTIONS on token-srv/users-srv/user-scim-srv → 204 `ACAO:*` + 6 methods; token-srv/token issuance client-gated (400 invalid_client); anchors zero-delta today; RFC 7662/7009 mandate client auth; only token VALUE separates PoC from full chain.
+evidence_needed: ONE valid HORNBACH access token → introspect `active:true` + claims; revoke kills session; userinfo/SCIM Bearer confirms PII.
+verify_steps: (POST-gated, under human authorization) POST introspect `token=<t>`; POST revoke `token=<t>`; GET users-srv/userinfo Bearer; re-introspect → `active:false`.
+impact: token-metadata disclosure + silent server-side session kill; MEDIUM-HIGH.
+testability: AUTH_HELPED
+
+[HYP] SCIM v2 provisioning controller behind 401 — cross-tenant customer-identity BOLA
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 55
+reasoning: /v2/Users + /v2/Schemas + /v2/ResourceTypes mounted at uniform 401/66B (gate shape identical to token-srv); wildcard-CORS preflight confirmed on SCIM routes; metadata advertises `scim_endpoint`; SCIM auto-provisions customer identities; only bearer auth separates attacker from CRUD.
+evidence_needed: any cidaas/SCIM bearer → GET /v2/Users and /v2/Users/{id} for cross-tenant PII.
+verify_steps: (token-gated, deferred) GET `/user-scim-srv/v2/Users` Bearer; GET `/v2/Users/{id}`; 401→200 differential.
+impact: cross-tenant customer identity/PII enumeration IF token obtained; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+
+[HYP] Device-code flow abuse (RFC 8628) via authz-srv/device/authz
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint live (400 AUTH10003 parse error); discovery advertises device_authorization_endpoint; attacker-initiated user_code requires only valid client_id.
+evidence_needed: valid client_id → POST returns `user_code+verification_uri+device_code`.
+verify_steps: (POST-gated, requires valid client_id) POST `{"client_id":"<valid>","scope":"openid"}`.
+impact: social-engineered device-code approval → session takeover; HIGH in-theory; client_id-gated.
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+- **[PARKED]** OAuth redirect_uri validation on authz-srv/authz: zero candidate seed, ~40 guesses → uniform 302→AUTH10007; enumeration-spirit out-of-scope.
+- **[PARKED]** JWT alg confusion (HS256/RS256): blocked on client_id + captured token; mature provider likely pins per-client.
+- **[FINAL]** 1) introspect+revoke (88, AUTH_HELPED); 2) SCIM BOLA (55, AUTH_HELPED); 3) device-code (45, AUTH_HELPED). All derive from confirmed live endpoints with traceable evidence; none dropped below confidence 40.
+
+## STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain; v3.9.0) → unzip → grep `assets/cidaas.xml`, `res/raw/*`, `strings -a classes*.dex` for auth.hornbach.com UUID `client_id` + `redirect_uri` + `clientSecret`. Single extraction unlocks all 3 FINAL chains (88-conf PoC, 55-conf SCIM BOLA, 45-conf device-code) + redirect_uri validation. No anonymous probe remains: api breadth definitively exhausted; token-plane re-confirmation is POST-gated (outside read-only scope this session).
+
+## STEP 6 — LEARNING
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: 6 novel SAP ICF paths (`/sap/public/icf_info`, `/sap/public/icman/ping`, `/sap/bc/bsp/sap/system`, `/sap/bc/webdynpro/sap/appl_webdynpro`, `/sap/bc/gui/sap/its/webgui`, `/sap/wdisp/admin/public/default/host`) → uniform 404/47B 09-16 11:5xZ; anonymous breadth re-confirmed exhausted, no SSRF/route mount.
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-16 11:5xZ — discovery 200/3189B, status 200/60B, userinfo 401/66B, check_session 200/27021B; walled estate re-confirmed.
+
+## STEP 7 — RISK
+[RISK] hornbach: 66 — token-plane finding (88) stable and re-anchored today; SCIM BOLA (55) + tenant-wide wildcard-CORS confirmed on all routers; device-code (45) client_id-gated; api.hornbach.de + Mirakl breadth exhausted; estate bot-walled for client_id; PoC gated on single APK client_id/token extraction (HUMAN_ONLY); no new anonymous high-value vector — risk stable, evidence base unchanged.
+
+Files updated: `leads/lead-bigpickle.md`, `reports/hypotheses-bigpickle.txt`; state remains `{"phase":"POC","target":"api"}`.
