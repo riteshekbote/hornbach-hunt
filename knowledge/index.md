@@ -329,3 +329,16 @@
 - 2026-09-16 ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 11:5xZ — discovery 200/3189B, status 200/60B, users-srv/userinfo 401/66B, session/check_session 200/27021B; walled estate re-confirmed.
 - 2026-09-16 ACCEPTED class MISCONFIG @ api.hornbach.de: 6 novel SAP ICF paths (`/sap/public/icf_info`, `/sap/public/icman/ping`, `/sap/bc/bsp/sap/system`, `/sap/bc/webdynpro/sap/appl_webdynpro`, `/sap/bc/gui/sap/its/webgui`, `/sap/wdisp/admin/public/default/host`) → uniform 404/47B 09-16 11:5xZ; anonymous breadth re-confirmed exhausted, no SSRF/route mount.
 - 2026-09-16 ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-16 11:5xZ — discovery 200/3189B, status 200/60B, userinfo 401/66B, check_session 200/27021B; walled estate re-confirmed.
+- 2026-09-17 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED 09-17 POST → 200 (16B/2B bodies) unauthenticated; walled estate zero-delta; single non-gated flaw.
+- 2026-09-17 ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-17 — discovery 200/3189B, status OK, userinfo+SCIM 401/66B, authz AUTH10007 uniform; no surface delta across 4 hosts.
+- 2026-09-17 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 18+ sessions; body-presence sole gate; systemic and stable
+- 2026-09-17 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
+- 2026-09-17 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
+- 2026-09-17 CHANGED class OTHER @ auth.hornbach.com/ (root): 302 → hornbach.de — root HTML client_id extraction hypothesis definitively dead
+- 2026-09-17 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated
+- 2026-09-17 REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy unactionable with zero candidate seed; enumeration-spirit out-of-scope
+- 2026-09-17 ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+- 2026-09-17 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- 2026-09-17 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+- 2026-09-17 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+- 2026-09-17 ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted
