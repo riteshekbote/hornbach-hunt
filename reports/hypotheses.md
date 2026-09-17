@@ -1755,3 +1755,6 @@
 - [88] auth.hornbach.com/token-srv/{introspect,revoke}: Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass) (from art/lead_bigpickle.txt)
 
 ## RANKED HYPOTHESES 2026-09-16 22:47:10 UTC
+
+## RANKED HYPOTHESES 2026-09-17 01:13:10 UTC
+- [88] auth.hornbach.com/token-srv/{introspect,revoke}: Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass) (from art/lead_bigpickle.txt)

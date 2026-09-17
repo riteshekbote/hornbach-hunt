@@ -3941,3 +3941,31 @@ verify_steps: POST-gated (requires valid client_id): POST `{"client_id":"<valid>
 impact: social-engineered device approval → session takeover; HIGH in-theory, client_id-gated.
 testability: AUTH_HELPED
 ## 2026-09-16 22:46:00 UTC [target] (model bigpickle)
+## 2026-09-17 01:12:43 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}` / 200 `OK` with zero client creds across 20+ sessions; my 09-17 read-only probes: discovery 200, status 200/60B, userinfo 401/66B — walled estate unchanged; token plane remains the single non-gated flaw; only token VALUE separates PoC from full chain.
+evidence_needed: ONE valid HORNBACH access token → introspect `active:true`+claims; revoke → session kill; userinfo/SCIM Bearer → PII.
+verify_steps: (POST-gated, human authorization) POST `token-srv/introspect` `token=<t>`; POST `token-srv/revoke` `token=<t>`; GET `users-srv/userinfo` Bearer; re-introspect → `active:false`.
+impact: silent session kill + token-metadata disclosure; MEDIUM-HIGH.
+testability: AUTH_HELPED
+[HYP] SCIM v2 provisioning controller behind 401 — cross-tenant customer-identity BOLA
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 55
+reasoning: `/v2/Users`, `/v2/Schemas`, `/v2/ResourceTypes` mounted uniform 401/66B (gate shape = token-srv); wildcard-CORS preflight on SCIM routes; metadata advertises scim_endpoint; auto-provisions identities; only bearer auth between attacker and CRUD.
+evidence_needed: any cidaas/SCIM bearer → GET `/v2/Users` + `/v2/Users/{id}` for cross-tenant PII.
+verify_steps: token-gated (deferred): GET `/user-scim-srv/v2/Users` Bearer; GET `/Users/{id}`; 401→200 differential.
+impact: cross-tenant customer identity/PII enumeration IF token obtained; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+[HYP] Device-code flow abuse (RFC 8628)
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint live (400 AUTH10003 on malformed JSON); discovery advertises device_authorization_endpoint; attacker-initiated user_code needs only valid client_id.
+evidence_needed: valid client_id → POST returns user_code+verification_uri+device_code.
+verify_steps: POST-gated (requires valid client_id): POST `{"client_id":"<valid>","scope":"openid"}`.
+impact: social-engineered device approval → session takeover; HIGH in-theory, client_id-gated.
+testability: AUTH_HELPED

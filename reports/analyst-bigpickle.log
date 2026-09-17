@@ -27540,3 +27540,176 @@ sync-issues.py
 [93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
 [0m✗ [0mcurl -s --max-time 15 https://auth.hornbach.com/token-srv/introspect -X POST -d 'token=dummy' -H 'Content-Type: application/x-www-form-urlencoded' -o /tmp/is.txt -w "introspect: %{http_code}\n"; cat /tmp/is.txt; echo; curl -s --max-time 15 "https://auth.hornbach.com/authz-srv/authz?client_id=dummy&response_type=code&redirect_uri=https://example.com&scope=openid" -o /dev/null -D - | head -6; echo "---status---"; curl -s --max-time 15 https://auth.hornbach.com/.well-known/status; echo failed
 [91m[1mError: [0mThe user rejected permission to use this specific tool call.
+===== ANALYST bigpickle 2026-09-17 01:13:10 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mfor u in "https://api.hornbach.de/healthcheck" "https://api.hornbach.de/" "https://api.hornbach.de/health" ; do echo "=== $u ==="; curl -sS -o /tmp/opencode/hb_body.txt -D - --max-time 15 -A "Mozilla/5.0" "$u" | sed -E 's/(date:).*/\1 REDACTED/i'; echo "--- body:"; head -c 300 /tmp/opencode/hb_body.txt; echo; done
+=== https://api.hornbach.de/healthcheck ===
+HTTP/1.1 200 OK
+Max-Forwards: 20
+Via: 1.0 sapigwprd01 (Gateway), 1.0 sapigwprd01 (Gateway)
+Connection: close
+X-CorrelationID: Id-533eab6adf8c8ae6463d0cd9 0; Id-533eab6ae08c089c0c2fbd5c 0
+Accept: */*
+Date: REDACTED
+Host: localhost:8080
+Server: Gateway
+User-Agent: Mozilla/5.0
+Content-Type: text/xml
+
+--- body:
+<status>ok</status>
+=== https://api.hornbach.de/ ===
+HTTP/1.1 404 Not Found
+Date: REDACTED
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-5b3eab6a2a75817c936d6990 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: Mozilla/5.0
+Content-Type: application/json
+
+--- body:
+{"message":{"status":"404","text":"Not Found"}}
+=== https://api.hornbach.de/health ===
+HTTP/1.1 404 Not Found
+Date: REDACTED
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-5c3eab6a2f7565caace72387 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: Mozilla/5.0
+Content-Type: application/json
+
+--- body:
+{"message":{"status":"404","text":"Not Found"}}
+[0m
+[0m$ [0mecho "=== discovery HEAD ==="; curl -sSI --max-time 15 -A "Mozilla/5.0" "https://auth.hornbach.com/.well-known/openid-configuration" | sed -E 's/(date:).*/\1 REDACTED/i' | head -20; echo "=== status ==="; curl -sS --max-time 15 -A "Mozilla/5.0" "https://auth.hornbach.com/.well-known/status" | head -c 200; echo; echo "=== userinfo ==="; curl -sS -o /dev/null -w "%{http_code} len=%{size_download}\n" --max-time 15 -A "Mozilla/5.0" "https://auth.hornbach.com/users-srv/userinfo"
+=== discovery HEAD ===
+HTTP/2 200 
+date: REDACTED
+content-type: application/json; charset=utf-8
+cache-control: public, max-age=900
+strict-transport-security: max-age=15724800; includeSubDomains
+vary: Accept-Encoding
+x-content-type-options: nosniff
+x-powered-by: cidaas
+x-ref-number: 399d2df5-f5b1-4f54-9b78-5fe60287b226
+x-xss-protection: 1; mode=block
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=3xxHS5wDuRolt6u0RxxztJHS9XnAY0H7jzMTUuPAhGg-1789607516.8942451-1.0.1.1-hucIo.oJGPox7e.K_uUOH6HPuvjWACT7yhqFxPDn8MBQkPRH6MoqxVn6MxvgSx5X71U6U5p1AQn5cvNU6dPv2JoAz_LNu5fEG8q_VkkXAIlZ0MmNo9aSpUo3sAVT5dl9; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Thu, 17 Sep 2026 01:41:56 GMT
+server: cloudflare
+cf-ray: a3c43d649a0f02cd-CDG
+alt-svc: h3=":443"; ma=86400
+
+=== status ===
+{"updatedAt":"2026-09-17T01:11:57.251358182Z","status":"OK"}
+=== userinfo ===
+401 len=66
+[0m
+Anchors zero-delta. My target is `api` — let me probe novel SAP APIM angles (gateway-native endpoints not covered by earlier path fuzzing) with read-only methods only.
+[0m$ [0mecho "=== OPTIONS /healthcheck ==="; curl -sS -X OPTIONS -o /dev/null -D - --max-time 12 -A "Mozilla/5.0" "https://api.hornbach.de/healthcheck" | grep -Ei "^HTTP|^allow|^access-control|^server:"; echo "=== GET /healthcheck?v=1 ==="; curl -sS -o /tmp/opencode/hbq.txt -D - --max-time 12 -A "Mozilla/5.0" "https://api.hornbach.de/healthcheck?v=1" | grep -Ei "^HTTP|^via:|^content-type:|^host:"; echo "body: $(head -c 120 /tmp/opencode/hbq.txt)"
+=== OPTIONS /healthcheck ===
+HTTP/1.1 200 OK
+Allow: GET, HEAD, OPTIONS
+Server: Gateway
+=== GET /healthcheck?v=1 ===
+HTTP/1.1 200 OK
+Via: 1.0 sapigwprd01 (Gateway), 1.0 sapigwprd01 (Gateway)
+Host: localhost:8080
+Content-Type: text/xml
+body: <status>ok</status>
+[0m
+[0m$ [0mfor p in "/oauth/token" "/common/api/oauthtoken" "/OData" "/odata/service" "/$batch" "/api-mgmt" ; do echo "=== $p ==="; curl -sS -o /tmp/opencode/hb.txt -D - --max-time 12 -A "Mozilla/5.0" "https://api.hornbach.de$p" | grep -Ei "^HTTP|^server:|^via:|^x-correlationid|^content-type:" ; echo "body: $(head -c 120 /tmp/opencode/hb.txt)"; done
+=== /oauth/token ===
+HTTP/1.1 404 Not Found
+Server: Gateway
+X-CorrelationID: Id-5a3eab6a018ddc526a7b5a24 0
+Content-Type: application/json
+body: {"message":{"status":"404","text":"Not Found"}}
+=== /common/api/oauthtoken ===
+HTTP/1.1 404 Not Found
+Server: Gateway
+X-CorrelationID: Id-5a3eab6a038d059d6527cbac 0
+Content-Type: application/json
+body: {"message":{"status":"404","text":"Not Found"}}
+=== /OData ===
+HTTP/1.1 404 Not Found
+Server: Gateway
+X-CorrelationID: Id-623eab6a6275350dfe8dfb04 0
+Content-Type: application/json
+body: {"message":{"status":"404","text":"Not Found"}}
+=== /odata/service ===
+HTTP/1.1 404 Not Found
+Server: Gateway
+X-CorrelationID: Id-633eab6a6575555786f48c8e 0
+Content-Type: application/json
+body: {"message":{"status":"404","text":"Not Found"}}
+=== / ===
+HTTP/1.1 404 Not Found
+Server: Gateway
+X-CorrelationID: Id-633eab6a75754929408795b4 0
+Content-Type: application/json
+body: {"message":{"status":"404","text":"Not Found"}}
+=== /api-mgmt ===
+HTTP/1.1 404 Not Found
+Server: Gateway
+X-CorrelationID: Id-5c3eab6a288ddd0e03cdc1ae 0
+Content-Type: application/json
+body: {"message":{"status":"404","text":"Not Found"}}
+[0m
+STEP 1 — DELTA
+- [NEW] api.hornbach.de: 5 gateway-native probes — `/oauth/token`, `/common/api/oauthtoken`, `/OData`, `/odata/service`, `/api-mgmt` — all uniform 404/47B; OPTIONS `/healthcheck` → 200 `Allow: GET, HEAD, OPTIONS` (same Allow, no CORS); breadth re-confirmed exhaustive.
+- [CHANGED] NO_DELTA on all anchors: discovery HEAD 200, status 200 (`updatedAt 09-17T01:11:57Z`), userinfo 401/66B, api root 404/47B, `/healthcheck` 200 `<status>ok</status>` Via `sapigwprd01` + `Host: localhost:8080` gutter-leak (info only, class already REJECTED for SSRF).
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke}, 7.2, (8,7,9,10,4,2)
+- [PRIO] auth.hornbach.com/user-scim-srv/v2, 5.9, (6,9,7,4,3,2)
+- [PRIO] api.hornbach.de, 5.7, (5,8,3,10,3,2)
+
+STEP 3 — HYPOTHESES
+[HYP] Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}` / 200 `OK` with zero client creds across 20+ sessions; my 09-17 read-only probes: discovery 200, status 200/60B, userinfo 401/66B — walled estate unchanged; token plane remains the single non-gated flaw; only token VALUE separates PoC from full chain.
+evidence_needed: ONE valid HORNBACH access token → introspect `active:true`+claims; revoke → session kill; userinfo/SCIM Bearer → PII.
+verify_steps: (POST-gated, human authorization) POST `token-srv/introspect` `token=<t>`; POST `token-srv/revoke` `token=<t>`; GET `users-srv/userinfo` Bearer; re-introspect → `active:false`.
+impact: silent session kill + token-metadata disclosure; MEDIUM-HIGH.
+testability: AUTH_HELPED
+[HYP] SCIM v2 provisioning controller behind 401 — cross-tenant customer-identity BOLA
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 55
+reasoning: `/v2/Users`, `/v2/Schemas`, `/v2/ResourceTypes` mounted uniform 401/66B (gate shape = token-srv); wildcard-CORS preflight on SCIM routes; metadata advertises scim_endpoint; auto-provisions identities; only bearer auth between attacker and CRUD.
+evidence_needed: any cidaas/SCIM bearer → GET `/v2/Users` + `/v2/Users/{id}` for cross-tenant PII.
+verify_steps: token-gated (deferred): GET `/user-scim-srv/v2/Users` Bearer; GET `/Users/{id}`; 401→200 differential.
+impact: cross-tenant customer identity/PII enumeration IF token obtained; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+[HYP] Device-code flow abuse (RFC 8628)
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint live (400 AUTH10003 on malformed JSON); discovery advertises device_authorization_endpoint; attacker-initiated user_code needs only valid client_id.
+evidence_needed: valid client_id → POST returns user_code+verification_uri+device_code.
+verify_steps: POST-gated (requires valid client_id): POST `{"client_id":"<valid>","scope":"openid"}`.
+impact: social-engineered device approval → session takeover; HIGH in-theory, client_id-gated.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [FINAL] token-plane introspect/revoke (88) — re-anchored alive today via discovery/status, methodology-sound, highest-value.
+- [FINAL] SCIM BOLA (55) — token-gated but topology confirmed.
+- [FINAL] device-code (45) — client_id-gated; kept at floor.
+- [PARKED] api.hornbach.de Host-header/healthcheck SSRF-pivot: REJECTED class re-confirmed — Host/XFH tampering yields only 503/default localhost:8080; 5 new native-path probes uniform 404; no cross-backend routing, no metadata vector.
+
+STEP 5 — NEXT ACTION
+- [NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK (APKMirror/APKPure/AppBrain) → unzip → grep `assets/cidaas.xml`, `res/raw/*`, `strings -a classes*.dex` for `auth.hornbach.com` UUID `client_id` + `redirect_uri` + `clientSecret` → single extraction unlocks all 3 FINAL chains (88 PoC, 55 SCIM, 45 device-code) + redirect_uri validation. My read-only GET/HEAD/OPTIONS probes today returned zero new surface; POST verification remains human-authorized.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED OTHER @ api.hornbach.de: gateway-native OAuth/OData/mgmt paths (`/oauth/token`, `/common/api/oauthtoken`, `/OData`, `/odata/service`, `/api-mgmt`) uniform 404/47B 09-17 01:2xZ; anonymous surface breadth definitively re-exhausted; `/healthcheck` 200 `<status>ok</status>` Via sapigwprd01 with `Host: localhost:8080` leak remains information-only.
+
+STEP 7 — RISK
+- [RISK] hornbach: 66 — zero new public surface; token-plane flaw (88) stable and re-anchored; SCIM BOLA (55) + device-code (45) remain gated on client_id/token extraction (HUMAN APK); api.hornbach.de + Mirakl breadth exhausted; estate bot-walled; PoC chain blocked solely on client_id/APK extraction — risk stable, evidence base unchanged.
