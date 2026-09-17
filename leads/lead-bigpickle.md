@@ -4038,3 +4038,42 @@ testability: AUTH_HELPED
 [NEXT] PROBE: Re-confirm unauthenticated token introspection is still live (POST `https://auth.hornbach.com/token-srv/introspect` with `token=dummy`).
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED 09-17 POST → 200 (16B/2B bodies) unauthenticated; walled estate zero-delta; single non-gated flaw.
 [RISK] hornbach: 66 — token-plane finding (88) stable and re-anchored today; SCIM BOLA (55) + wildcard-CORS confirmed; api.hornbach.de/Mirakl breadth exhausted; estate bot-walled for client_id; PoC gated on single APK client_id/token extraction (HUMAN_ONLY); no new anonymous high-value vector.
+## 2026-09-17 16:36:56 UTC [target] (model bigpickle)
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},8.3,AUTH
+[PRIO] auth.hornbach.com/user-scim-srv/v2,6.2,IDOR
+[PRIO] auth.hornbach.com/authz-srv/device/authz,5.3,AUTH
+[PRIO] api.hornbach.de,4.3,MISCONFIG
+[HYP] Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}` / 200 `OK` with zero client creds across 20+ sessions; token plane otherwise client-gated (`token-srv/token` → 400 invalid_client); GET-plane gate shape (401/66B userinfo+SCIM, AUTH10007 authz) re-confirmed live 16:35Z.
+evidence_needed: ONE valid HORNBACH access token → `active:true`+claims; revoke → session kill; userinfo/SCIM Bearer → PII.
+verify_steps: (authorized token) POST `token-srv/introspect` `token=<t>`; POST `token-srv/revoke` `token=<t>`; GET `users-srv/userinfo` Bearer.
+impact: silent session kill + token-metadata disclosure; MEDIUM-HIGH.
+testability: AUTH_HELPED
+[HYP] SCIM v2 provisioning controller behind 401 — cross-tenant customer-identity BOLA
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 55
+reasoning: `/v2/Users`, `/v2/Schemas` mounted uniform 401/66B (gate = token shape); discovery advertises scim_endpoint; auto-provisioned identities; single bearer gate between attacker and CRUD.
+evidence_needed: any cidaas/SCIM bearer → GET `/v2/Users` + `/v2/Users/{id}` differential.
+verify_steps: token-gated (deferred): GET `/user-scim-srv/v2/Users` Bearer; observe 401→200.
+impact: cross-tenant customer identity/PII enumeration; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+[HYP] Device-code flow abuse (RFC 8628)
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint live in discovery + 400 AUTH10003 on malformed JSON; attacker-initiated user_code needs only valid client_id.
+evidence_needed: valid client_id → POST returns user_code+verification_uri+device_code.
+verify_steps: POST-gated (valid client_id): POST `{"client_id":"<valid>","scope":"openid"}`.
+impact: social-engineered approval → session takeover; HIGH in-theory, client_id-gated.
+testability: AUTH_HELPED
+[FINAL] Unauthenticated token introspection + revocation — 88, AUTH.
+[FINAL] SCIM v2 BOLA — 55, IDOR (token-gated).
+[FINAL] Device-code flow abuse — 45, AUTH (client_id-gated).
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK v3.9.0 (APKMirror/APKPure) → unzip → grep `assets/cidaas.xml` + `strings -a classes*.dex` for `client_id`/`client_secret` — sole remaining unlock for the token-plane chain (introspect/revoke/userinfo/SCIM all reduce to one valid token). Nothing further achievable passively: POST probing is mutating, and all GET-surface (incl. api.hornbach.de) is exhausted.
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: novel SAP APIM management-console paths (`/apiportal`, `/api-management`) + `/sap/public/icf_info` all uniform 404/47B 16:35Z — no anonymous admin/catalog mount; breadth definitively exhausted (Via sapigwprd02 active node, Host: localhost:8080 leak unchanged).
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 16:35Z — discovery 200/3189B, status 200/60B, userinfo+SCIM 401/66B, check_session 200/27021B, authz AUTH10007 uniform; walled estate unchanged across 4 hosts.
+[RISK] hornbach: 66 — token-plane flaw (88) stable and re-anchored; SCIM BOLA (55) stands; api/Mirakl breadth exhausted; estate bot-walled for client_id; PoC remains gated on single APK token/client_id extraction (HUMAN_ONLY); no new anonymous high-value vector.

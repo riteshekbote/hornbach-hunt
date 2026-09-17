@@ -342,3 +342,5 @@
 - 2026-09-17 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - 2026-09-17 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
 - 2026-09-17 ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted
+- 2026-09-17 ACCEPTED class MISCONFIG @ api.hornbach.de: novel SAP APIM management-console paths (`/apiportal`, `/api-management`) + `/sap/public/icf_info` all uniform 404/47B 16:35Z — no anonymous admin/catalog mount; breadth definitively exhausted (Via sapigwprd02 active node, Host: localhost:8080 leak unchanged).
+- 2026-09-17 ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 16:35Z — discovery 200/3189B, status 200/60B, userinfo+SCIM 401/66B, check_session 200/27021B, authz AUTH10007 uniform; walled estate unchanged across 4 hosts.

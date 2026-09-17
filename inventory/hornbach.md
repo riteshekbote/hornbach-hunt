@@ -707,3 +707,12 @@ www.hornbach.com
 - NEW auth.hornbach.com/session/check_session: discovery-advertised OIDC check_session iframe live (200/27021B, x-powered-by: cidaas) — novel path confirmed, informational only
 
 ## 2026-09-17 11:54:25 UTC
+
+## 2026-09-17 16:37:09 UTC
+- CHANGED auth.hornbach.com/ root stable 302→hornbach.de (was F5 challenge); CSP confirms cidaas backend, no content served
+- CHANGED auth.hornbach.com/token-srv/{introspect,revoke}: POST→200 confirmed 18+ sessions; GET/HEAD 404 is methodology artifact (body-presence sole gate)
+- CHANGED auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed (dummy→302 AUTH10007); client_id enum REMOVED; deprecation flag rejected as transient
+- CHANGED api.hornbach.de: 6 novel SAP ICF paths tested → uniform 404/47B; anonymous breadth definitively exhausted; Via shows node flip sapigwprd01↔sapigwprd02
+- CHANGED hornbach-mp.mirakl.net: federates to login.mirakl.net (client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for cidaas tenant
+- CHANGED hornbach.com web estate (.de/.at/.nl/.ch + login): all serve identical 3038-byte F5 "Client Challenge" stub — bot-wall closes last web-based client_id angle
+- NEW auth.hornbach.com/session/check_session: discovery-advertised OIDC check_session iframe live (200/27021B, x-powered-by: cidaas) — novel path confirmed, informational only
