@@ -1,13 +1,22 @@
-## 2026-09-17 19:52:46 UTC [target] (model nemotron3)
+## 2026-09-17 22:45:30 UTC [target] (model nemotron3)
+[NEW] auth.hornbach.com/token-srv/{introspect,revoke}: POST-only unauthenticated access confirmed across 18+ independent sessions (latest 2026-09-17 16:5xZ); GET/HEAD 404 is methodology artifact — body-presence sole gate, systemic and stable
+[CHANGED] auth.hornbach.com/ root: stable 302→hornbach.de (was F5 challenge 200); CSP confirms cidaas backend but no content served — web-based client_id extraction definitively dead
+[CHANGED] auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed (dummy→302 AUTH10007); client_id enum REMOVED; deprecation flag rejected as transient routing noise
+[CHANGED] api.hornbach.de: 6 novel SAP ICF paths tested → uniform 404/47B; anonymous breadth definitively exhausted; Via shows node flip sapigwprd01↔sapigwprd02
+[CHANGED] hornbach-mp.mirakl.net: federates to login.mirakl.net (client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for cidaas tenant
+[CHANGED] hornbach.com web estate (.de/.at/.nl/.ch + login.hornbach.com): all serve identical 3038-byte F5 "Client Challenge" stub — bot-wall closes last web-based client_id angle
+[NEW] auth.hornbach.com/session/check_session: discovery-advertised OIDC check_session iframe live (200/27021B, x-powered-by: cidaas) — novel path confirmed, informational only
 [PRIO] auth.hornbach.com/token-srv/introspect,9.2,attack_surface=10,business_value=9,tech_exposure=8,gate_ease=10,cloud_surface=8,freshness=10
 [PRIO] auth.hornbach.com/token-srv/revoke,9.0,attack_surface=10,business_value=9,tech_exposure=8,gate_ease=10,cloud_surface=8,freshness=9
 [PRIO] auth.hornbach.com/authz-srv/authz,7.8,attack_surface=9,business_value=10,tech_exposure=9,gate_ease=3,cloud_surface=7,freshness=10
 [PRIO] auth.hornbach.com/session/check_session,4.2,attack_surface=5,business_value=4,tech_exposure=5,gate_ease=10,cloud_surface=3,freshness=7
+[PRIO] api.hornbach.de/healthcheck,3.8,attack_surface=6,business_value=3,tech_exposure=6,gate_ease=10,cloud_surface=5,freshness=8
+[PRIO] auth.hornbach.de,2.5,attack_surface=4,business_value=5,tech_exposure=3,gate_ease=1,cloud_surface=4,freshness=6
 [HYP] Unauthenticated token introspection + revocation enables silent session metadata leak + revocation DoS
 class: AUTH
 asset: auth.hornbach.com/token-srv/introspect
 confidence: 88
-reasoning: POST returns 200 {"active":false} unauthenticated across 18+ independent sessions; RFC 7662 requires client authentication but endpoint accepts empty POST body; GET/HEAD return 404 (parameter-sensitive routing)
+reasoning: POST returns 200 {"active":false} unauthenticated across 18+ independent sessions; RFC 7662 requires client authentication but endpoint accepts empty POST body; GET/HEAD return 404 (parameter-sensitive routing); parallel revoke endpoint same flaw
 evidence_needed: Valid access_token from any client to demonstrate introspection returns active=true + token metadata (exp, scope, client_id, sub) and revoke invalidates session
 verify_steps: 1) POST https://auth.hornbach.com/token-srv/introspect -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe active=true + metadata; 2) POST https://auth.hornbach.com/token-srv/revoke -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe 200 OK; 3) Repeat introspect — observe active=false
 impact: Silent session termination + token metadata leak for any valid access_token; enables account takeover via token theft + revocation denial-of-service (AUTH class, MEDIUM-HIGH)
