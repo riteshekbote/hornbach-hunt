@@ -716,3 +716,5 @@ www.hornbach.com
 - CHANGED hornbach-mp.mirakl.net: federates to login.mirakl.net (client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for cidaas tenant
 - CHANGED hornbach.com web estate (.de/.at/.nl/.ch + login): all serve identical 3038-byte F5 "Client Challenge" stub — bot-wall closes last web-based client_id angle
 - NEW auth.hornbach.com/session/check_session: discovery-advertised OIDC check_session iframe live (200/27021B, x-powered-by: cidaas) — novel path confirmed, informational only
+
+## 2026-09-17 19:52:56 UTC
