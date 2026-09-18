@@ -31002,3 +31002,24 @@ Program description: German multinational DIY and home improvement retail group 
 [0m✗ [0mcd /tmp && curl -s -o cs.html -w "check_session -> HTTP %{http_code}, %{size_download}B, x-powered-by: %header{x-powered-by}\n" https://auth.hornbach.com/session/check_session failed
 [91m[1mError: [0mThe user rejected permission to use this specific tool call.
 Delta window: last re-anchor 18:34Z; now 21:14Z. Running two read-only GET probes (1 rps) on the least-exhausted surfaces — the check_session iframe body (200/27021B, never grepped for embedded cidaas config) and a discovery re-diff.
+===== ANALYST bigpickle 2026-09-18 23:25:07 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sS -m 15 -D - -o /tmp/hb-api-root.txt https://api.hornbach.de/ | head -30; echo "---BODY---"; wc -c /tmp/hb-api-root.txt
+HTTP/1.1 404 Not Found
+Date: Fri, 18 Sep 2026 23:22:39 GMT
+Server: Gateway
+Connection: close
+X-CorrelationID: Id-bfc7ad6af83f1b6b0b8d5137 0
+Accept: */*
+Host: api.hornbach.de
+User-Agent: curl/8.5.0
+Content-Type: application/json
+
+---BODY---
+47 /tmp/hb-api-root.txt
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0msleep 1; curl -sS -m 15 -D - -o /tmp/hb-api-hc.txt https://api.hornbach.de/healthcheck | head -30; echo "---BODY---"; cat /tmp/hb-api-hc.txt; echo; wc -c /tmp/hb-api-hc.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
