@@ -1,4 +1,4 @@
-## 2026-09-18 18:37:25 UTC [target] (model nemotron3)
+## 2026-09-18 21:17:19 UTC [target] (model nemotron3)
 [NEW] auth.hornbach.com/session/check_session: OIDC Session Management iframe live (200/27021B, x-powered-by: cidaas) — discovery-advertised, novel path confirmed
 [CHANGED] auth.hornbach.com/ root: stable 302→hornbach.de (was F5 challenge 200); CSP confirms cidaas backend, no content served — web-based client_id extraction definitively dead
 [CHANGED] Probe methodology gap confirmed: all 578 probe entries use GET for token-srv/introspect/revoke (404), KB confirms POST→200 across 18+ sessions — body-presence sole gate
