@@ -727,3 +727,12 @@ www.hornbach.com
 - CHANGED hornbach-mp.mirakl.net: federates to login.mirakl.net (client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for cidaas tenant
 - CHANGED hornbach.com web estate (.de/.at/.nl/.ch + login.hornbach.com): all serve identical 3038-byte F5 "Client Challenge" stub — bot-wall closes last web-based client_id angle
 - NEW auth.hornbach.com/session/check_session: discovery-advertised OIDC check_session iframe live (200/27021B, x-powered-by: cidaas) — novel path confirmed, informational only
+
+## 2026-09-18 01:09:42 UTC
+- NEW Probe methodology confirmed: all 578 probe entries in probe-results.md use GET for token-srv/introspect and token-srv/revoke (returning 404), while KB confirms POST returns 200 across 18+ sessions — G
+- CHANGED auth.hornbach.com/ root: stable 302→hornbach.de (was F5 challenge 200 len=3038); CSP header confirms cidaas backend (x-powered-by: cidaas) but no content served — web-based client_id extraction defini
+- CHANGED auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed (dummy client_id→302 AUTH10007 "invalid client_id passed"); client_id enumeration REMOVED; deprecation flag rejected as transient routing n
+- CHANGED api.hornbach.de: 6 novel SAP ICF paths tested (/sap/public/icf_info, /sap/public/icman/ping, /sap/bc/bsp/sap/system, /sap/bc/webdynpro/sap/appl_webdynpro, /sap/bc/gui/sap/its/webgui, /sap/wdisp/admin/
+- CHANGED hornbach-mp.mirakl.net: federates to login.mirakl.net (client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for cidaas tenant
+- CHANGED hornbach.com web estate (.de/.at/.nl/.ch + login.hornbach.com): all serve identical 3038-byte F5 "Client Challenge" stub — bot-wall closes last web-based client_id angle
+- NEW auth.hornbach.com/session/check_session: discovery-advertised OIDC check_session iframe live (200/27021B, x-powered-by: cidaas) — novel path confirmed, informational only
