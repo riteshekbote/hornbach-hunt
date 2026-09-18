@@ -4232,3 +4232,31 @@ evidence_needed: valid `client_id` → POST `{"client_id":"<v>","scope":"openid"
 verify_steps: POST-gated (valid client_id, test IDP account only): above exact request.
 impact: social-engineered device approval → session takeover; HIGH in-theory, client_id-gated.
 testability: AUTH_HELPED
+## 2026-09-18 11:30:25 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: Re-anchored today: discovery 200/3189B still advertises both endpoints with `introspection_endpoint_auth_methods_supported=[client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt]`; KB holds 20+ sessions of POST `token=dummy` → 200 `{"active":false}`/`OK` with zero client creds; token-srv/token (same plane) → 400 invalid_client client-gated — flaw isolated to introspect/revoke.
+evidence_needed: ONE authorized HORNBACH access token → unauthenticated introspect returns `active:true`+claims; revoke then flips to `active:false`.
+verify_steps: (AUTHORIZED token only) POST `token-srv/introspect` form `token=<t>`; POST `token-srv/revoke` form `token=<t>`; GET `users-srv/userinfo` Bearer to confirm kill.
+impact: token-metadata disclosure (sub/scope/exp/client_id) + silent session revocation → forced re-auth/interception; MEDIUM-HIGH.
+testability: AUTH_HELPED
+[HYP] SCIM v2 provisioning controller behind single bearer gate — cross-tenant identity BOLA
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 55
+reasoning: `/v2/Users` uniform 401/66B today (gate = token shape, no client auth); discovery advertises scim endpoint; auto-provisioned customer identities → CRUD if any SCIM/bearer obtained.
+evidence_needed: any cidaas/SCIM bearer → GET `/v2/Users` + `/v2/Users/{id}` 401→200 differential, cross-tenant records.
+verify_steps: token-gated (deferred): GET `/user-scim-srv/v2/Users` Bearer; GET `/user-scim-srv/v2/Users/{id}`.
+impact: cross-tenant customer identity/PII enumeration; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+[HYP] Device-code flow abuse (RFC 8628)
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint previously live (400 AUTH10003 on malformed input); discovery advertises device_authorization_endpoint + device_code grant; attacker-initiated flow needs only valid client_id.
+evidence_needed: valid client_id → POST returns device_code/user_code/verification_uri (test IDP account only).
+verify_steps: POST-gated (valid client_id): POST `{"client_id":"<v>","scope":"openid"}`.
+impact: social-engineered device approval → session takeover; HIGH in-theory, client_id-gated.
+testability: AUTH_HELPED
