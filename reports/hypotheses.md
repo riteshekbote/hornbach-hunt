@@ -1899,3 +1899,35 @@
 - LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
 - LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations o
+
+## RANKED HYPOTHESES 2026-09-18 15:18:01 UTC
+- [88] auth.hornbach.com/token-srv/{introspect,revoke}: Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass) (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: obtain `de.hornbach.app.smarthome` (Google Play v3.9.0) via trusted mirror → unzip → grep `assets/cidaas.xml`, `res/raw/*`, `strings -a classes*.dex` for
+- LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: 6 novel SAP ICF paths (/sap/public/icf_info, /sap/public/icman/ping, /sap/bc/bsp/sap/system, /sap/bc/webdynpro/sap/a
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 11:5xZ — discovery 200/3189B, status 200/60B, users-srv/userinfo 401/66B, session/check_session 200
+- LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: 6 novel SAP ICF paths (`/sap/public/icf_info`, `/sap/public/icman/ping`, `/sap/bc/bsp/sap/system`, `/sap/bc/webdynpr
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-16 11:5xZ — discovery 200/3189B, status 200/60B, userinfo 401/66B, check_session 200/27021B; wal
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED 09-17 POST → 200 (16B/2B bodies) unauthenticated; walled estate zero-delta; 
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-17 — discovery 200/3189B, status OK, userinfo+SCIM 401/66B, authz AUTH10007 uniform; no surface 
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED 09-17 POST → 200 (16B/2B bodies) unauthenticated; walled estate zero-delta; 
+- LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: novel SAP APIM management-console paths (`/apiportal`, `/api-management`) + `/sap/public/icf_info` all uniform 404/4
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 16:35Z — discovery 200/3189B, status 200/60B, userinfo+SCIM 401/66B, check_session 200/27021B, auth
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED 09-17 16:5xZ POST → 200 (16B/2B bodies) unauthenticated; walled estate zero-
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-17 16:5xZ — discovery 200/3189B, status 200/60B, userinfo+SCIM 401/66B, authz 302 AUTH10007 unif
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED 09-17 16:5xZ POST → 200 (16B/2B bodies) unauthenticated; walled estate zero-
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-17 16:5xZ — discovery 200/3189B, status 200/60B, userinfo+SCIM 401/66B, authz 302 AUTH10007 unif
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED 09-18 POST → 200 (16B/2B bodies) unauthenticated; walled estate zero-delta; 
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-18 — discovery 200/3189B, status 200/60B, userinfo 401/66B, authz 302 AUTH10007 uniform; api.hor
+- LEARN: REJECTED class OTHER @ external APK mirrors (APKPure/APKMirror/APKCombo/Uptodown): all bot-walled (403/410/JS-render) from this egress; cannot extract client_id
+- LEARN: REJECTED class OTHER @ Wayback Machine CDX: initial CDX worked for login.hornbach.com; subsequent HTTPS connections to web.archive.org timed out from this egres
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 18+ sessions; body-pr
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
+- LEARN: ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
+- LEARN: CHANGED class OTHER @ auth.hornbach.com/ (root): 302 → hornbach.de — root HTML client_id extraction hypothesis definitively dead
+- LEARN: ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated
+- LEARN: REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy unactionable with zero candidate seed; enumeration-spirit out-of-scope
+- LEARN: ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-w
+- LEARN: REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- LEARN: REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+- LEARN: REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+- LEARN: ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations o

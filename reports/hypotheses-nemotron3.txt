@@ -1,18 +1,4 @@
-## 2026-09-18 11:29:55 UTC [target] (model nemotron3)
-[NEW] Probe methodology gap confirmed: all 578 probe entries in probe-results.md use GET for token-srv/introspect and token-srv/revoke (returning 404), while KB confirms POST returns 200 across 18+ sessions — GET/HEAD 404 is methodology artifact, body-presence is sole gate
-[CHANGED] auth.hornbach.com/ root: stable 302→hornbach.de (was F5 challenge 200 len=3038); CSP header confirms cidaas backend (x-powered-by: cidaas) but no content served — web-based client_id extraction definitively dead
-[CHANGED] auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed (dummy client_id→302 AUTH10007 "invalid client_id passed"); client_id enumeration REMOVED; deprecation flag rejected as transient routing noise
-[CHANGED] api.hornbach.de: 6 novel SAP ICF paths tested (/sap/public/icf_info, /sap/public/icman/ping, /sap/bc/bsp/sap/system, /sap/bc/webdynpro/sap/appl_webdynpro, /sap/bc/gui/sap/its/webgui, /sap/wdisp/admin/public/default/host) → uniform 404/47B; Via shows node flip sapigwprd01↔sapigwprd02; anonymous breadth definitively exhausted
-[CHANGED] hornbach-mp.mirakl.net: federates to login.mirakl.net (client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for cidaas tenant
-[CHANGED] hornbach.com web estate (.de/.at/.nl/.ch + login.hornbach.com): all serve identical 3038-byte F5 "Client Challenge" stub — bot-wall closes last web-based client_id angle
-[NEW] auth.hornbach.com/session/check_session: discovery-advertised OIDC check_session iframe live (200/27021B, x-powered-by: cidaas) — novel path confirmed, informational only
-[PRIO] auth.hornbach.com/token-srv/introspect,9.2,attack_surface=10,business_value=9,tech_exposure=8,gate_ease=10,cloud_surface=8,freshness=10
-[PRIO] auth.hornbach.com/token-srv/revoke,9.0,attack_surface=10,business_value=9,tech_exposure=8,gate_ease=10,cloud_surface=8,freshness=9
-[PRIO] auth.hornbach.com/authz-srv/authz,7.8,attack_surface=9,business_value=10,tech_exposure=9,gate_ease=3,cloud_surface=7,freshness=10
-[PRIO] auth.hornbach.com/session/check_session,4.2,attack_surface=5,business_value=4,tech_exposure=5,gate_ease=10,cloud_surface=3,freshness=7
-[PRIO] api.hornbach.de/healthcheck,3.8,attack_surface=6,business_value=3,tech_exposure=6,gate_ease=10,cloud_surface=5,freshness=8
-[PRIO] auth.hornbach.de,2.5,attack_surface=4,business_value=5,tech_exposure=3,gate_ease=1,cloud_surface=4,freshness=6
-[HYP] Unauthenticated token introspection + revocation enables silent session metadata leak + revocation DoS
+## 2026-09-18 15:13:27 UTC [target] (model nemotron3)
 class: AUTH
 asset: auth.hornbach.com/token-srv/introspect
 confidence: 88
@@ -21,7 +7,6 @@ evidence_needed: Valid access_token from any client to demonstrate introspection
 verify_steps: 1) POST https://auth.hornbach.com/token-srv/introspect -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe active=true + metadata; 2) POST https://auth.hornbach.com/token-srv/revoke -d "token=<valid_access_token>" -H "Content-Type: application/x-www-form-urlencoded" — observe 200 OK; 3) Repeat introspect — observe active=false
 impact: Silent session termination + token metadata leak for any valid access_token; enables account takeover via token theft + revocation denial-of-service (AUTH class, MEDIUM-HIGH)
 testability: AUTH_HELPED
-[HYP] OAuth redirect_uri validation bypass on authorization endpoint
 class: OATH
 asset: auth.hornbach.com/authz-srv/authz
 confidence: 65
@@ -30,7 +15,6 @@ evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, ht
 verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach.app.smarthome) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
 impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
 testability: AUTH_HELPED
-[HYP] OIDC check_session iframe enables cross-origin login state detection
 class: OTHER
 asset: auth.hornbach.com/session/check_session
 confidence: 45
@@ -39,10 +23,6 @@ evidence_needed: Demonstrate iframe loads cross-origin without CSP/X-Frame-Optio
 verify_steps: 1) GET https://auth.hornbach.com/session/check_session — confirm 200 HTML with cidaas JS; 2) Inspect response headers for X-Frame-Options, CSP frame-ancestors; 3) Embed in attacker-origin iframe — observe if postMessage or parent.accessible indicates session state
 impact: Cross-origin login state detection (user tracking); potential session fixation aid if combined with other flaws (OTHER class, LOW)
 testability: PASSIVE
-[PARKED] OIDC check_session iframe enables cross-origin login state detection: confidence 45 < 50 threshold; informational-only endpoint per OIDC spec; no demonstrated exploit path without additional chain; KB marks "informational only, not separately reportable"
-[FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 88, AUTH_HELPED, MEDIUM-HIGH)
-[FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
-[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK v3.9.0 (APKMirror/APKPure/AppBrain; package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` + `res/raw/*` + `strings -a classes*.dex` for `client_id` + `redirect_uri` scheme. Unlocks both 88-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
 [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 18+ sessions; body-presence sole gate; systemic and stable
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
 [LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
