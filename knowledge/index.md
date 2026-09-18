@@ -357,3 +357,5 @@
 - 2026-09-18 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
 - 2026-09-18 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
 - 2026-09-18 ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted
+- 2026-09-18 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED 09-17 16:5xZ POST → 200 (16B/2B bodies) unauthenticated; walled estate zero-delta; single non-gated flaw.
+- 2026-09-18 ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-17 16:5xZ — discovery 200/3189B, status 200/60B, userinfo+SCIM 401/66B, authz 302 AUTH10007 uniform; api.hornbach.de root 404/47B unchanged.

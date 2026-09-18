@@ -1,5 +1,5 @@
-## 2026-09-18 01:09:33 UTC [target] (model nemotron3)
-[NEW] Probe methodology confirmed: all 578 probe entries in probe-results.md use GET for token-srv/introspect and token-srv/revoke (returning 404), while KB confirms POST returns 200 across 18+ sessions — GET/HEAD 404 is methodology artifact, body-presence is sole gate
+## 2026-09-18 06:04:46 UTC [target] (model nemotron3)
+[NEW] Probe methodology gap confirmed: all 578 probe entries in probe-results.md use GET for token-srv/introspect and token-srv/revoke (returning 404), while KB confirms POST returns 200 across 18+ sessions — GET/HEAD 404 is methodology artifact, body-presence is sole gate
 [CHANGED] auth.hornbach.com/ root: stable 302→hornbach.de (was F5 challenge 200 len=3038); CSP header confirms cidaas backend (x-powered-by: cidaas) but no content served — web-based client_id extraction definitively dead
 [CHANGED] auth.hornbach.com/authz-srv/authz: uniform gate re-confirmed (dummy client_id→302 AUTH10007 "invalid client_id passed"); client_id enumeration REMOVED; deprecation flag rejected as transient routing noise
 [CHANGED] api.hornbach.de: 6 novel SAP ICF paths tested (/sap/public/icf_info, /sap/public/icman/ping, /sap/bc/bsp/sap/system, /sap/bc/webdynpro/sap/appl_webdynpro, /sap/bc/gui/sap/its/webgui, /sap/wdisp/admin/public/default/host) → uniform 404/47B; Via shows node flip sapigwprd01↔sapigwprd02; anonymous breadth definitively exhausted

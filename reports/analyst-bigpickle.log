@@ -28768,3 +28768,233 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] hornbach: 66 — token-plane flaw (88) stable and zero-delta 09-18; SCIM BOLA (55) behind single bearer gate; api/Mirakl anonymous breadth exhausted; estate bot-walled for client_id; PoC remains gated on single APK token/client_id extraction (HUMAN_ONLY); no new anonymous high-value vector this session.
+===== ANALYST bigpickle 2026-09-18 06:04:57 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && ls -R . | head -50
+total 464
+drwxr-xr-x 12 runner runner   4096 Sep 18 06:03 .
+drwxr-xr-x  3 runner runner   4096 Sep 18 06:03 ..
+drwxr-xr-x  7 runner runner   4096 Sep 18 06:03 .git
+drwxr-xr-x  3 runner runner   4096 Sep 18 06:03 .github
+-rw-r--r--  1 runner runner   1901 Sep 18 06:03 README.md
+-rw-r--r--  1 runner runner     32 Sep 18 06:03 analyst-out.txt
+-rw-r--r--  1 runner runner 177589 Sep 18 06:03 analyst-prompt.txt
+-rw-r--r--  1 runner runner 173661 Sep 18 06:03 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:03 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:03 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:03 leads
+-rw-r--r--  1 runner runner  31848 Sep 18 06:03 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:03 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:03 reports
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:03 reposcan-raw
+-rw-r--r--  1 runner runner   3341 Sep 18 06:03 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:03 scripts
+-rw-r--r--  1 runner runner     33 Sep 18 06:03 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 18 06:03 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 18 06:03 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 18 06:03 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 18 06:03 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 18 06:03 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:03 triage
+.:
+README.md
+analyst-out.txt
+analyst-prompt.txt
+ctx.txt
+inventory
+knowledge
+leads
+probe-results.md
+recon-notes
+reports
+reposcan-raw
+scope.yml
+scripts
+state_bigpickle.json
+state_laguna.json
+state_ling3.json
+state_longcat.json
+state_mimo.json
+state_nemotron3.json
+triage
+
+./inventory:
+hornbach.md
+
+./knowledge:
+index.md
+
+./leads:
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-mimo.md
+lead-nemotron3.md
+reposcan-hornbach.md
+
+./recon-notes:
+DEDICATED-DEEP.md
+
+./reports:
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+[0m
+[0m$ [0mls -la /tmp/opencode 2>/dev/null; ls /tmp 2>/dev/null | head -20
+total 8
+drwxr-xr-x  2 runner runner 4096 Sep 18 06:03 .
+drwxrwxrwt 15 root   root   4096 Sep 18 06:03 ..
+clr-debug-pipe-1868-14022-in
+clr-debug-pipe-1868-14022-out
+clr-debug-pipe-1887-14181-in
+clr-debug-pipe-1887-14181-out
+dotnet-diagnostic-1868-14022-socket
+dotnet-diagnostic-1887-14181-socket
+node-compile-cache
+opencode
+snap-private-tmp
+systemd-private-77bba91725e34fbdbbd54adb4ed378e7-ModemManager.service-BhvTPg
+systemd-private-77bba91725e34fbdbbd54adb4ed378e7-chrony.service-MIjdsw
+systemd-private-77bba91725e34fbdbbd54adb4ed378e7-haveged.service-p5xqLh
+systemd-private-77bba91725e34fbdbbd54adb4ed378e7-polkit.service-wAUZKs
+systemd-private-77bba91725e34fbdbbd54adb4ed378e7-systemd-logind.service-fi4cK4
+systemd-private-77bba91725e34fbdbbd54adb4ed378e7-systemd-resolved.service-SCdRXs
+[0m
+[0m→ [0mRead state_bigpickle.json
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead scope.yml
+[0m
+[0m$ [0mwc -l leads/lead-bigpickle.md reports/hypotheses-bigpickle.txt probe-results.md; echo "---TAIL LEADS---"; tail -60 leads/lead-bigpickle.md
+4175 leads/lead-bigpickle.md
+    28 reports/hypotheses-bigpickle.txt
+   584 probe-results.md
+  4787 total
+---TAIL LEADS---
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED 09-17 16:5xZ POST → 200 (16B/2B bodies) unauthenticated; walled estate zero-delta; single non-gated flaw.
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-17 16:5xZ — discovery 200/3189B, status 200/60B, userinfo+SCIM 401/66B, authz 302 AUTH10007 uniform; api.hornbach.de root 404/47B unchanged.
+[RISK] hornbach: 66 — token-plane flaw (88) stable and re-anchored 16:5xZ today; SCIM BOLA (55) stands behind single bearer gate; api/Mirakl breadth exhausted; estate bot-walled for client_id; PoC remains gated on single APK token/client_id extraction (HUMAN_ONLY); no new anonymous high-value vector.
+## 2026-09-17 22:44:52 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}` (16B) / 200 `OK` (2B) with zero client creds, re-confirmed 09-17 16:5xZ (20+ cumulative sessions); token-srv/token → 400 invalid_client client-gated; GET-plane anchors userinfo/SCIM 401/66B, authz 302 AUTH10007 uniform.
+evidence_needed: ONE valid HORNBACH access token → `active:true`+claims via introspect; revoke terminates session.
+verify_steps: AUTHORIZED token only: POST `token-srv/introspect` body `token=<t>`; POST `token-srv/revoke` body `token=<t>`; GET `users-srv/userinfo` Bearer.
+impact: token-metadata disclosure + silent session kill; MEDIUM-HIGH.
+testability: AUTH_HELPED
+[HYP] SCIM v2 provisioning controller behind 401 — cross-tenant customer-identity BOLA
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 55
+reasoning: `/v2/Users` mounted uniform 401/66B (gate = token shape); discovery advertises scim_endpoint; auto-provisioned identities; single bearer gate between attacker and CRUD.
+evidence_needed: any cidaas/SCIM bearer → GET `/v2/Users` + `/v2/Users/{id}` differential 401→200.
+verify_steps: token-gated (deferred): GET `/user-scim-srv/v2/Users` Bearer; GET `/v2/Users/{id}`.
+impact: cross-tenant customer identity/PII enumeration; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+[HYP] Device-code flow abuse (RFC 8628)
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint live (400 AUTH10003 on malformed JSON); discovery advertises device_authorization_endpoint; attacker-initiated user_code needs only valid client_id.
+evidence_needed: valid client_id → POST returns user_code+verification_uri+device_code.
+verify_steps: POST-gated (valid client_id): POST `{"client_id":"<valid>","scope":"openid"}` (label verbatim token, mutated only against test IDP account).
+impact: social-engineered approval → session takeover; HIGH in-theory, client_id-gated.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK v3.9.0 (APKMirror/APKPure) → unzip → inspect `assets/cidaas.xml` + `strings -a classes*.dex` for `client_id`/`client_secret` — sole remaining unlock for introspect/revoke/userinfo/SCIM chain (one valid token or client_id). All passive surface re-confirmed exhausted 09-17; further POST probing is mutating and outside passive scope.
+## 2026-09-18 01:08:38 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: Discovery 200/3189B this session still advertises introspection/revocation endpoints with `introspection_endpoint_auth_methods_supported=[client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt]`; KB re-confirms POST `token=dummy` → 200 `{"active":false}`/`OK` with zero client creds across 20+ sessions (last 09-17 16:5xZ); token-srv/token → 400 invalid_client proves token plane is otherwise client-gated — flaw is isolated to introspect/revoke.
+evidence_needed: ONE valid HORNBACH access token → `active:true`+claims via unauthenticated introspect; revoke flips session to inactive on re-introspect.
+verify_steps: (AUTHORIZED token only) POST `token-srv/introspect` body `token=<t>`; POST `token-srv/revoke` body `token=<t>`; GET `users-srv/userinfo` Bearer to confirm kill.
+impact: token-metadata disclosure (sub/scope/exp/client_id) + silent session revocation → forced re-auth/interception; MEDIUM-HIGH.
+testability: AUTH_HELPED
+[HYP] SCIM v2 provisioning controller behind 401 — cross-tenant customer-identity BOLA
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 55
+reasoning: `/v2/Users`, `/v2/Schemas`, `/v2/ResourceTypes` mounted uniform 401/66B (gate = token shape, not client auth); discovery advertises `scim` endpoint; auto-provisioned customer identities behind single bearer gate → CRUD if bearer obtained.
+evidence_needed: any cidaas/SCIM bearer → GET `/v2/Users` + `{id}` 401→200 differential + cross-tenant records.
+verify_steps: token-gated (deferred): GET `/user-scim-srv/v2/Users` Bearer; GET `/v2/Users/{id}`.
+impact: cross-tenant customer identity/PII enumeration; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+[HYP] Device-code flow abuse (RFC 8628)
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint live (400 AUTH10003 on malformed JSON); discovery advertises `device_code` grant; attacker-initiated flow returns `user_code`+`verification_uri` needing only valid `client_id`.
+evidence_needed: valid `client_id` → POST `{"client_id":"<v>","scope":"openid"}` returns `device_code`+`user_code`.
+verify_steps: POST-gated (valid client_id, test IDP account only): above exact request.
+impact: social-engineered device approval → session takeover; HIGH in-theory, client_id-gated.
+testability: AUTH_HELPED
+[0m
+[0m$ [0mecho "---TAIL probe-results---"; tail -30 probe-results.md
+---TAIL probe-results---
+## 2026-09-17 11:54:34 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/session/check_session -> 200 len=?
+https://auth.hornbach.com/token-srv/introspect` -> HTTP 404
+
+## 2026-09-17 16:37:16 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/session/check_session -> 200 len=?
+
+## 2026-09-17 19:53:03 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/session/check_session -> 200 len=?
+
+## 2026-09-17 22:45:47 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/session/check_session -> 200 len=?
+
+## 2026-09-18 01:09:48 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/session/check_session -> 200 len=?
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "root:%{http_code} len:%{size_download}\n" --max-time 15 https://api.hornbach.de/ 2>&1; curl -s -o /dev/null -w "healthcheck:%{http_code} len:%{size_download}\n" --max-time 15 https://api.hornbach.de/healthcheck 2>&1
+root:404 len:47
+healthcheck:200 len:19
+[0m
+[0m$ [0mfor p in "sap/opu/odata/sap/API_BUSINESS_PARTNER_SRV" "itspaces" "sap/opu/odata/sap" "$SAP_URI" "odata/v2" "sap/public/icf_info" "catalog" "api/status"; do curl -s -o /dev/null -D /tmp/h.txt -w "$p -> %{http_code} len:%{size_download}\n" --max-time 12 "https://api.hornbach.de/$p"; grep -i "^via:\|^x-correlation" /tmp/h.txt | tr -d '\r' | sed 's/^/    /'; sleep 1; done
+sap/opu/odata/sap/API_BUSINESS_PARTNER_SRV -> 404 len:47
+    X-CorrelationID: Id-6ed4ac6abea85f17e373cc8f 0
+itspaces -> 404 len:47
+    X-CorrelationID: Id-6fd4ac6a2aa9d7951a35dfb4 0
+sap/opu/odata/sap -> 404 len:47
+    X-CorrelationID: Id-71d4ac6afa226dfb9bb65772 0
+ -> 404 len:47
+    X-CorrelationID: Id-72d4ac6ab0a9f6ce09a65098 0
+odata/v2 -> 404 len:47
+    X-CorrelationID: Id-74d4ac6ab423aa74ae9bef5d 0
+sap/public/icf_info -> 404 len:47
+    X-CorrelationID: Id-75d4ac6a59aa1d13a844c471 0
+catalog -> 404 len:47
+    X-CorrelationID: Id-77d4ac6a1124ac754935cb5a 0
+api/status -> 404 len:47
+    X-CorrelationID: Id-78d4ac6a6024c2b1923ccbc9 0
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -s -D /tmp/hh.txt -o /tmp/hh.txt --max-time 12 https://api.hornbach.de/healthcheck | true; grep -i "^via:\|^server:\|^x-correlation" /tmp/hh.txt | tr -d '\r'; echo "body:"; cat /tmp/hh.txt | grep -v "^HTTP\|^[a-z-]*:" | head -5 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

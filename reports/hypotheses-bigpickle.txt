@@ -1,4 +1,35 @@
-## 2026-09-18 01:08:38 UTC [target] (model bigpickle)
+## 2026-09-18 06:04:47 UTC [target] (model bigpickle)
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED 09-17 16:5xZ POST → 200 (16B/2B bodies) unauthenticated; walled estate zero-delta; single non-gated flaw.
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-17 16:5xZ — discovery 200/3189B, status 200/60B, userinfo+SCIM 401/66B, authz 302 AUTH10007 uniform; api.hornbach.de root 404/47B unchanged.
+[RISK] hornbach: 66 — token-plane flaw (88) stable and re-anchored 16:5xZ today; SCIM BOLA (55) stands behind single bearer gate; api/Mirakl breadth exhausted; estate bot-walled for client_id; PoC remains gated on single APK token/client_id extraction (HUMAN_ONLY); no new anonymous high-value vector.
+[HYP] Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy → 200 `{"active":false}` (16B) / 200 `OK` (2B) with zero client creds, re-confirmed 09-17 16:5xZ (20+ cumulative sessions); token-srv/token → 400 invalid_client client-gated; GET-plane anchors userinfo/SCIM 401/66B, authz 302 AUTH10007 uniform.
+evidence_needed: ONE valid HORNBACH access token → `active:true`+claims via introspect; revoke terminates session.
+verify_steps: AUTHORIZED token only: POST `token-srv/introspect` body `token=<t>`; POST `token-srv/revoke` body `token=<t>`; GET `users-srv/userinfo` Bearer.
+impact: token-metadata disclosure + silent session kill; MEDIUM-HIGH.
+testability: AUTH_HELPED
+[HYP] SCIM v2 provisioning controller behind 401 — cross-tenant customer-identity BOLA
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 55
+reasoning: `/v2/Users` mounted uniform 401/66B (gate = token shape); discovery advertises scim_endpoint; auto-provisioned identities; single bearer gate between attacker and CRUD.
+evidence_needed: any cidaas/SCIM bearer → GET `/v2/Users` + `/v2/Users/{id}` differential 401→200.
+verify_steps: token-gated (deferred): GET `/user-scim-srv/v2/Users` Bearer; GET `/v2/Users/{id}`.
+impact: cross-tenant customer identity/PII enumeration; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+[HYP] Device-code flow abuse (RFC 8628)
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint live (400 AUTH10003 on malformed JSON); discovery advertises device_authorization_endpoint; attacker-initiated user_code needs only valid client_id.
+evidence_needed: valid client_id → POST returns user_code+verification_uri+device_code.
+verify_steps: POST-gated (valid client_id): POST `{"client_id":"<valid>","scope":"openid"}` (label verbatim token, mutated only against test IDP account).
+impact: social-engineered approval → session takeover; HIGH in-theory, client_id-gated.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK v3.9.0 (APKMirror/APKPure) → unzip → inspect `assets/cidaas.xml` + `strings -a classes*.dex` for `client_id`/`client_secret` — sole remaining unlock for introspect/revoke/userinfo/SCIM chain (one valid token or client_id). All passive surface re-confirmed exhausted 09-17; further POST probing is mutating and outside passive scope.
 [HYP] Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass)
 class: AUTH
 asset: auth.hornbach.com/token-srv/{introspect,revoke}
