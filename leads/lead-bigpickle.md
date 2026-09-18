@@ -4810,3 +4810,35 @@ testability: AUTH_HELPED
 [LEARN] REJECTED class OTHER @ external APK mirrors (APKPure/APKMirror/APKCombo/Uptodown): all bot-walled (403/410/JS-render) from this egress; cannot extract client_id passively from this environment.
 [LEARN] REJECTED class OTHER @ Wayback Machine CDX: initial CDX worked for login.hornbach.com; subsequent HTTPS connections to web.archive.org timed out from this egress; no historical snapshot retrieval possible this session.
 [RISK] hornbach: 66 — token-plane flaw (88) stable and re-anchored 09-18; SCIM BOLA (55) stands behind single bearer gate; device-code (45) client_id-gated; api.hornbach.de/Mirakl breadth exhausted; estate bot-walled for client_id; PoC gated on single APK token/client_id extraction (HUMAN_ONLY); no new anonymous high-value vector this session.
+## 2026-09-18 18:34:05 UTC [target] (model bigpickle)
+[HYP] Unauthenticated token introspection + revocation (RFC 7662/7009 systemic bypass)
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST token=dummy→200 {"active":false} (16B)/200 "OK" (2B) zero-cred across 18+ sessions (KB); discovery still advertises both + introspection_endpoint_auth_methods_supported=[client_secret_basic,post,jwt,private_key_jwt]; token-srv/token→400 invalid_client isolates gap; GET-plane anchors re-verified zero-delta this session; RFC 7662 §2.1/RFC 7009 §2.1 mandate client auth.
+evidence_needed: ONE valid HORNBACH access token → introspect active:true + claims (sub/email/mobile_number).
+verify_steps: (AUTHORIZED token only) POST token-srv/introspect body token=<t>; POST token-srv/revoke body token=<t>; GET users-srv/userinfo Bearer <t>; re-introspect→active:false.
+impact: token-metadata disclosure + silent revocation → forced re-auth/interception; MEDIUM-HIGH.
+testability: AUTH_HELPED
+[HYP] SCIM v2 provisioning controller behind single bearer gate — cross-tenant BOLA
+class: IDOR
+asset: auth.hornbach.com/user-scim-srv/v2
+confidence: 55
+reasoning: /v2/Users+/v2/Schemas+/v2/ResourceTypes uniform 401/66B; discovery advertises scim endpoint; auto-provisioned customer identities; only bearer token shape separates attacker from CRUD.
+evidence_needed: any cidaas/SCIM bearer → GET /v2/Users, /v2/Users/{id} 401→200 + cross-tenant records.
+verify_steps: token-gated (deferred): GET /user-scim-srv/v2/Users Bearer; GET /user-scim-srv/v2/Users/{id}; observe 401→200 differential.
+impact: cross-tenant customer identity/PII enumeration; MEDIUM-HIGH gated.
+testability: AUTH_HELPED
+[HYP] Device-code flow abuse (RFC 8628)
+class: AUTH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: endpoint previously live (400 AUTH10003 on malformed JSON); discovery advertises device_authorization_endpoint + device_code grant; needs only valid client_id.
+evidence_needed: valid client_id → POST {"client_id":"<v>","scope":"openid"} returns device_code/user_code/verification_uri.
+verify_steps: POST-gated (valid client_id) once obtained.
+impact: social-engineered device approval → session takeover; HIGH in-theory, client_id-gated.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` (Google Play v3.9.0) via trusted mirror → unzip → grep `assets/cidaas.xml`, `res/raw/*`, `strings -a classes*.dex` for auth.hornbach.com UUID `client_id` + `redirect_uri` + `clientSecret` — unlocks all 3 FINAL chains. (This egress: APK mirrors bot-walled 403/410, Wayback CDX→web.archive.org times out — verified again 09-18.)
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-18 18:34Z — discovery 200/3189B, status 200/60B, root 302→hornbach.de, userinfo 401/66B, authz AUTH10007 uniform; api.hornbach.de root 404/47B + healthcheck 200/19B; walled estate re-confirmed, no surface delta.
+[LEARN] REJECTED class OTHER @ auth.hornbach.com/.well-known: RFC 8414 oauth-authorization-server → 404/50B, webfinger → 404/2B — no secondary discovery doc, discovery-driven surface fully bounded by openid-configuration.
+[RISK] hornbach: 66 — token-plane flaw (88) restable 09-18 18:34Z; SCIM BOLA (55) behind single bearer gate; device-code (45) client_id-gated; api.hornbach.de/Mirakl breadth exhausted; estate bot-walled for client_id; PoC gated on single APK token/client_id extraction (HUMAN_ONLY); no new anonymous high-value vector this session.

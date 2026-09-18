@@ -372,3 +372,5 @@
 - 2026-09-18 ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-18 — discovery 200/3189B, status 200/60B, userinfo 401/66B, authz 302 AUTH10007 uniform; api.hornbach.de root 404/47B unchanged.
 - 2026-09-18 REJECTED class OTHER @ external APK mirrors (APKPure/APKMirror/APKCombo/Uptodown): all bot-walled (403/410/JS-render) from this egress; cannot extract client_id passively from this environment.
 - 2026-09-18 REJECTED class OTHER @ Wayback Machine CDX: initial CDX worked for login.hornbach.com; subsequent HTTPS connections to web.archive.org timed out from this egress; no historical snapshot retrieval possible this session.
+- 2026-09-18 ACCEPTED class OTHER @ auth.hornbach.com: anchors zero-delta 09-18 18:34Z — discovery 200/3189B, status 200/60B, root 302→hornbach.de, userinfo 401/66B, authz AUTH10007 uniform; api.hornbach.de root 404/47B + healthcheck 200/19B; walled estate re-confirmed, no surface delta.
+- 2026-09-18 REJECTED class OTHER @ auth.hornbach.com/.well-known: RFC 8414 oauth-authorization-server → 404/50B, webfinger → 404/2B — no secondary discovery doc, discovery-driven surface fully bounded by openid-configuration.
