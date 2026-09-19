@@ -1,16 +1,10 @@
-## 2026-09-19 01:36:10 UTC [target] (model nemotron3)
-[NEW] Probe methodology gap confirmed: all 578 probe entries in probe-results.md use GET for token-srv/introspect and token-srv/revoke (returning 404), while KB confirms POST returns 200 across 18+ independent sessions — body-presence is sole gate  
-[NEW] auth.hornbach.com/ root stable 302→hornbach.de (was F5 challenge 200); CSP header confirms cidaas backend (x-powered-by: cidaas) but no content served — web-based client_id extraction definitively dead  
-[NEW] auth.hornbach.com/session/check_session: discovery-advertised OIDC Session Management check_session iframe live (200/27021B, x-powered-by: cidaas) — novel path confirmed, informational only  
-[CHANGED] hornbach.com web estate (.de/.at/.nl/.ch + login.hornbach.com): all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id angle  
-[CHANGED] api.hornbach.de: 6 novel SAP ICF paths tested (/sap/public/icf_info, /sap/public/icman/ping, /sap/bc/bsp/sap/system, /sap/bc/webdynpro/sap/appl_webdynpro, /sap/bc/gui/sap/its/webgui, /sap/wdisp/admin/public/default/host) → uniform 404/47B; anonymous breadth definitively exhausted; Via shows node flip sapigwprd01↔sapigwprd02  
-[CHANGED] hornbach-mp.mirakl.net: federates to login.mirakl.net (client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for cidaas tenant  
-[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},9.5,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=10  
-[PRIO] auth.hornbach.com/authz-srv/authz,7.8,attack_surface=9,business_value=10,tech_exposure=8,gate_ease=3,cloud_surface=7,freshness=9  
-[PRIO] auth.hornbach.com/session/check_session,4.2,attack_surface=5,business_value=3,tech_exposure=4,gate_ease=10,cloud_surface=3,freshness=6  
-[PRIO] api.hornbach.de,3.5,attack_surface=4,business_value=6,tech_exposure=5,gate_ease=10,cloud_surface=7,freshness=3  
-[PRIO] auth.hornbach.de,2.8,attack_surface=3,business_value=5,tech_exposure=3,gate_ease=2,cloud_surface=4,freshness=3  
-[PRIO] hornbach-mp.mirakl.net,2.5,attack_surface=3,business_value=6,tech_exposure=3,gate_ease=2,cloud_surface=5,freshness=3  
+## 2026-09-19 06:37:57 UTC [target] (model nemotron3)
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},9.5,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=10
+[PRIO] auth.hornbach.com/authz-srv/authz,7.8,attack_surface=9,business_value=10,tech_exposure=8,gate_ease=3,cloud_surface=7,freshness=9
+[PRIO] auth.hornbach.com/session/check_session,4.2,attack_surface=5,business_value=3,tech_exposure=4,gate_ease=10,cloud_surface=3,freshness=6
+[PRIO] api.hornbach.de,3.5,attack_surface=4,business_value=6,tech_exposure=5,gate_ease=10,cloud_surface=7,freshness=3
+[PRIO] auth.hornbach.de,2.8,attack_surface=3,business_value=5,tech_exposure=3,gate_ease=2,cloud_surface=4,freshness=3
+[PRIO] hornbach-mp.mirakl.net,2.5,attack_surface=3,business_value=6,tech_exposure=3,gate_ease=2,cloud_surface=5,freshness=3
 [HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak  
 class: AUTH  
 asset: auth.hornbach.com/token-srv/{introspect,revoke}  

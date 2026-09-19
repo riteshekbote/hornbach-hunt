@@ -31310,3 +31310,63 @@ testability: AUTH_HELPED
 
 ## STEP 7 — RISK
 [RISK] hornbach: 58/100 — client_id deadlock broken: reusable 5-client live matrix for the cidaas tenant; tenant-wide redirect_uri path-prefix acceptance confirmed (OAuth code-interception precondition, chain pending a same-host sink); unauthenticated introspect/revoke stands as the non-gated flaw; worst-case chain (prefix redirect_uri + same-host reflector + PKCE gap) would be CRITICAL ATO but is bounded by PKCE-at-exchange and the F5-walled www sink limiting live confirmation; legacy Keycloak dead; employee NetScaler remains high-risk-untouched.
+===== ANALYST bigpickle 2026-09-19 06:38:14 UTC =====
+[0m
+> build · big-pickle
+[0m
+## STEP 1 — DELTA
+- [NEW] auth.hornbach.com/authz-srv/authz: tenant-wide redirect_uri path-prefix (non-exact) acceptance confirmed on 4 web clients (f243e104…, a319e635…, 063c8171…, 28e0cbe4…): registered origin+prefix → 302 login + `cidaas_dr`; foreign/cross-TLD → AUTH10009. RFC 6749 §3.1.2.3 deviation (carried 01:37Z).
+- [NEW] Client_id deadlock broken: CDX-recovered web clients + registered URIs (`/checkout/flow/step/2?orderType=DV…`, `/checkout`) unlock token-plane differentials previously zero-seed (carried).
+- NO_DELTA on asset inventory: 4 scoped hosts unchanged; all standing anchors re-confirmed 09-18/09-19.
+
+## STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com/authz-srv/authz, 8.35, attack_surface:9,business_value:9,tech_exposure:9,gate_ease:6,cloud_surface:7,freshness:9
+- [PRIO] auth.hornbach.com/token-srv/{introspect,revoke}, 8.00, attack_surface:8,business_value:8,tech_exposure:7,gate_ease:9,cloud_surface:7,freshness:9
+- [PRIO] www.hornbach.de/checkout (sink), 5.25, attack_surface:4,business_value:9,tech_exposure:3,gate_ease:1,cloud_surface:5,freshness:9
+
+## STEP 3 — HYPOTHESES
+[HYP] Query-component binding gap in redirect_uri prefix-match
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 55
+reasoning: Prefix acceptance already proven at origin+path. CDX-recovered registered URIs are query-string-heavy (`/checkout/flow/step/2?orderType=DV…`). Whether the query portion is bound in the prefix match is unproven; a registered-query mutation that still accepts (302 login) would widen attacker-controlled reflectors inside the checkout origin.
+evidence_needed: accepted(302→login/cidaas_dr) vs AUTH10009 differential when mutating query value/name on the recovered registered URI for client f243e104-…
+verify_steps: 3 passive GETs on authz-srv/authz (≤1 rps), identity client fixed; variant A = exact CDX URI, variant B = query value swapped (orderType=EVIL), variant C = extra param appended (query prefix still holds, or rejected)
+impact: loosens an already invalid match; feeds code/state interception chain; MEDIUM–HIGH pending sink
+testability: PASSIVE
+
+[HYP] Token-plane client-validation ordering now testable with live client
+class: AUTH
+asset: auth.hornbach.com/token-srv/token
+confidence: 60
+reasoning: Bogus-client POST → 400 `invalid_client "unknown client"` established. With real client f243e104-…, {valid client + wrong secret} vs {valid client + fake code} discriminates client-secret strength and PKCE-at-exchange order (AUTH10008/10009 firing order). Previously untestable with zero seed.
+evidence_needed: error-code family across client_secret present/absent/wrong with real client_id
+verify_steps: POST token-srv/token grant_type=authorization_code code=fake, real client_id, secret conditioning — POST deferred per probe method limits
+impact: exposes weak client auth or PKCE-not-enforced at exchange → elevation to code-reuse; MEDIUM
+testability: AUTH_HELPED
+
+[HYP] Same-origin reflector under accepted prefix closes code-theft chain
+class: OATH
+asset: www.hornbach.de/checkout*(suffix)
+confidence: 40
+reasoning: Any suffix under registered `/checkout/…` is a valid redirect target; chain converges only if such a path reflects or forwards query params (code,state). Egress returns the 3038-byte F5 challenge stub before origin for all www GETs — reflector not passively observable from this environment.
+evidence_needed: a non-bot-challenge response under /checkout reflecting code/state
+verify_steps: PASSIVE GET on known checkout asset paths — capped by bot-wall; browser (HUMAN) required
+impact: code+state exfiltration → ATO; CRITICAL (unconfirmed)
+testability: PASSIVE — bounded by bot-wall
+
+## STEP 4 — SELF-CRITIQUE
+- [PARKED] device-code flow abuse: needs POST, thin delta, marginal 45 → drop.
+- [PARKED] www sink-hunt as written: F5 challenge answers every www GET from this egress; no passive signal; demote to HUMAN browser task.
+- [FINAL] survivors: (1) token-srv introspect/revoke [88][standing]; (2) token-plane client-validation ordering [60]; (3) redirect_uri query-binding differential [55].
+
+## STEP 5 — NEXT ACTION
+- [NEXT] PROBE: passive GET differential on `https://auth.hornbach.com/authz-srv/authz` — fix client_id=f243e104-… (recovered) and redirect_uri variants (recovered CDX full URI → exact; `?orderType=EVIL` value swap; `&extra=1` append); classify 302→login/cidaas_dr vs AUTH10009; ≤1 rps. Supersedes prior www sink-hunt (bot-walled, unparkable passively).
+
+## STEP 6 — LEARNING
+- [LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: redirect_uri path-prefix acceptance is tenant-wide config on 4 web clients (302 vs AUTH10009); RFC deviation confirmed; query-portion binding is the open differential
+- [LEARN] REJECTED class OATH @ www.hornbach.de: same-origin sink-hunt not passively observable from this egress — F5 challenge stub precedes origin; chain bounded pending HUMAN browser step
+- [LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: client-validation-ordering (AUTH10008/10009) now testable with recovered client_id — was zero-seed
+
+## STEP 7 — RISK
+- [RISK] hornbach: 62/100 — live 4-client matrix + confirmed tenant-wide redirect_uri prefix acceptance bring OAuth chain within one sink of ATO, but PKCE-at-exchange and the F5 bot-walled www sink bound it; unauthenticated introspect/revoke remains the single non-gated flaw; token-plane ordering and device-flow deferred to authorized POST sessions; CDN/bot-wall density keeps most surface undemonstrable passively.
