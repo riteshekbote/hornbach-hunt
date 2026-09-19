@@ -653,3 +653,16 @@ https://auth.hornbach.com/token-srv/introspect -> HTTP 404
 https://auth.hornbach.com/token-srv/revoke -> HTTP 404
 https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
 https://auth.hornbach.com/session/check_session -> 200 len=?
+
+## 2026-09-19 17:55:01 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/ -> 200 len=3038
+https://auth.hornbach.com/apps-srv/clients/register` -> HTTP 404
+https://auth.hornbach.com/apps-srv/clients/register -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/authz-srv/device/authz -> HTTP 400
+https://auth.hornbach.com/session/check_session -> 200 len=?
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=f243e104-…&redirect_uri=https://www.hornbach.de/checkout/flow/step/2?orderType=DV&state=SINKTEST&scope=openid` -> ERR 'ascii' codec can't encode character '\u2026' in p
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%2Fflow%2Fstep%2F2%3ForderType%3DDV&scope=openid&state=SINKTEST` -> 200 len=3038

