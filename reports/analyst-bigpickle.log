@@ -31023,3 +31023,290 @@ Content-Type: application/json
 [93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
 [0m✗ [0msleep 1; curl -sS -m 15 -D - -o /tmp/hb-api-hc.txt https://api.hornbach.de/healthcheck | head -30; echo "---BODY---"; cat /tmp/hb-api-hc.txt; echo; wc -c /tmp/hb-api-hc.txt failed
 [91m[1mError: [0mThe user rejected permission to use this specific tool call.
+===== ANALYST bigpickle 2026-09-19 01:37:38 UTC =====
+[0m
+> build · big-pickle
+[0m
+I'll do a compact delta re-check (read-only, ≤1 rps) plus a passive Wayback retry, then emit the structured blocks.
+[0m$ [0mprintf 'auth-oidc '; curl -s -o /dev/null -w '%{http_code} %{size_download}\n' -m 20 'https://auth.hornbach.com/.well-known/openid-configuration'
+sleep 1
+printf 'auth-root '; curl -s -o /dev/null -w '%{http_code} %{size_download} %{redirect_url}\n' -m 20 'https://auth.hornbach.com/'
+sleep 1
+printf 'api-de-root '; curl -s -o /dev/null -w '%{http_code} %{size_download}\n' -m 20 'https://api.hornbach.de/'
+sleep 1
+printf 'auth-de '; curl -s -o /dev/null -w '%{http_code} %{size_download} %{redirect_url}\n' -m 20 'https://auth.hornbach.de/'
+auth-oidc 200 3189
+auth-root 302 0 https://hornbach.de/
+api-de-root 404 47
+auth-de 302 413 https://auth.hornbach.de/logon/LogonPoint/tmindex.html
+[0m
+[0m$ [0mprintf '=== wayback auth.hornbach.com ===\n'
+curl -s -m 25 'http://web.archive.org/cdx/search/cdx?url=auth.hornbach.com*&output=text&fl=timestamp,original,statuscode&collapse=urlkey&limit=30'
+printf '=== wayback login.hornbach.com ===\n'
+curl -s -m 25 'http://web.archive.org/cdx/search/cdx?url=login.hornbach.com*&output=text&fl=timestamp,original,statuscode&collapse=urlkey&limit=30'
+=== wayback auth.hornbach.com ===
+20230308211019 http://auth.hornbach.com/ -
+20250714123733 https://auth.hornbach.com/.well-known/openid-configuration 200
+20260101201654 https://auth.hornbach.com/authz-srv/authz?client_id=a319e635-38c8-4cde-be1d-e2341e3c6480&redirect_uri=https%3A%2F%2Fwww.hornbach.nl%2Fcustomer%2Faccount%2Fpurchases%2F%23%2F%3F_filter%3Dshelly%26_archived%3Ddefault&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acustomer_account_verified+hb%3Acustomer_address&state=4bf8d6dc645a48f6b712c1348972167c&code_challenge=dNJ3OCkJzSOvtGk0R2KP0mXvcZCwpemakx6ehrXv554&code_challenge_method=S256&ui_locales=nl-NL&context=DEFAULT&redirectUri=https%3A%2F%2Fwww.hornbach.nl%2Fcustomer%2Faccount%2Fpurchases%2F%23%2F%3F_filter%3Dshelly%26_archived%3Ddefault 302
+20251123070840 https://auth.hornbach.com/authz-srv/authz?client_id=a319e635-38c8-4cde-be1d-e2341e3c6480&redirect_uri=https%3A%2F%2Fwww.hornbach.nl%2Fcustomer%2Faccount%2Fpurchases%2F%23%2F%3F_filter%3Dmeng%26_archived%3Ddefault&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acustomer_account_verified+hb%3Acustomer_address&state=6109a05e17f746f3a3a0130b826ae1d6&code_challenge=iOUHAxR75os2nrZIi4qIq11s0ZUtvcYK_4cfqRH9PP4&code_challenge_method=S256&ui_locales=nl-NL&context=DEFAULT&redirectUri=https%3A%2F%2Fwww.hornbach.nl%2Fcustomer%2Faccount%2Fpurchases%2F%23%2F%3F_filter%3Dmeng%26_archived%3Ddefault 302
+20260101201634 https://auth.hornbach.com/authz-srv/authz?client_id=a319e635-38c8-4cde-be1d-e2341e3c6480&redirect_uri=https%3A%2F%2Fwww.hornbach.nl%2Fcustomer%2Faccount%2Fpurchases%2F%23%2F%3F_filter%3Dshelly%26_archived%3Ddefault&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acustomer_account_verified+hb%3Acustomer_address&state=9493dc179493421b9e36dc71816afe29&code_challenge=wpAknGucNyo9eRYNW4iUHLZQ2HD5ZYEMvnMFe2Ftoko&code_challenge_method=S256&ui_locales=nl-NL&context=DEFAULT&redirectUri=https%3A%2F%2Fwww.hornbach.nl%2Fcustomer%2Faccount%2Fpurchases%2F%23%2F%3F_filter%3Dshelly%26_archived%3Ddefault 302
+20250728175104 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%2Fflow%2Fstep%2F2%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE612%26abort%3Dtrue&response_type=code&scope=openid+groups+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=301e81551bc94fa88d9407e27b4a618c&code_challenge=-N9M6ayJau6OXZo0VlGtpCYB7lC9rZmm4SPVS-dYpnE&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%2Fflow%2Fstep%2F2%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE612%26abort%3Dtrue 302
+20250728175420 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%2Fflow%2Fstep%2F2%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE612%26abort%3Dtrue&response_type=code&scope=openid+groups+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=8e137c8239ac48aabf36ed798cdd1441&code_challenge=BS2qLgpom1sau7iImuu-u2wVlyOIgEi1q_Amj7y5XG0&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%2Fflow%2Fstep%2F2%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE612%26abort%3Dtrue 302
+20250925165609 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%2Fflow%2Fstep%2F3%3Fiss%3Dhttps%253A%252F%252Fauth.hornbach.com%26cartCode%3D7110593156%26raMarketCode%3D579%26locale%3Dde_DE%26orderType%3DZKA%26isLoggedIn%3Dtrue&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=7d13a3da68a04464a35f9e2d5b8aeba3&code_challenge=DFkutgHVuqDbUj6ueDet1nyX-nO2jjwsByo09rxXqTk&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%2Fflow%2Fstep%2F3%3Fiss%3Dhttps%253A%252F%252Fauth.hornbach.com%26cartCode%3D7110593156%26raMarketCode%3D579%26locale%3Dde_DE%26orderType%3DZKA%26isLoggedIn%3Dtrue 302
+20250925165538 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%2F%3Fiss%3Dhttps%253A%252F%252Fauth.hornbach.com%26cartCode%3D7110593156%26raMarketCode%3D579%26locale%3Dde_DE%26orderType%3DZKA%26isLoggedIn%3Dtrue&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=af010a590f5241a290774ae5b3465e32&code_challenge=SRvnZwNirlluFDYnoYQnyScGCh87Ul9I8Cq0Rn39gLE&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%2F%3Fiss%3Dhttps%253A%252F%252Fauth.hornbach.com%26cartCode%3D7110593156%26raMarketCode%3D579%26locale%3Dde_DE%26orderType%3DZKA%26isLoggedIn%3Dtrue 302
+20260511052924 https://auth.hornbach.com/authz-srv/authz?client_id=30e033d9-afe7-4646-982a-e41872b33b0e&redirect_uri=https%3A%2F%2Fwww.hornbach.nl%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dnl_NL%26raMarketCode%3DNL719%26cartCode%3Dguest%253A04e06424-bae0-5591-8fc1-0fae102a5626%253Aee025fb2-ccc4-436a-b185-a29e0c2c2623&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=7ab0351aad69406fafda9d37e51532d0&code_challenge=5BW-G0_y5PlO19UqBsTXHxplo30dKkEIdmnDpxS7jtU&code_challenge_method=S256&ui_locales=nl-NL&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.nl%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dnl_NL%26raMarketCode%3DNL719%26cartCode%3Dguest%253A04e06424-bae0-5591-8fc1-0fae102a5626%253Aee025fb2-ccc4-436a-b185-a29e0c2c2623 302
+20251023174819 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE630%26cartCode%3Dguest%253A2650e459-5414-5a06-8304-fff0ea71881d%253A625bb4bb-69c8-4f84-a58f-ea984ce73742&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=f65296821e3f4afb8605788c19a37427&code_challenge=ebaioW-6n9AOpGlG-hinCqFEviOSXEOGnaYkeiKnD74&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE630%26cartCode%3Dguest%253A2650e459-5414-5a06-8304-fff0ea71881d%253A625bb4bb-69c8-4f84-a58f-ea984ce73742 302
+20260329074005 https://auth.hornbach.com/authz-srv/authz?client_id=30e033d9-afe7-4646-982a-e41872b33b0e&redirect_uri=https%3A%2F%2Fwww.hornbach.nl%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dnl_NL%26raMarketCode%3DNL711%26cartCode%3Dguest%253A6419bba3-dc7b-5ba6-8950-869abecbe9cb%253Aff0e7ab2-36d2-4d14-aaf1-9c93784356c1&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=be2a7860ecff453080651d340185c2b6&code_challenge=TY_H0wHHsxsUHmryWKqBms613Dbjd2qCvndOWwou3PA&code_challenge_method=S256&ui_locales=nl-NL&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.nl%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dnl_NL%26raMarketCode%3DNL711%26cartCode%3Dguest%253A6419bba3-dc7b-5ba6-8950-869abecbe9cb%253Aff0e7ab2-36d2-4d14-aaf1-9c93784356c1 302
+20260329074029 https://auth.hornbach.com/authz-srv/authz?client_id=30e033d9-afe7-4646-982a-e41872b33b0e&redirect_uri=https%3A%2F%2Fwww.hornbach.nl%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dnl_NL%26raMarketCode%3DNL711%26cartCode%3Dguest%253A6419bba3-dc7b-5ba6-8950-869abecbe9cb%253Aff0e7ab2-36d2-4d14-aaf1-9c93784356c1%26iss%3Dhttps%253A%252F%252Fauth.hornbach.com&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=d17692afeb964fc0a7c36c3f46625757&code_challenge=VrLWHZ-D_2EAg6TVTbE2UxF8cmGQ-i0XJfOqsPMb0oY&code_challenge_method=S256&ui_locales=nl-NL&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.nl%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dnl_NL%26raMarketCode%3DNL711%26cartCode%3Dguest%253A6419bba3-dc7b-5ba6-8950-869abecbe9cb%253Aff0e7ab2-36d2-4d14-aaf1-9c93784356c1%26iss%3Dhttps%253A%252F%252Fauth.hornbach.com 302
+20251022152844 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE539%26cartCode%3Dguest%253A712745fa-8328-597b-b55f-c70e041cad4f%253A4af21eb6-0a45-4273-9a10-3978d7be73a3&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=2110b2756e5e4032a3591ece63f2be4c&code_challenge=cRc8XfFLuaF-sHhAZzET62FqNLKzLRaIEe8PyQ4NXHc&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE539%26cartCode%3Dguest%253A712745fa-8328-597b-b55f-c70e041cad4f%253A4af21eb6-0a45-4273-9a10-3978d7be73a3 302
+20251020110144 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE630%26cartCode%3Dguest%253Aa7ad5334-0a32-594a-9072-dcc6346bcace%253A029576bf-c614-4ab4-a4d1-349731bf2d8a&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=4893586c835d49c2bff3a58bc5ce6034&code_challenge=MoJdavaYLatepmKRaicsL2SWew5N8bIPxSu_xzHvZ2c&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE630%26cartCode%3Dguest%253Aa7ad5334-0a32-594a-9072-dcc6346bcace%253A029576bf-c614-4ab4-a4d1-349731bf2d8a 302
+20250827075845 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE586%26cartCode%3Dguest%253Aad47ed1c-9745-5d29-b3a0-f0e3dbc3c995%253A803fa86e-f3b3-4043-802e-907c2233d518&response_type=code&scope=openid+groups+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=f92c976faaf64cd9b9dff49a92b7199b&code_challenge=Lwh6GYpxDfMfjj74JPOJ-QKjhR9yFRbbDnlL4T3KxKM&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE586%26cartCode%3Dguest%253Aad47ed1c-9745-5d29-b3a0-f0e3dbc3c995%253A803fa86e-f3b3-4043-802e-907c2233d518 302
+20250714144023 https://auth.hornbach.com/authz-srv/authz?client_id=28e0cbe4-47d1-4bc2-812f-ad3ca8528915&redirect_uri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_CH%26raMarketCode%3DCH756%26cartCode%3Dguest%253Ac4af0d23-2724-5a1d-9de6-42e65eabf174%253A1a38f33c-bbc0-480a-9b63-7ef71e373562%26email%3Dchhb%2540grey-panther.net&response_type=code&scope=openid+groups+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=234da693243d4678bb16b9283ec9e603&code_challenge=j2V-l4Dzcm7ncW5Jc1SC5Ng-AwucFA2LYGXCNpEXx6k&code_challenge_method=S256&ui_locales=de-CH&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_CH%26raMarketCode%3DCH756%26cartCode%3Dguest%253Ac4af0d23-2724-5a1d-9de6-42e65eabf174%253A1a38f33c-bbc0-480a-9b63-7ef71e373562%26email%3Dchhb%2540grey-panther.net 302
+20250714144018 https://auth.hornbach.com/authz-srv/authz?client_id=28e0cbe4-47d1-4bc2-812f-ad3ca8528915&redirect_uri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_CH%26raMarketCode%3DCH756%26cartCode%3Dguest%253Ac4af0d23-2724-5a1d-9de6-42e65eabf174%253A1a38f33c-bbc0-480a-9b63-7ef71e373562&response_type=code&scope=openid+groups+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=dc483fa37c0947b6a348bd8608c554d8&code_challenge=PstwS7QcURbdHnUuDo8ELRr0hzMhCWqFi7hfuZsvxHk&code_challenge_method=S256&ui_locales=de-CH&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_CH%26raMarketCode%3DCH756%26cartCode%3Dguest%253Ac4af0d23-2724-5a1d-9de6-42e65eabf174%253A1a38f33c-bbc0-480a-9b63-7ef71e373562 302
+20250714144144 https://auth.hornbach.com/authz-srv/authz?client_id=28e0cbe4-47d1-4bc2-812f-ad3ca8528915&redirect_uri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_CH%26raMarketCode%3DCH756%26cartCode%3Dguest%253Ac4af0d23-2724-5a1d-9de6-42e65eabf174%253A1a38f33c-bbc0-480a-9b63-7ef71e373562%26email%3Dchhb%2540grey-panther.net&response_type=code&scope=openid+groups+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=58bac323733c4133bab042819893f83d&code_challenge=RogT1vfmjERh8Bxb2KrFyvLtcX10fiJBflCwLadnUv0&code_challenge_method=S256&ui_locales=de-CH&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_CH%26raMarketCode%3DCH756%26cartCode%3Dguest%253Ac4af0d23-2724-5a1d-9de6-42e65eabf174%253A1a38f33c-bbc0-480a-9b63-7ef71e373562%26email%3Dchhb%2540grey-panther.net 302
+20250920070240 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE539%26cartCode%3Dguest%253Affaeea94-771c-5163-a9a4-dc5f25f00bb4%253Aade1747a-6f34-4384-8547-1213f934bcca&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=7f088c0284424d9ca30d62b7854be581&code_challenge=4BZB2_yqrp2nuZ0U_Kz6j9SfK8ZnKreIjXM687eZKsk&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE539%26cartCode%3Dguest%253Affaeea94-771c-5163-a9a4-dc5f25f00bb4%253Aade1747a-6f34-4384-8547-1213f934bcca 302
+20250920070226 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE539%26cartCode%3Dguest%253Affaeea94-771c-5163-a9a4-dc5f25f00bb4%253Aade1747a-6f34-4384-8547-1213f934bcca&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=ee59876aa798461b8b92b6fb1b9c1b74&code_challenge=A4BErgxOabS1JXyJaWD_pCAQlVQN0xed1_MszfMe42E&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE539%26cartCode%3Dguest%253Affaeea94-771c-5163-a9a4-dc5f25f00bb4%253Aade1747a-6f34-4384-8547-1213f934bcca 302
+20250728172626 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE612%26cartCode%3Duser%253A91bc604d-4a4c-5707-aab6-27a08ebc2b8c&response_type=code&scope=openid+groups+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=bbd68bb36dad4a1d959db3157a9ad96f&code_challenge=1UHylGPoVi9-zUKSMvlNwd51Y-VswjemmN0_Hm2T-yI&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE612%26cartCode%3Duser%253A91bc604d-4a4c-5707-aab6-27a08ebc2b8c 302
+20250728172706 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE612%26cartCode%3Duser%253A91bc604d-4a4c-5707-aab6-27a08ebc2b8c&response_type=code&scope=openid+groups+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=7fb41609140b4274829d5ed412eb0795&code_challenge=eyP3FeiTlhOj2tfCo7aRXTFdjDW2vWTzGcH7Atf-mW0&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE612%26cartCode%3Duser%253A91bc604d-4a4c-5707-aab6-27a08ebc2b8c 302
+20250728175101 https://auth.hornbach.com/authz-srv/authz?client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE612%26cartCode%3Duser%253A91bc604d-4a4c-5707-aab6-27a08ebc2b8c&response_type=code&scope=openid+groups+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=2e01e90de3c44f488739a3662438c903&code_challenge=LqHdakaenujfIs3Bfzm-qLvvsUlL-dRss57g3EOnUy0&code_challenge_method=S256&ui_locales=de-DE&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_DE%26raMarketCode%3DDE612%26cartCode%3Duser%253A91bc604d-4a4c-5707-aab6-27a08ebc2b8c 302
+20260512142100 https://auth.hornbach.com/authz-srv/authz?client_id=30e033d9-afe7-4646-982a-e41872b33b0e&redirect_uri=https%3A%2F%2Fwww.hornbach.nl%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dnl_NL%26raMarketCode%3DNL719%26cartCode%3Duser%253Adcb72d23-d320-5dcd-9091-7975f45870ee&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=041fb2f06d5147b397e47d80dc95237d&code_challenge=55648lGUzFLtGXiXlQDT5AtKc5oUKwuLyeSR73I5fRU&code_challenge_method=S256&ui_locales=nl-NL&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.nl%2Fcheckout%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dnl_NL%26raMarketCode%3DNL719%26cartCode%3Duser%253Adcb72d23-d320-5dcd-9091-7975f45870ee 302
+20250927160622 https://auth.hornbach.com/authz-srv/authz?client_id=063c8171-50be-4b0f-aac8-d1237882ff64&redirect_uri=https%3A%2F%2Fwww.hornbach.ro%2Fcustomer%2F&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acustomer_account_verified+hb%3Acustomer_address&state=9ee303c61b8f4039bcbeefea731d0565&code_challenge=1kpCWEU4_-zM0CRhHwk5lleM8D9EU3UCX78VTdCNWAk&code_challenge_method=S256&ui_locales=ro-RO&context=DEFAULT&redirectUri=https%3A%2F%2Fwww.hornbach.ro%2Fcustomer%2F 302
+20250802190150 https://auth.hornbach.com/authz-srv/authz?client_id=063c8171-50be-4b0f-aac8-d1237882ff64&redirect_uri=https%3A%2F%2Fwww.hornbach.ro%2Fcustomer%2F&response_type=code&scope=openid+groups+profile+email+hb%3Acustomer_account_verified+hb%3Acustomer_address&state=49e6a54c1118477ab73bd83c7a2ccd38&code_challenge=EcgBn61iBETYwV31Je84UXPEjmHEjOPsmfRr93uLea0&code_challenge_method=S256&ui_locales=ro-RO&context=DEFAULT&redirectUri=https%3A%2F%2Fwww.hornbach.ro%2Fcustomer%2F 302
+20250714144215 https://auth.hornbach.com/authz-srv/authz?client_id=28e0cbe4-47d1-4bc2-812f-ad3ca8528915&redirect_uri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout%2Fflow%2Fstep%2F3%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_CH%26raMarketCode%3DCH756%26email%3Dchhb%2540grey-panther.net&response_type=code&scope=openid+groups+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=0ad8686453dd435da771a9fc9138eaa2&code_challenge=5GiWAiNVBIYUlkqw8MzthxlTyN89F_Iy9R95QjmMEf0&code_challenge_method=S256&ui_locales=de-CH&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout%2Fflow%2Fstep%2F3%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_CH%26raMarketCode%3DCH756%26email%3Dchhb%2540grey-panther.net 302
+20260227164737 https://auth.hornbach.com/authz-srv/authz?client_id=28e0cbe4-47d1-4bc2-812f-ad3ca8528915&redirect_uri=https%3A%2F%2Fwww.hornbach.ch%2Ffr%2Fcheckout%2Fflow%2Fstep%2F1%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dfr_CH%26raMarketCode%3DCH751%26iss%3Dhttps%253A%252F%252Fauth.hornbach.com&response_type=code&scope=openid+groups+identities+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=c87f7b6833d5411a8ed830c12ee8ab8d&code_challenge=5W_kEvQmzuJimKDDONLV3W_9VzIeKJA-RWiXcOgwbTs&code_challenge_method=S256&ui_locales=fr-CH&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.ch%2Ffr%2Fcheckout%2Fflow%2Fstep%2F1%3ForderType%3DRA%26isLoggedIn%3Dtrue%26locale%3Dfr_CH%26raMarketCode%3DCH751%26iss%3Dhttps%253A%252F%252Fauth.hornbach.com 302
+20250714144054 https://auth.hornbach.com/authz-srv/authz?client_id=28e0cbe4-47d1-4bc2-812f-ad3ca8528915&redirect_uri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout%2Fflow%2Fstep%2F2%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_CH%26raMarketCode%3DCH756%26email%3Dchhb%2540grey-panther.net&response_type=code&scope=openid+groups+profile+email+hb%3Acheckout+hb%3Acustomer_address&state=7ff1960bca99455b9c4c28736196f153&code_challenge=5WWx1K_OZUbuEYCHKbbESTMJ4cGvYfNClXfew6YS-jE&code_challenge_method=S256&ui_locales=de-CH&context=CHECKOUT&redirectUri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout%2Fflow%2Fstep%2F2%3ForderType%3DDV%26isLoggedIn%3Dtrue%26locale%3Dde_CH%26raMarketCode%3DCH756%26email%3Dchhb%2540grey-panther.net 302
+=== wayback login.hornbach.com ===
+20230610125220 https://login.hornbach.com/ 404
+20230610185312 https://login.hornbach.com/.well-known/ai-plugin.json 404
+20230610135736 https://login.hornbach.com/.well-known/assetlinks.json 404
+20230610142405 https://login.hornbach.com/.well-known/dnt-policy.txt 404
+20230610152858 https://login.hornbach.com/.well-known/gpc.json 404
+20230610150504 https://login.hornbach.com/.well-known/nodeinfo 404
+20230610130613 https://login.hornbach.com/.well-known/openid-configuration 404
+20230610151509 https://login.hornbach.com/.well-known/security.txt 404
+20230610150743 https://login.hornbach.com/.well-known/trust.txt 404
+20230610155201 https://login.hornbach.com/ads.txt 404
+20230610130633 https://login.hornbach.com/app-ads.txt 404
+20220705032804 https://login.hornbach.com/auth 404
+20241210204118 https://login.hornbach.com/auth/realms/hornbach 200
+20241216000612 https://login.hornbach.com/auth/realms/hornbach/.well-known/openid-configuration 503
+20250124083546 https://login.hornbach.com/auth/realms/hornbach/account 302
+20230514165340 https://login.hornbach.com/auth/realms/hornbach/login-actions/action-token?key=eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJiOTdmNDc0NC1jNTA1LTRhMTgtYjNkYS05ZTEwZDBiMDE2NjMifQ.eyJleHAiOjE2ODQwODgyMTUsImlhdCI6MTY4NDA3NzQxNSwianRpIjoiMmE0YTFlZGYtYzQzNS00MTQ3LWI0ZGQtNWQ1Y2Y2OGMwZGEyIiwiaXNzIjoiaHR0cHM6Ly9sb2dpbi5ob3JuYmFjaC5jb20vYXV0aC9yZWFsbXMvaG9ybmJhY2giLCJhdWQiOiJodHRwczovL2xvZ2luLmhvcm5iYWNoLmNvbS9hdXRoL3JlYWxtcy9ob3JuYmFjaCIsInN1YiI6IjkxYTZlNjczLWE5MTYtNGJmMC04ZDdkLTgxZjA4Y2U0NTU3YyIsInR5cCI6ImV4ZWN1dGUtYWN0aW9ucyIsImF6cCI6Im5sIiwibm9uY2UiOiIyYTRhMWVkZi1jNDM1LTQxNDctYjRkZC01ZDVjZjY4YzBkYTIiLCJycWFjIjpbIlZFUklGWV9FTUFJTCJdLCJyZWR1cmkiOiJodHRwczovL3d3dy5ob3JuYmFjaC5ubC9jdXN0b21lci9hY2NvdW50IiwicnFhYyI6WyJWRVJJRllfRU1BSUwiXSwicmVkdXJpIjoiaHR0cHM6Ly93d3cuaG9ybmJhY2gubmwvY3VzdG9tZXIvYWNjb3VudCJ9.LEbF5VdIfrzZ7n8E5vmZaUGqpScGUuiiORS8U-es_9s&client_id=nl&tab_id=mQIJ_i6ReWA&kc_locale=nl-NL&ui_locales=nl-NL 200
+20230514165338 https://login.hornbach.com/auth/realms/hornbach/login-actions/action-token?key=eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJiOTdmNDc0NC1jNTA1LTRhMTgtYjNkYS05ZTEwZDBiMDE2NjMifQ.eyJleHAiOjE2ODQwODgyMTUsImlhdCI6MTY4NDA4MzIwOCwianRpIjoiMmE0YTFlZGYtYzQzNS00MTQ3LWI0ZGQtNWQ1Y2Y2OGMwZGEyIiwiaXNzIjoiaHR0cHM6Ly9sb2dpbi5ob3JuYmFjaC5jb20vYXV0aC9yZWFsbXMvaG9ybmJhY2giLCJhdWQiOiJodHRwczovL2xvZ2luLmhvcm5iYWNoLmNvbS9hdXRoL3JlYWxtcy9ob3JuYmFjaCIsInN1YiI6IjkxYTZlNjczLWE5MTYtNGJmMC04ZDdkLTgxZjA4Y2U0NTU3YyIsInR5cCI6ImV4ZWN1dGUtYWN0aW9ucyIsImF6cCI6Im5sIiwibm9uY2UiOiIyYTRhMWVkZi1jNDM1LTQxNDctYjRkZC01ZDVjZjY4YzBkYTIiLCJycWFjIjpbIlZFUklGWV9FTUFJTCJdLCJyZWR1cmkiOiJodHRwczovL3d3dy5ob3JuYmFjaC5ubC9jdXN0b21lci9hY2NvdW50IiwiYXNpZCI6IjAyZmQ2NDVjLTM3ZTctNDAzMi05OTk0LTM5MjBiMzg2OWYyMi5rMlJQU0MtWDBCSS40ZjE1MDUwMi01YWZkLTQ2MDEtOWZmOC03M2NiNjVhNGRhZjEiLCJhc2lkIjoiMDJmZDY0NWMtMzdlNy00MDMyLTk5OTQtMzkyMGIzODY5ZjIyLmsyUlBTQy1YMEJJLjRmMTUwNTAyLTVhZmQtNDYwMS05ZmY4LTczY2I2NWE0ZGFmMSIsInJxYWMiOlsiVkVSSUZZX0VNQUlMIl0sInJlZHVyaSI6Imh0dHBzOi8vd3d3Lmhvcm5iYWNoLm5sL2N1c3RvbWVyL2FjY291bnQifQ.wpNq2fSfihDH9ER48llnHoGJoxz3ZwBZCEe_bas6Hj0&client_id=nl&tab_id=k2RPSC-X0BI 200
+20230605005243 https://login.hornbach.com/auth/realms/hornbach/login-actions/action-token?key=eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJiOTdmNDc0NC1jNTA1LTRhMTgtYjNkYS05ZTEwZDBiMDE2NjMifQ.eyJleHAiOjE2ODQwODgyMTUsImlhdCI6MTY4NDA4MzIxOCwianRpIjoiMmE0YTFlZGYtYzQzNS00MTQ3LWI0ZGQtNWQ1Y2Y2OGMwZGEyIiwiaXNzIjoiaHR0cHM6Ly9sb2dpbi5ob3JuYmFjaC5jb20vYXV0aC9yZWFsbXMvaG9ybmJhY2giLCJhdWQiOiJodHRwczovL2xvZ2luLmhvcm5iYWNoLmNvbS9hdXRoL3JlYWxtcy9ob3JuYmFjaCIsInN1YiI6IjkxYTZlNjczLWE5MTYtNGJmMC04ZDdkLTgxZjA4Y2U0NTU3YyIsInR5cCI6ImV4ZWN1dGUtYWN0aW9ucyIsImF6cCI6Im5sIiwibm9uY2UiOiIyYTRhMWVkZi1jNDM1LTQxNDctYjRkZC01ZDVjZjY4YzBkYTIiLCJycWFjIjpbIlZFUklGWV9FTUFJTCJdLCJyZWR1cmkiOiJodHRwczovL3d3dy5ob3JuYmFjaC5ubC9jdXN0b21lci9hY2NvdW50IiwiYXNpZCI6IjBlMTZkOTY3LTczYTYtNDM0OC1hZTZkLTBjZmI1NzZkMmUxZC50UHVUUFBUV1NNSS40ZjE1MDUwMi01YWZkLTQ2MDEtOWZmOC03M2NiNjVhNGRhZjEiLCJhc2lkIjoiMGUxNmQ5NjctNzNhNi00MzQ4LWFlNmQtMGNmYjU3NmQyZTFkLnRQdVRQUFRXU01JLjRmMTUwNTAyLTVhZmQtNDYwMS05ZmY4LTczY2I2NWE0ZGFmMSIsInJxYWMiOlsiVkVSSUZZX0VNQUlMIl0sInJlZHVyaSI6Imh0dHBzOi8vd3d3Lmhvcm5iYWNoLm5sL2N1c3RvbWVyL2FjY291bnQifQ.Wmm37SeUirCTW3sm7eofUa8JI83AZNDqGbcCko3ZHV4&client_id=nl&tab_id=tPuTPPTWSMI 400
+20230605005333 https://login.hornbach.com/auth/realms/hornbach/login-actions/action-token?key=eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJiOTdmNDc0NC1jNTA1LTRhMTgtYjNkYS05ZTEwZDBiMDE2NjMifQ.eyJleHAiOjE2ODQwODgyMTUsImlhdCI6MTY4NDA4MzIyMCwianRpIjoiMmE0YTFlZGYtYzQzNS00MTQ3LWI0ZGQtNWQ1Y2Y2OGMwZGEyIiwiaXNzIjoiaHR0cHM6Ly9sb2dpbi5ob3JuYmFjaC5jb20vYXV0aC9yZWFsbXMvaG9ybmJhY2giLCJhdWQiOiJodHRwczovL2xvZ2luLmhvcm5iYWNoLmNvbS9hdXRoL3JlYWxtcy9ob3JuYmFjaCIsInN1YiI6IjkxYTZlNjczLWE5MTYtNGJmMC04ZDdkLTgxZjA4Y2U0NTU3YyIsInR5cCI6ImV4ZWN1dGUtYWN0aW9ucyIsImF6cCI6Im5sIiwibm9uY2UiOiIyYTRhMWVkZi1jNDM1LTQxNDctYjRkZC01ZDVjZjY4YzBkYTIiLCJycWFjIjpbIlZFUklGWV9FTUFJTCJdLCJyZWR1cmkiOiJodHRwczovL3d3dy5ob3JuYmFjaC5ubC9jdXN0b21lci9hY2NvdW50IiwiYXNpZCI6IjJjZGVkMGJkLWE5MGEtNGViMC1hMDdjLWNjNmIyYjM0ZGZkZC5fN3BpS3BrQlpWUS40ZjE1MDUwMi01YWZkLTQ2MDEtOWZmOC03M2NiNjVhNGRhZjEiLCJhc2lkIjoiMmNkZWQwYmQtYTkwYS00ZWIwLWEwN2MtY2M2YjJiMzRkZmRkLl83cGlLcGtCWlZRLjRmMTUwNTAyLTVhZmQtNDYwMS05ZmY4LTczY2I2NWE0ZGFmMSIsInJxYWMiOlsiVkVSSUZZX0VNQUlMIl0sInJlZHVyaSI6Imh0dHBzOi8vd3d3Lmhvcm5iYWNoLm5sL2N1c3RvbWVyL2FjY291bnQifQ.KXzFXlzr3kV2XXo8FWaIHVqb8nRltIQ0VyuJsiIndfE&client_id=nl&tab_id=_7piKpkBZVQ -
+20230104154640 https://login.hornbach.com/auth/realms/hornbach/login-actions/authenticate?tab_id=J87dbciOYqE -
+20250306101730 https://login.hornbach.com/auth/realms/hornbach/login-actions/authenticate?tab_id=MeKwklGJTl4 400
+20230605004949 https://login.hornbach.com/auth/realms/hornbach/login-actions/authenticate?tab_id=tu_k_y-ioz8 -
+20240315155306 https://login.hornbach.com/auth/realms/hornbach/login-actions/registration?client_id=at&tab_id=C9xXGoIVdiM -
+20240315155328 https://login.hornbach.com/auth/realms/hornbach/login-actions/registration?client_id=at&tab_id=hT-k1TvgZ9M -
+20240315155301 https://login.hornbach.com/auth/realms/hornbach/login-actions/registration?client_id=at&tab_id=Oh6wGv_w4Qs -
+20240315155235 https://login.hornbach.com/auth/realms/hornbach/login-actions/registration?client_id=at&tab_id=rCY-HScaWa4 -
+20220726142939 https://login.hornbach.com/auth/realms/hornbach/login-actions/registration?client_id=cz&tab_id=fIDTDV-x5mo 426
+20220726142927 https://login.hornbach.com/auth/realms/hornbach/login-actions/registration?client_id=cz&tab_id=QI-ECbTCb14 426
+20250611130058 https://login.hornbach.com/auth/realms/hornbach/login-actions/registration?client_id=de&tab_id=-kILbrHMudw 400
+20230302110329 https://login.hornbach.com/auth/realms/hornbach/login-actions/registration?client_id=de&tab_id=05s167Hn1wE -
+[0m
+Wayback recovered and returned a major yield: **historical authz URLs expose 5 real cidaas client_ids**, plus a **legacy Keycloak realm** on login.hornbach.com. Verifying liveness with read-only GETs (≤1 rps):
+[0m$ [0mp() { printf '\n=== %s ===\n' "$1"; curl -s -o /dev/null -D - -m 20 -w 'HTTP %{http_code} size=%{size_download}\n' "$2" | grep -iE '^(HTTP|location|error|server|set-cookie)' ; }
+p 'de-checkout f243e104' 'https://auth.hornbach.com/authz-srv/authz?response_type=code&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout&client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&scope=openid%20profile%20email&state=acbd1234'
+sleep 1
+p 'ro-customer 063c8171' 'https://auth.hornbach.com/authz-srv/authz?response_type=code&redirect_uri=https%3A%2F%2Fwww.hornbach.ro%2Fcustomer%2F&client_id=063c8171-50be-4b0f-aac8-d1237882ff64&scope=openid%20profile%20email&state=acbd1234'
+sleep 1
+p 'nl-account a319e635' 'https://auth.hornbach.com/authz-srv/authz?response_type=code&redirect_uri=https%3A%2F%2Fwww.hornbach.nl%2Fcustomer%2Faccount%2Fpurchases%2F&client_id=a319e635-38c8-4cde-be1d-e2341e3c6480&scope=openid%20profile%20email&state=acbd1234'
+sleep 1
+p 'ch-checkout 28e0cbe4' 'https://auth.hornbach.com/authz-srv/authz?response_type=code&redirect_uri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout&client_id=28e0cbe4-47d1-4bc2-812f-ad3ca8528915&scope=openid%20profile%20email&state=acbd1234'
+sleep 1
+p 'login-hb-keycloak' 'https://login.hornbach.com/auth/realms/hornbach/.well-known/openid-configuration'
+=== de-checkout f243e104 ===
+HTTP/2 302 
+location: https://www.hornbach.de/auth/pages/web/?requestId=2bc36296-f630-4fb5-85d5-166f478b4747&view_type=login
+set-cookie: cidaas_dr=b87435e4-52c4-44e3-b24c-305bbd3adcdc; expires=Sun, 19 Sep 2027 01:35:37 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: cidaas_sid=; expires=Sat, 19 Sep 2026 01:35:32 GMT; domain=auth.hornbach.com; path=/; secure; SameSite=None
+set-cookie: cidaas_sso=; expires=Sat, 19 Sep 2026 01:35:32 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: cidaas_rl=; expires=Sat, 19 Sep 2026 01:35:32 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: __cf_bm=7z7Epc.cXpKrr8Qg8AjMyLIYIM0Y_WSNog86rTAIPYE-1789781737.2526665-1.0.1.1-Bubhd5jg1Zd5Xs4fEdFE7Rtb.j4M_4In4hJbblwUp69iJ_hldYSGpOQUN.ItANj1jYK1IqA5kughokcPO5CNcc6Pl4GA4HjMI7hWOfJJjgJBzCrUawFsVoL5OZnL1ueT; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Sat, 19 Sep 2026 02:05:37 GMT
+server: cloudflare
+HTTP 302 size=0
+
+=== ro-customer 063c8171 ===
+HTTP/2 302 
+location: https://www.hornbach.ro/auth/pages/web/?requestId=79de8730-b368-426b-b42b-b8f23fce00a8&view_type=login
+set-cookie: cidaas_dr=da544e33-c855-4665-9087-b6fa59e7e871; expires=Sun, 19 Sep 2027 01:35:38 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: cidaas_sid=; expires=Sat, 19 Sep 2026 01:35:33 GMT; domain=auth.hornbach.com; path=/; secure; SameSite=None
+set-cookie: cidaas_sso=; expires=Sat, 19 Sep 2026 01:35:33 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: cidaas_rl=; expires=Sat, 19 Sep 2026 01:35:33 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: __cf_bm=5S1sOUx74lHZ1ZYsA1YWJvMgw.sL5VfJ4GrsPOfgq0g-1789781738.7321413-1.0.1.1-drw7OFjBd8RrDm9ufm4KNpgH9e6UrhgVA.bPfeTNRrPEClYhL9ao23smtVPUL.L8xVcMLyetdKNGpKungIPsJnqGhJtc.HuJLHNEPnxXJSXMksiP7vFQ9PyXq1lWBvMy; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Sat, 19 Sep 2026 02:05:38 GMT
+server: cloudflare
+HTTP 302 size=0
+
+=== nl-account a319e635 ===
+HTTP/2 302 
+location: https://www.hornbach.nl/auth/pages/web/?requestId=205c3bbd-1bef-48e6-b147-3460808be98d&view_type=login
+set-cookie: cidaas_dr=1d5731a2-0d39-45bc-8e9b-aebe45d15440; expires=Sun, 19 Sep 2027 01:35:40 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: cidaas_sid=; expires=Sat, 19 Sep 2026 01:35:35 GMT; domain=auth.hornbach.com; path=/; secure; SameSite=None
+set-cookie: cidaas_sso=; expires=Sat, 19 Sep 2026 01:35:35 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: cidaas_rl=; expires=Sat, 19 Sep 2026 01:35:35 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: __cf_bm=O9sZuKvyRoA4CYSb0068UeMtkvcqC8Q7xKJ8ZJ8Smxw-1789781740.1755164-1.0.1.1-ZZUDAdRIm6tQ1p5Gi_hyNRf9tfElqkjx05oXYwOv0k939Dha85yE9dW3SEIx7knL1jUJVSrMSFR6LUaBXnNkFU8v6AR0e5oiGEk3C30bErGgzSLxEq_mYKKkyJT74OeL; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Sat, 19 Sep 2026 02:05:40 GMT
+server: cloudflare
+HTTP 302 size=0
+
+=== ch-checkout 28e0cbe4 ===
+HTTP/2 302 
+location: https://www.hornbach.ch/de/auth/pages/web/?requestId=9057efce-8fa7-44f8-a480-5959b0c1ac2a&view_type=login
+set-cookie: cidaas_dr=d15e45b6-88a3-4ac9-bea3-38190252fe80; expires=Sun, 19 Sep 2027 01:35:41 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: cidaas_sid=; expires=Sat, 19 Sep 2026 01:35:36 GMT; domain=auth.hornbach.com; path=/; secure; SameSite=None
+set-cookie: cidaas_sso=; expires=Sat, 19 Sep 2026 01:35:36 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: cidaas_rl=; expires=Sat, 19 Sep 2026 01:35:36 GMT; domain=auth.hornbach.com; path=/; HttpOnly; secure; SameSite=None
+set-cookie: __cf_bm=6_iEfDcgwSE9KNdAhUrAvQ5UlpJDYcNU81DMkGj1gdo-1789781741.620497-1.0.1.1-xxGc.ilRHI8ZvvfcT88EnX6SG_P6J2.x1gOdbWWHte2ygV26hgqdb7RuodCjPhlrtx1BWegrjCPoBY7MlWYXHIhYA9qonW8cPELdIbvunAIY0oMLuIM87uSZm5u25Nes; HttpOnly; SameSite=None; Secure; Path=/; Domain=auth.hornbach.com; Expires=Sat, 19 Sep 2026 02:05:41 GMT
+server: cloudflare
+HTTP 302 size=0
+
+=== login-hb-keycloak ===
+HTTP/2 302 
+server: Varnish
+location: https://www.hornbach.de/customer
+HTTP 302 size=0
+[0m
+All 4 recovered client_ids are **LIVE** (302→cidaas login-page redirect with `requestId`; valid client + valid redirect_uri). login.hornbach.com Keycloak realm is dead (302→Varnish order-flow). Now the redirect_uri-validation differential with the live de-checkout client:
+[0m$ [0mbase='https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=f243e104-8bd9-4bb5-a78a-92ee473a0161&scope=openid%20profile%20email&state=acbd1234'
+p() { printf '\n=== %s ===\n' "$1"; curl -s -o /dev/null -D - -m 20 -w 'HTTP %{http_code} size=%{size_download}\n' "$2" | grep -iE '^(HTTP|location)' ; }
+p 'A evil.com          ' "$base&redirect_uri=https%3A%2F%2Fevil.com"
+sleep 1
+p 'B www.de.evil.com   ' "$base&redirect_uri=https%3A%2F%2Fwww.hornbach.de.evil.com%2F"
+sleep 1
+p 'C /checkout.evil    ' "$base&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout.evil"
+sleep 1
+p 'D / root only       ' "$base&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2F"
+sleep 1
+p 'E www.com checkout  ' "$base&redirect_uri=https%3A%2F%2Fwww.hornbach.com%2Fcheckout"
+sleep 1
+p 'F fragment#@evil    ' "$base&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%23%40evil.com"
+sleep 1
+p 'G @evil.com userinfo' "$base&redirect_uri=https%3A%2F%2Fwww.hornbach.de%2Fcheckout%40evil.com"
+=== A evil.com           ===
+HTTP/2 302 
+location: https://auth.hornbach.com/identity/error?error=invalid_request&error_code=AUTH10009&error_description=invalid_request%3A+given+url+is+not+allowed+by+the+application+configuration&error_hint=please+check+if+you+passing+correct+redirect_uri%2C+and+it+is+present+in+app+settings&iss=https%253A%252F%252Fauth.hornbach.com
+HTTP 302 size=0
+
+=== B www.de.evil.com    ===
+HTTP/2 302 
+location: https://auth.hornbach.com/identity/error?error=invalid_request&error_code=AUTH10009&error_description=invalid_request%3A+given+url+is+not+allowed+by+the+application+configuration&error_hint=please+check+if+you+passing+correct+redirect_uri%2C+and+it+is+present+in+app+settings&iss=https%253A%252F%252Fauth.hornbach.com
+HTTP 302 size=0
+
+=== C /checkout.evil     ===
+HTTP/2 302 
+location: https://www.hornbach.de/auth/pages/web/?requestId=a7bd66b1-c41f-4b3a-84d7-e684a23d341a&view_type=login
+HTTP 302 size=0
+
+=== D / root only        ===
+HTTP/2 302 
+location: https://auth.hornbach.com/identity/error?error=invalid_request&error_code=AUTH10009&error_description=invalid_request%3A+given+url+is+not+allowed+by+the+application+configuration&error_hint=please+check+if+you+passing+correct+redirect_uri%2C+and+it+is+present+in+app+settings&iss=https%253A%252F%252Fauth.hornbach.com
+HTTP 302 size=0
+
+=== E www.com checkout   ===
+HTTP/2 302 
+location: https://auth.hornbach.com/identity/error?error=invalid_request&error_code=AUTH10009&error_description=invalid_request%3A+given+url+is+not+allowed+by+the+application+configuration&error_hint=please+check+if+you+passing+correct+redirect_uri%2C+and+it+is+present+in+app+settings&iss=https%253A%252F%252Fauth.hornbach.com
+HTTP 302 size=0
+
+=== F fragment#@evil     ===
+HTTP/2 302 
+location: https://www.hornbach.de/auth/pages/web/?requestId=3b41f1c3-b426-48e4-abfa-96341b430c2e&view_type=login
+HTTP 302 size=0
+
+=== G @evil.com userinfo ===
+HTTP/2 302 
+location: https://www.hornbach.de/auth/pages/web/?requestId=97207553-f08e-4746-bea1-ee242deddfbc&view_type=login
+HTTP 302 size=0
+[0m
+Redirect-uri differential is decisive: **path-suffix and `@`-injection variants of the registered URI are ACCEPTED** (`/checkout.evil`, `/checkout@evil.com` → 302 to the login flow), while foreign host/root are rejected with AUTH10009. Testing whether the prefix-match is systemic across the other live clients:
+[0m$ [0ma() { printf '\n=== %s ===\n' "$1"; curl -s -o /dev/null -D - -m 20 -w 'HTTP %{http_code}\n' "$2" | grep -iE '^(HTTP|location)' ; }
+sleep 1
+a 'NL account a319e635 /purchases/evil' 'https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=a319e635-38c8-4cde-be1d-e2341e3c6480&redirect_uri=https%3A%2F%2Fwww.hornbach.nl%2Fcustomer%2Faccount%2Fpurchases%2Fevil&scope=openid%20profile%20email&state=acbd1234'
+sleep 1
+a 'RO 063c8171 /customer/evil' 'https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=063c8171-50be-4b0f-aac8-d1237882ff64&redirect_uri=https%3A%2F%2Fwww.hornbach.ro%2Fcustomer%2Fevil&scope=openid%20profile%20email&state=acbd1234'
+sleep 1
+a 'CH 28e0cbe4 /de/checkout/evil' 'https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=28e0cbe4-47d1-4bc2-812f-ad3ca8528915&redirect_uri=https%3A%2F%2Fwww.hornbach.ch%2Fde%2Fcheckout%2Fevil&scope=openid%20profile%20email&state=acbd1234'
+sleep 1
+a 'NL checkout 30e033d9 /checkout/evil' 'https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=30e033d9-afe7-4646-982a-e41872b33b0e&redirect_uri=https%3A%2F%2Fwww.hornbach.nl%2Fcheckout%2Fevil&scope=openid%20profile%20email&state=acbd1234'
+=== NL account a319e635 /purchases/evil ===
+HTTP/2 302 
+location: https://www.hornbach.nl/auth/pages/web/?requestId=d6142442-f098-4b40-bcd3-8743325a8e71&view_type=login
+HTTP 302
+
+=== RO 063c8171 /customer/evil ===
+HTTP/2 302 
+location: https://www.hornbach.ro/auth/pages/web/?requestId=b020a5f8-e715-410a-a195-c8c7bf8c2cf6&view_type=login
+HTTP 302
+
+=== CH 28e0cbe4 /de/checkout/evil ===
+HTTP/2 302 
+location: https://www.hornbach.ch/de/auth/pages/web/?requestId=c6f0c488-7d2c-4bcb-8ce1-8a3b814e2c2a&view_type=login
+HTTP 302
+
+=== NL checkout 30e033d9 /checkout/evil ===
+HTTP/2 302 
+location: https://www.hornbach.nl/auth/pages/web/?requestId=f169dde7-c36a-4720-9725-4a8780bb3822&view_type=login
+HTTP 302
+[0m
+All four web clients accept the suffixed redirect_uri — **tenant-wide path-prefix (non-exact) redirect_uri matching confirmed**. The client_id blockage that stalled this engagement for weeks is broken. Structured blocks:
+
+---
+
+## STEP 1 — DELTA
+- **[NEW]** Wayback CDX reachable again over http; historical `/authz-srv/authz` URLs expose **5 cidaas client_ids** — de-checkout `f243e104-8bd9-4bb5-a78a-92ee473a0161`, nl-checkout `30e033d9-afe7-4646-982a-e41872b33b0e`, nl-account `a319e635-38c8-4cde-be1d-e2341e3c6480`, ro `063c8171-50be-4b0f-aac8-d1237882ff64`, ch `28e0cbe4-47d1-4bc2-812f-ad3ca8528915`. All **verified LIVE**: GET authz → 302 `www.hornb.*/auth/pages/web/?requestId=…&view_type=login` + `cidaas_dr` cookie. Rejects KB 09-18 "no client_id source / Wayback unreachable".
+- **[NEW]** redirect_uri validation is **path-PREFIX** on the exact registered host: `/checkout.evil`, `/checkout@evil.com`, `/customer/evil`, `/purchases/evil`, `/de/checkout/evil` → 302 to login flow (identical to control); `evil.com`, `www.hornbach.de.evil.com`, root `/`, cross-TLD `www.hornbach.com` → 302 `error_code=AUTH10009 given url is not allowed by the application configuration`. Systemic across all 4 tested clients (de/nl/ro/ch) → tenant-wide RFC 6749 §3.1.2.3 exact-match deviation.
+- **[CHANGED]** login.hornbach.com legacy Keycloak realm (CDX: `/auth/realms/hornbach` 200 until 2024-12, client_ids nl/at/cz/de, HS256/Kid action-token JWTs) is **decommissioned** — today 302 Varnish → `www.hornbach.de/customer`.
+- anchors zero-delta: oidc 200/3189B, root 302→hornbach.de, api.hornbach.de 404/47B, auth.hornbach.de 302→NetScaler logon.
+
+## STEP 2 — PRIORITIZE
+- [PRIO] auth.hornbach.com, 8.6, attack_surface:9,business_value:9,tech_exposure:9,gate_ease:7,cloud_surface:8,freshness:9 — live client matrix + live authz + redirect prefix bug; all OAuth tests now executable
+- [PRIO] www.hornbach.de, 6.9, attack_surface:7,business_value:9,tech_exposure:6,gate_ease:3,cloud_surface:8,freshness:8 — sole code-delivery sink for the redirect_uri chain; bot-walled but required to close it
+- [PRIO] hornbach-mp.mirakl.net, 5.5, attack_surface:6,business_value:6,tech_exposure:6,gate_ease:3,cloud_surface:5,freshness:7 — unchanged, auth-gated Mirakl API
+
+## STEP 3 — HYPOTHESES
+[HYP] OAuth redirect_uri path-prefix (non-exact) acceptance → authorization-code interception chain
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz (clients f243e104-…, a319e635-…, 063c8171-…, 28e0cbe4-…)
+confidence: 72
+reasoning: GET differential (2026-09-19) proves any redirect_uri string beginning with the registered origin+path is accepted (302→login flow, cidaas_dr cookie set) while foreign host / root / cross-TLD get AUTH10009; identical result on 4 independent web clients → tenant config, not per-app mishap. Registered URIs per CDX include query-string-heavy `/checkout/flow/step/2?orderType=DV…` and `/checkout`, consistent with prefix logic. Control requests without code_challenge also accepted at authz (PKCE only gated at token exchange). RFC 6749 §3.1.2.3 requires exact match.
+evidence_needed: a same-host sink on www.hornb.*/checkout<attacker-suffix> that reflects `code`+`state` (or repeats query params) to an attacker observer; without it, PKCE S256 still blocks code-use even if delivered.
+verify_steps: PASSIVE GET sink-hunt on accepted suffix paths (`/checkout/evil`, `/checkout.evil?code=test&state=test`, `/customer/evil`, `/de/checkout/evil`) for reflector/open-redirect; browserless requalification of state param reflection.
+impact: if a same-host reflector exists → OAuth code+state exfiltration → ATO (CRITICAL chain); alone, a confirmed config deviation + login-request/requestId fabrication abusable for session priming (MEDIUM).
+testability: PASSIVE (differential verified live this session)
+[HYP] token-plane client-validation-ordering differential now feasible with a real client_id
+class: AUTH
+asset: auth.hornbach.com/token-srv/token
+confidence: 55
+reasoning: KB: anonymous/bogus-client POST → 400 `invalid_client "unknown client"` — the invalid_client↔invalid_grant ordering (AUTH10008/10009) fires only after a recognized client_id. With f243e104-… now known, {valid client + fake secret} vs {valid client + fake code} discriminates client-secret strength and PKCE enforcement at exchange. Previously zero-seed, untestable.
+evidence_needed: error_code family comparison across client_secret present/absent/wrong with the real client_id.
+verify_steps: POST token-srv/token grant_type=authorization_code code=fakeclient_id secret conditioning (POST — deferred to authorized session per probe method limits on live targets).
+impact: exposes weak client auth / PKCE-not-enforced at exchange → elevation of the OAuth chain to code-reuse; MEDIUM.
+testability: AUTH_HELPED
+[HYP] device-code authorization reachable with a real client (flow-abuse)
+class: OATH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: KB: device endpoint live, anonymous 400 invalid_request (client_id-bound). With a live web client_id, device_code issuance without further auth may enable delegation/phishing (advertised device_authorization_endpoint + `urn:ietf:params:oauth:grant-type:device_code`).
+evidence_needed: whether device authz mints device_code for a web client without login/consent.
+verify_steps: POST device authz with client_id=f243e104-… + scopes (POST — deferred per probe rules).
+impact: device-flow delegation abuse / phishing pivot; MEDIUM.
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+- [PARKED] cidaas JWT alg confusion (HS256/RS256): still needs capture of a legit id_token via real login — HUMAN/AUTH-gated, unchanged.
+- [PARKED] Unauthenticated introspect/revoke impact: no real token to introspect; remains a config-flaw finding (RFC 7662 §2.2 / RFC 7009 §2.1 client-auth omission), not data-exfil proof.
+- [PARKED] PKCE downgrade at authz (code_challenge omitted): accepted, but PKCE enforcement sits at token exchange; unproven use, lower value than the redirect prefix bug.
+- [PARKED] Keycloak legacy realm: decommissioned (302 Varnish→catalog), dead.
+- [FINAL] 1. Unauthenticated token introspection+revocation — CONFIRMED systemic (19+ sessions KB; RFC-violating client-auth omission; stands as the single non-gated finding). 2. OAuth redirect_uri path-prefix acceptance — CONFIRMED live tenant-wide this session (redirect_uri code-interception precondition). 3. Token-plane client-validation-ordering differential — ENABLED by recovered client_id (AUTH_HELPED).
+
+## STEP 5 — NEXT ACTION
+[NEXT] PROBE: passive GET sink-hunt on `https://www.hornbach.de/checkout/evil` and `https://www.hornbach.de/checkout.evil?code=test&state=test` (≤1 rps, GET only) — a same-host parameter-reflector or open redirect on an accepted suffix path closes the OAuth code-theft chain for the confirmed prefix-match finding.
+
+## STEP 6 — LEARNING
+- [LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: Wayback CDX (http) reachable again from this egress; historical URLs recover 5 LIVE cidaas web client_ids (de/nl/nl/ro/ch) — overturns the 09-18 "no client_id source" conclusion and re-opens all OAuth hypotheses.
+- [LEARN] ACCEPTED class OATH @ auth.hornbach.com/authz-srv/authz: redirect_uri validation is PATH-PREFIX on the exact registered host (accepted `/checkout.evil`, `/checkout@evil.com`, `/customer/evil`, `/purchases/evil`, `/de/checkout/evil`; rejected foreign-host/root AUTH10009) — systemic across de/nl/ro/ch clients; RFC 6749 §3.1.2.3 exact-match deviation confirmed live.
+- [LEARN] REJECTED class OTHER @ login.hornbach.com: legacy Keycloak realm `/auth/realms/hornbach` (client_ids nl/at/cz/de, HS256 action-token JWTs; 200 as late as 2024-12-10 per CDX) is decommissioned — today 302 Varnish → www.hornbach.de/customer; not a live surface.
+
+## STEP 7 — RISK
+[RISK] hornbach: 58/100 — client_id deadlock broken: reusable 5-client live matrix for the cidaas tenant; tenant-wide redirect_uri path-prefix acceptance confirmed (OAuth code-interception precondition, chain pending a same-host sink); unauthenticated introspect/revoke stands as the non-gated flaw; worst-case chain (prefix redirect_uri + same-host reflector + PKCE gap) would be CRITICAL ATO but is bounded by PKCE-at-exchange and the F5-walled www sink limiting live confirmation; legacy Keycloak dead; employee NetScaler remains high-risk-untouched.

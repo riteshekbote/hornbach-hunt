@@ -390,3 +390,14 @@
 - 2026-09-18 ACCEPTED class AUTH @ auth.hornbach.de: separate Citrix NetScaler AAA VPN Gateway surface exists on hornbach.de, distinct from cidaas .com — legacy employee access infra in-scope
 - 2026-09-18 ACCEPTED class MISCONFIG @ hornbach-mp.mirakl.net: HORNBACH-operated Mirakl marketplace (v3.1301) is an in-scope API surface; all /api/* require Mirakl auth
 - 2026-09-18 REJECTED class WILDCARD_DOM @ hornbach.com: no wildcard DNS (random-xyz-test returns empty) — contradicts prior KB "wildcard dominates" conclusions; only 4 known scoped hosts resolve
+- 2026-09-19 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/{introspect,revoke}: RE-CONFIRMED POST → 200 {"active":false} / 200 OK unauthenticated — 18+ sessions; body-presence sole gate; systemic and stable
+- 2026-09-19 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/openid-configuration: RE-CONFIRMED fully intact 3189B — all 6 service endpoints + status advertised
+- 2026-09-19 ACCEPTED class OTHER @ auth.hornbach.com/.well-known/status: 200 OK — discovery status endpoint live
+- 2026-09-19 CHANGED class OTHER @ auth.hornbach.com/ (root): 302 → hornbach.de — root HTML client_id extraction hypothesis definitively dead
+- 2026-09-19 ACCEPTED class AUTH @ auth.hornbach.com/token-srv/token: POST authorization_code + bogus client → 400 invalid_client "unknown client" — token plane client-gated
+- 2026-09-19 REJECTED class OATH @ auth.hornbach.com/authz-srv/authz: client_id discrepancy unactionable with zero candidate seed; enumeration-spirit out-of-scope
+- 2026-09-19 ACCEPTED class OTHER @ hornbach.com web estate: international TLDs (.de/.at/.nl/.ch) + login all serve identical 3038-byte F5 "Client Challenge" stub — estate-wide bot-wall closes last web-based cidaas client_id extraction angle
+- 2026-09-19 REJECTED class MISCONFIG @ auth.hornbach.com/session/end_session: token-gated, no anonymous CSRF
+- 2026-09-19 REJECTED class MISCONFIG @ api.hornbach.de: OPTIONS/TRACE excluded per scope
+- 2026-09-19 REJECTED class AUTH @ auth.hornbach.de: /nitro/v1/config NOT exposed
+- 2026-09-19 ACCEPTED class MISCONFIG @ api.hornbach.de: Gateway server + X-CorrelationID + /healthcheck 200/19B (localhost:8080 backend leak via Host); 30+ case-rotations of bad paths uniform 404/47B; anonymous surface breadth definitively exhausted

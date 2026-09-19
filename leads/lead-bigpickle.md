@@ -5072,3 +5072,33 @@ testability: AUTH_HELPED
 [NEXT] PROBE: obtain a valid cidaas client_id by parsing the HORNBACH mobile app (de.hornbach) OAuth config; fallback: test candidate redirect_uris (de.hornbach://callback, app://callback) + app package-name-derived client_ids against /authz-srv/authz to find a live client, which unblocks all parked OAuth hypotheses
 [RISK] hornbach: 42/100 — cidaas tenant is confirmed live auth surface, OIDC metadata fully exposed; client registration disabled; valid client_id is the critical unlock gating all OAuth testing (redirect_uri, alg confusion, code theft, device code); new legacy NetScaler AAA on auth.hornbach.de broadens employee-auth surface but is high-risk to probe (employee/infra); www.hornbach.de bot-walled (FingerprintJS) blocks the source embedding client_id; hornbach-mp.mirakl.net is a separate auth-gated Mirakl API surface; broad scope but CDN-heavy and gate-hard.
 ## 2026-09-18 23:22:46 UTC [target] (model bigpickle)
+## 2026-09-19 01:37:21 UTC [target] (model bigpickle)
+[HYP] OAuth redirect_uri path-prefix (non-exact) acceptance → authorization-code interception chain
+class: OATH
+asset: auth.hornbach.com/authz-srv/authz (clients f243e104-…, a319e635-…, 063c8171-…, 28e0cbe4-…)
+confidence: 72
+reasoning: GET differential (2026-09-19) proves any redirect_uri string beginning with the registered origin+path is accepted (302→login flow, cidaas_dr cookie set) while foreign host / root / cross-TLD get AUTH10009; identical result on 4 independent web clients → tenant config, not per-app mishap. Registered URIs per CDX include query-string-heavy `/checkout/flow/step/2?orderType=DV…` and `/checkout`, consistent with prefix logic. Control requests without code_challenge also accepted at authz (PKCE only gated at token exchange). RFC 6749 §3.1.2.3 requires exact match.
+evidence_needed: a same-host sink on www.hornb.*/checkout<attacker-suffix> that reflects `code`+`state` (or repeats query params) to an attacker observer; without it, PKCE S256 still blocks code-use even if delivered.
+verify_steps: PASSIVE GET sink-hunt on accepted suffix paths (`/checkout/evil`, `/checkout.evil?code=test&state=test`, `/customer/evil`, `/de/checkout/evil`) for reflector/open-redirect; browserless requalification of state param reflection.
+impact: if a same-host reflector exists → OAuth code+state exfiltration → ATO (CRITICAL chain); alone, a confirmed config deviation + login-request/requestId fabrication abusable for session priming (MEDIUM).
+testability: PASSIVE (differential verified live this session)
+[HYP] token-plane client-validation-ordering differential now feasible with a real client_id
+class: AUTH
+asset: auth.hornbach.com/token-srv/token
+confidence: 55
+reasoning: KB: anonymous/bogus-client POST → 400 `invalid_client "unknown client"` — the invalid_client↔invalid_grant ordering (AUTH10008/10009) fires only after a recognized client_id. With f243e104-… now known, {valid client + fake secret} vs {valid client + fake code} discriminates client-secret strength and PKCE enforcement at exchange. Previously zero-seed, untestable.
+evidence_needed: error_code family comparison across client_secret present/absent/wrong with the real client_id.
+verify_steps: POST token-srv/token grant_type=authorization_code code=fakeclient_id secret conditioning (POST — deferred to authorized session per probe method limits on live targets).
+impact: exposes weak client auth / PKCE-not-enforced at exchange → elevation of the OAuth chain to code-reuse; MEDIUM.
+testability: AUTH_HELPED
+[HYP] device-code authorization reachable with a real client (flow-abuse)
+class: OATH
+asset: auth.hornbach.com/authz-srv/device/authz
+confidence: 45
+reasoning: KB: device endpoint live, anonymous 400 invalid_request (client_id-bound). With a live web client_id, device_code issuance without further auth may enable delegation/phishing (advertised device_authorization_endpoint + `urn:ietf:params:oauth:grant-type:device_code`).
+evidence_needed: whether device authz mints device_code for a web client without login/consent.
+verify_steps: POST device authz with client_id=f243e104-… + scopes (POST — deferred per probe rules).
+impact: device-flow delegation abuse / phishing pivot; MEDIUM.
+testability: AUTH_HELPED
+[NEXT] PROBE: passive GET sink-hunt on `https://www.hornbach.de/checkout/evil` and `https://www.hornbach.de/checkout.evil?code=test&state=test` (≤1 rps, GET only) — a same-host parameter-reflector or open redirect on an accepted suffix path closes the OAuth code-theft chain for the confirmed prefix-match finding.
+[RISK] hornbach: 58/100 — client_id deadlock broken: reusable 5-client live matrix for the cidaas tenant; tenant-wide redirect_uri path-prefix acceptance confirmed (OAuth code-interception precondition, chain pending a same-host sink); unauthenticated introspect/revoke stands as the non-gated flaw; worst-case chain (prefix redirect_uri + same-host reflector + PKCE gap) would be CRITICAL ATO but is bounded by PKCE-at-exchange and the F5-walled www sink limiting live confirmation; legacy Keycloak dead; employee NetScaler remains high-risk-untouched.
