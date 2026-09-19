@@ -811,3 +811,5 @@ www.hornbach.com
 - NEW auth.hornbach.com: Introspection endpoint `token-srv/introspect` exposed in metadata
 - CHANGED www.hornbach.com / hornbach.de: Login page returns bot-challenge page (FingerprintJS-based `_fs_ch_st_` cookie), 3038-byte stub, not direct login form
 - CHANGED hornbach-mp.mirakl.net: federates to login.mirakl.net (client_id UNPB4KbSz10ZExFyRsNQ6JHbKBeW94nq, PKCE S256) — NOT a client_id source for cidaas tenant
+
+## 2026-09-19 14:50:46 UTC

